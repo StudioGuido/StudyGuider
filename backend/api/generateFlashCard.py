@@ -1,11 +1,12 @@
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
-from .embedding_utils import getModelResponse
+# from .embedding_utils import getModelResponse
 import os 
 import asyncpg
 import random
 from fastapi import status
 from fastapi.responses import JSONResponse
+from .openAIHelper import get_openai_response
 
 router = APIRouter()
 
@@ -123,7 +124,7 @@ async def generate_endpoint(request: FlashRequest):
             
             try:
                 print("Generating...........\n\n")
-                modelResponse = await getModelResponse(prompt)
+                modelResponse = await get_openai_response(prompt)
             except Exception as e:
                 continue
 

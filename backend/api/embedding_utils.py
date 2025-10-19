@@ -6,6 +6,7 @@ import httpx
 import asyncpg
 import asyncio
 from fastapi import HTTPException
+from .openAIHelper import get_openai_response
 
 OLLAMA_HOST  = os.getenv("OLLAMA_HOST")        # in Compose, service name "ollama"
 OLLAMA_PORT  = os.getenv("OLLAMA_PORT")
@@ -53,32 +54,32 @@ def _generate_embeddings_blocking(texts):
         raise RuntimeError(f"Error generating embeddings: {e}")
 
 
-async def getModelResponse(prompt: str) -> str:
-    '''
-    This will provide a prompt to Ollama and return what Ollama
-    generated
-    '''
+# async def getModelResponse(prompt: str) -> str:
+#     '''
+#     This will provide a prompt to Ollama and return what Ollama
+#     generated
+#     '''
 
-    data = {
-        "model": OLLAMA_MODEL,
-        "prompt": prompt,
-        "stream": False
-    }
-    timeout = httpx.Timeout(60.0)
-    try: 
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            resp = await client.post(OLLAMA_URL, json=data)
-    except httpx.RequestError as e:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Failed to connect to Ollama: {e}"
-        )
-    resp.raise_for_status()
-    if resp.status_code != 200:
-        raise HTTPException(status_code=resp.status_code, detail=resp.text)
+#     data = {
+#         "model": OLLAMA_MODEL,
+#         "prompt": prompt,
+#         "stream": False
+#     }
+#     timeout = httpx.Timeout(60.0)
+#     try: 
+#         async with httpx.AsyncClient(timeout=timeout) as client:
+#             resp = await client.post(OLLAMA_URL, json=data)
+#     except httpx.RequestError as e:
+#         raise HTTPException(
+#             status_code=503,
+#             detail=f"Failed to connect to Ollama: {e}"
+#         )
+#     resp.raise_for_status()
+#     if resp.status_code != 200:
+#         raise HTTPException(status_code=resp.status_code, detail=resp.text)
 
-    data = resp.json()
-    return data.get("response", "")
+#     data = resp.json()
+#     return data.get("response", "")
 
     
 
@@ -151,13 +152,16 @@ async def generate_Helper(prompt, chapter, textbook):
         context = "\n".join(row[0] for row in rows)
         prompt = f"Context:\n{context}\n\nQuestion: {prompt}\nAnswer: Provide a concise response\nIf no similiar content then respond with: No Context Applies"
 
+        # try:
+        #     answer = await getModelResponse(prompt)
+        #     if not answer:
+        #         raise HTTPException(
+        #             status_code=502,
+        #             detail="Empty response from model."
+        #         )
+
         try:
-            answer = await getModelResponse(prompt)
-            if not answer:
-                raise HTTPException(
-                    status_code=502,
-                    detail="Empty response from model."
-                )
+            answer = await get_openai_response(prompt)
 
         except HTTPException:
             raise

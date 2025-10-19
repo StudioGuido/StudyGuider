@@ -7,7 +7,7 @@ python createTables.py
 python moveToDb.py
 
 
-python warmModel.py
+# python warmModel.py
 
 # starting up the server
 echo "🚀 Starting FastAPI server..."
