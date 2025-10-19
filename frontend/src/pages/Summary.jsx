@@ -44,7 +44,7 @@ function Summary() {
             return; // Skip API call
         }
     
-        const fetchFlashcards = async () => {
+        const fetchSummary = async () => {
             try {
                 setLoading(true);
                 const response = await fetch('http://localhost:8000/api/generateSummary', {
@@ -76,7 +76,7 @@ function Summary() {
         };
     
         if (selectedTitle && selectedChapter) {
-            fetchFlashcards();
+            fetchSummary();
         }
     }, [selectedTitle, selectedChapter]);
     
