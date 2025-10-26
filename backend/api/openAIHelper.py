@@ -5,7 +5,7 @@ from openai import OpenAI
 async def get_openai_response(prompt: str) -> str:
     '''
     Sends a prompt to OpenAI and returns the model's response as a string.
-    Uses async so the program remains responsive while waiting for the API.
+    Uses async so the program remains responsive while waiting for the API..
     '''
 
     def call_openai():
