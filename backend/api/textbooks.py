@@ -6,14 +6,10 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 
 router = APIRouter()
-
+'''allows grouping endpoints'''
 
 @router.get("/api/getTextbooks")
 async def getTextbooks_endpoint():
-    '''
-    This will extract every textbooks title, author, description,
-    and image path
-    '''
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),
@@ -48,7 +44,16 @@ async def getTextbooks_endpoint():
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
         await conn.close()
-
+'''
+Fetches all textbooks from the database and returns a list of dictionaries 
+containing title, author, description, and image_path.
+    
+Connects asynchronously to PostgreSQL using environment variables, fetches all rows 
+from the 'textbooks' table, and converts them into a JSON-friendly format.
+    
+Raises HTTPException(404) if no textbooks are found, or HTTPException(500) 
+for any database errors.
+'''
     
 
 
