@@ -6,7 +6,7 @@ import asyncpg
 import random
 from fastapi import status
 from fastapi.responses import JSONResponse
-from .openAIHelper import get_openai_response
+from .AIHelper import get_gemini_response
 
 router = APIRouter()
 
@@ -124,7 +124,7 @@ async def generate_endpoint(request: FlashRequest):
             
             try:
                 print("Generating...........\n\n")
-                modelResponse = await get_openai_response(prompt)
+                modelResponse = await get_gemini_response(prompt)
             except Exception as e:
                 continue
 

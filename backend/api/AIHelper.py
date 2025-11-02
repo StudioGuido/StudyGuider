@@ -1,27 +1,30 @@
+
+
 import asyncio
-from openai import OpenAI
+from google import genai 
 
 
-async def get_openai_response(prompt: str) -> str:
+async def get_gemini_response(prompt: str) -> str:
     '''
     Sends a prompt to OpenAI and returns the model's response as a string.
     Uses async so the program remains responsive while waiting for the API.
     '''
 
-    def call_openai():
+    def call_gemini():
         '''
         Creates an OpenAI client and requests a response for the given prompt.
         Returns the response text if successful, raises an error otherwise.
         '''
-        client = OpenAI()
+        client = genai.Client() 
         try:
-            response = client.responses.create(
-                model="gpt-4o-mini",
-                input=prompt
+            response = client.models.generate_content(
+                model= "gemini-2.0-flash", 
+                contents=prompt
             )
-            return response.output_text.strip()
+            return response.text.strip()
+            
         except Exception as e:
             print("An error occurred:", e)
             raise e
 
-    return await asyncio.to_thread(call_openai)
+    return await asyncio.to_thread(call_gemini)
