@@ -6,15 +6,8 @@ import httpx
 import asyncpg
 import asyncio
 from fastapi import HTTPException
-from .openAIHelper import get_openai_response
+from .AIHelper import get_gemini_response
 
-OLLAMA_HOST  = os.getenv("OLLAMA_HOST")        # in Compose, service name "ollama"
-OLLAMA_PORT  = os.getenv("OLLAMA_PORT")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL")     # default model
-TIMEOUT_SEC   = float(os.getenv("OLLAMA_TIMEOUT_SEC"))
-OLLAMA_URL = f"http://{OLLAMA_HOST}:{OLLAMA_PORT}/api/generate"
-
-# OLLAMA_HOST=127.0.0.1:11435 ollama serve
 
 # Load tokenizer and model
 model_id = "sentence-transformers/all-MiniLM-L6-v2"
@@ -52,34 +45,6 @@ def _generate_embeddings_blocking(texts):
     
     except Exception as e:
         raise RuntimeError(f"Error generating embeddings: {e}")
-
-
-# async def getModelResponse(prompt: str) -> str:
-#     '''
-#     This will provide a prompt to Ollama and return what Ollama
-#     generated
-#     '''
-
-#     data = {
-#         "model": OLLAMA_MODEL,
-#         "prompt": prompt,
-#         "stream": False
-#     }
-#     timeout = httpx.Timeout(60.0)
-#     try: 
-#         async with httpx.AsyncClient(timeout=timeout) as client:
-#             resp = await client.post(OLLAMA_URL, json=data)
-#     except httpx.RequestError as e:
-#         raise HTTPException(
-#             status_code=503,
-#             detail=f"Failed to connect to Ollama: {e}"
-#         )
-#     resp.raise_for_status()
-#     if resp.status_code != 200:
-#         raise HTTPException(status_code=resp.status_code, detail=resp.text)
-
-#     data = resp.json()
-#     return data.get("response", "")
 
     
 
@@ -161,7 +126,7 @@ async def generate_Helper(prompt, chapter, textbook):
         #         )
 
         try:
-            answer = await get_openai_response(prompt)
+            answer = await get_gemini_response(prompt)
 
         except HTTPException:
             raise
