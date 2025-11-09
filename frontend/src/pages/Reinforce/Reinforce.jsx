@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fakeApi } from "../../services/fakeApi";
+import ChapterSidebarNav from "../../components/ChapterSidebar";
 
 export default function Reinforce({ type = "flashcards", showResults = false }) {
   const { bookId, chapterId } = useParams();
@@ -38,28 +39,36 @@ export default function Reinforce({ type = "flashcards", showResults = false }) 
   const card = items[index];
 
   return (
-    <section>
-      <h1 className="text-2xl font-semibold mb-4">Reinforce — {type}</h1>
-      {type === "flashcards" ? (
-        <div className="border rounded p-6">
-          <p className="font-medium mb-2">Q: {card?.front ?? "…"}</p>
-          <details className="mb-4">
-            <summary className="cursor-pointer">Show Answer</summary>
-            <p className="mt-2">A: {card?.back}</p>
-          </details>
-          <button className="px-3 py-2 border rounded" onClick={() => setIndex(i => i + 1)}>Next</button>
-        </div>
-      ) : (
-        <div className="border rounded p-6">
-          <p className="font-medium mb-4">Quiz (mock) — choose an answer</p>
-          {/* mock options */}
-          <div className="flex gap-2">
-            <button className="px-3 py-2 border rounded" onClick={() => setIndex(i => i + 1)}>Option A</button>
-            <button className="px-3 py-2 border rounded" onClick={() => setIndex(i => i + 1)}>Option B</button>
-            <button className="px-3 py-2 border rounded" onClick={() => setIndex(i => i + 1)}>Option C</button>
-          </div>
-        </div>
-      )}
-    </section>
+  <section className="grid grid-cols-[20rem_1fr] gap-4">
+    <ChapterSidebarNav />
+    <div>
+      {/* existing Reinforce content unchanged */}
+      {/* results view OR card/quiz flow goes here */}
+    </div>
+  </section>
+
+    // <section>
+    //   <h1 className="text-2xl font-semibold mb-4">Reinforce — {type}</h1>
+    //   {type === "flashcards" ? (
+    //     <div className="border rounded p-6">
+    //       <p className="font-medium mb-2">Q: {card?.front ?? "…"}</p>
+    //       <details className="mb-4">
+    //         <summary className="cursor-pointer">Show Answer</summary>
+    //         <p className="mt-2">A: {card?.back}</p>
+    //       </details>
+    //       <button className="px-3 py-2 border rounded" onClick={() => setIndex(i => i + 1)}>Next</button>
+    //     </div>
+    //   ) : (
+    //     <div className="border rounded p-6">
+    //       <p className="font-medium mb-4">Quiz (mock) — choose an answer</p>
+    //       {/* mock options */}
+    //       <div className="flex gap-2">
+    //         <button className="px-3 py-2 border rounded" onClick={() => setIndex(i => i + 1)}>Option A</button>
+    //         <button className="px-3 py-2 border rounded" onClick={() => setIndex(i => i + 1)}>Option B</button>
+    //         <button className="px-3 py-2 border rounded" onClick={() => setIndex(i => i + 1)}>Option C</button>
+    //       </div>
+    //     </div>
+    //   )}
+    // </section>
   );
 }
