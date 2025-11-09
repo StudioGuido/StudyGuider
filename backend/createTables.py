@@ -130,22 +130,61 @@ async def init_db():
             """
             await conn.execute(embeddingTable)
 
+            # usersTable = """
+            # CREATE TABLE users (
+            # id SERIAL PRIMARY KEY,
+            # username VARCHAR(150) UNIQUE NOT NULL,
+            # email VARCHAR(255) UNIQUE NOT NULL,
+            # password_hash TEXT NOT NULL,
+            # first_name VARCHAR(255),
+            # last_name VARCHAR(255),
+            # created_at TIMESTAMP DEFAULT NOW(),
+            # provider VARCHAR(50),
+            # provider_id VARCHAR(255),
+            # last_login TIMESTAMP,
+            # auth_level user_role DEFAULT 'user'
+            # );
+            # """
+
             usersTable = """
             CREATE TABLE users (
             id SERIAL PRIMARY KEY,
             username VARCHAR(150) UNIQUE NOT NULL,
             email VARCHAR(255) UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            first_name VARCHAR(255),
-            last_name VARCHAR(255),
             created_at TIMESTAMP DEFAULT NOW(),
-            provider VARCHAR(50),
-            provider_id VARCHAR(255),
-            last_login TIMESTAMP,
-            auth_level user_role DEFAULT 'user'
+            last_login TIMESTAMP
             );
             """
             await conn.execute(usersTable)
+
+            flashCardSetTable = """
+            CREATE TABLE flash_card_set (
+            fcset_id SERIAL PRIMARY KEY,
+            set_title VARCHAR(255) UNIQUE NOT NULL,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
+            );
+            """
+            await conn.execute(flashCardSetTable)
+
+            flashCardTable = """
+            CREATE TABLE flash_card (
+            fc_id SERIAL PRIMARY KEY,
+            fcset_id INTEGER REFERENCES flash_card_set(fcset_id) ON DELETE CASCADE,
+            question TEXT NOT NULL,
+            answer TEXT NOT NULL
+            );
+            """
+            await conn.execute(flashCardTable)
+
+            summaryTable = """
+            CREATE TABLE summary (
+            summary_id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            title VARCHAR(255) NOT NULL,
+            content TEXT NOT NULL
+            );
+            """
+            await conn.execute(summaryTable)
 
             await conn.close()
 

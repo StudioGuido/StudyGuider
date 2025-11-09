@@ -1,3 +1,5 @@
+import requests
+
 def testUserCreation():
     url = 'http://0.0.0.0:8000/api/createUser'
 
@@ -52,3 +54,5 @@ def testDeleteUser():
 
     print(response.status_code)
     print(chunk_data['response'])
+
+testUserCreation()
