@@ -41,7 +41,7 @@ export default function ChapterSidebar({ className = "", target = "understanding
           className,
         ].join(" ")}
         aria-label="Chapter navigation"
-      >
+      > 
         <header className="px-4 pb-3 pt-5 border-b border-neutral-800">
           <h2 className="text-xl font-semibold">{title}</h2>
           {authors && <p className="text-sm text-slate-300">{authors}</p>}
@@ -59,7 +59,7 @@ export default function ChapterSidebar({ className = "", target = "understanding
                       "bg-neutral-900 ring-1 ring-neutral-800",
                       "hover:bg-neutral-800 hover:ring-neutral-700",
                       isActive && "bg-neutral-800 ring-neutral-600",
-                    ]
+                    ] 
                       .filter(Boolean)
                       .join(" ")
                   }
