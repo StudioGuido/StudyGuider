@@ -15,7 +15,7 @@ export default function Books() {
     );
 
   return (
-    <main className="min-h-screen bg-black text-white flex items-center justify-center px-4">
+    <main className="min-h-screen text-white flex items-center justify-center px-4">
       <section className="w-full max-w-2xl">
         <header className="text-center mb-6">
           <h1 className="text-4xl font-extrabold">Welcome Nivar!</h1>
@@ -48,8 +48,8 @@ export default function Books() {
               type="button"
               className="w-full p-5 rounded-xl border border-dashed border-gray-700 text-center text-white bg-transparent hover:bg-white/3 transition"
             >
-              <div className="font-semibold">Import New Textbook</div>
-              <div className="text-2xl mt-2">+</div>
+              <div className="mt-1 font-semibold">Import New Textbook</div>
+              <div className="text-3xl">+</div>
             </button>
           </div>
         </div>
