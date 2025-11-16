@@ -19,10 +19,12 @@ class FlashcardSet(BaseModel):
     user_email: str
     title: str
 
+
 class Flashcard(BaseModel):
     flashcardset: FlashcardSet
     question: str
     answer: str
+
 
 class Summary(BaseModel):
     user_email: str
@@ -33,6 +35,11 @@ class Summary(BaseModel):
 @router.post("/api/createUser")
 async def createUser(userData: User):
     """
+    API Endpoint for user creation
+
+    Current Implementation only holds a username and email value, with OAuth
+    functionality TBI.
+
     example json input:
 
     json = {
@@ -94,7 +101,11 @@ async def createUser(userData: User):
 
 @router.delete("/api/deleteUser/{username}")
 async def retrieveDeleteUser(username: str):
-    # username = userData.username
+    """
+    API Endpoint for user deletion
+
+    Takes in a username endpoint path paramter and deletes the account associated with that username.
+    """
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),
@@ -145,6 +156,11 @@ async def retrieveDeleteUser(username: str):
 @router.post("/api/createFlashCardSet")
 async def createFlashCardSet(flashset: FlashcardSet):
     """
+    API Endpoint for flash card set creation
+
+    Creates a Flash Card set that references an associated user account and holds
+    a title string.
+
     example json input:
 
     json = {
@@ -173,6 +189,7 @@ async def createFlashCardSet(flashset: FlashcardSet):
             )
         except Exception as e:
             raise HTTPException(500, f"Error in finding valid user: {e}")
+
         user_dict = dict(user)
         user_id = user_dict["id"]
         try:
@@ -214,9 +231,15 @@ async def createFlashCardSet(flashset: FlashcardSet):
     finally:
         await conn.close()
 
-@router.delete("/api/deleteFlashSet/{set_name}")
-async def deleteFlashSet(set_name: str):
-    # username = userData.username
+
+# ChatGPT aided in refinement of this method
+@router.delete("/api/deleteFlashSet")
+async def deleteFlashSet(flashset: FlashcardSet):
+    """ "
+    API Endpoint for flash card set deletion
+
+    Deletes a flashcard set based on user email and flashcard set name.
+    """
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),
@@ -224,33 +247,40 @@ async def deleteFlashSet(set_name: str):
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD"),
         )
-        flash_set = await conn.fetchrow(
+
+        user = await conn.fetchrow(
             """
-        SELECT id
-        FROM flash_card_set
-        WHERE title = $1
-        """,
-            set_name,
+            SELECT id FROM users WHERE email = $1
+            """,
+            flashset.user_email,
         )
 
-
-        if not flash_set:
+        if not user:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Flashcard Set name"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid Email",
             )
 
-        # remove the user
-        flash_set_dict = dict(flash_set)
-        flash_set = await conn.execute(
+        user_id = user["id"]
+
+        result = await conn.execute(
             """
-        DELETE FROM flash_card_set
-        WHERE id = $1
-        """,
-            flash_set_dict["id"],
+            DELETE FROM flash_card_set
+            WHERE user_id = $1 AND set_title = $2
+            """,
+            user_id,
+            flashset.title,
         )
 
+        if result == "DELETE 0":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Flash set not found",
+            )
+
         return JSONResponse(
-            status_code=status.HTTP_200_OK, content={"response": flash_set}
+            status_code=status.HTTP_200_OK,
+            content={"message": "Flash set deleted successfully"},
         )
 
     except HTTPException:
@@ -260,38 +290,44 @@ async def deleteFlashSet(set_name: str):
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     finally:
-        await conn.close()
+        if conn:
+            await conn.close()
+
 
 @router.post("/api/addToFlashCardSet")
 async def addToFlashCardSet(flashcards: List[Flashcard]):
     """
+    API Endpoint for flash card creation
+
+    Adds an List of flash card json objects to an existing flash card set.
+
     example json input:
 
     json = [
         {
-        "set_title": "Basic Math FlashCards", 
-        "question": "1 + 1", 
-        "answer": "2",  
+        "set_title": "Basic Math FlashCards",
+        "question": "1 + 1",
+        "answer": "2",
         },
         {
-        "set_title": "Basic Math FlashCards", 
-        "question": "1 - 1", 
-        "answer": "0",  
+        "set_title": "Basic Math FlashCards",
+        "question": "1 - 1",
+        "answer": "0",
         },
         {
-        "set_title": "Basic Math FlashCards", 
-        "question": "1 * 1", 
-        "answer": "1",  
+        "set_title": "Basic Math FlashCards",
+        "question": "1 * 1",
+        "answer": "1",
         },
         {
-        "set_title": "Basic Math FlashCards", 
-        "question": "1 / 1", 
-        "answer": "1",  
+        "set_title": "Basic Math FlashCards",
+        "question": "1 / 1",
+        "answer": "1",
         },
         {
-        "set_title": "Basic Math FlashCards", 
-        "question": "1 ^ 1", 
-        "answer": "1",  
+        "set_title": "Basic Math FlashCards",
+        "question": "1 ^ 1",
+        "answer": "1",
         },
     ]
 
@@ -353,9 +389,14 @@ async def addToFlashCardSet(flashcards: List[Flashcard]):
     finally:
         await conn.close()
 
+
 @router.post("/api/saveSummary")
 async def saveSummary(summ: Summary):
     """
+    API Endpoint for summary creation
+
+    Saves an input summary to an associated user account
+
     example json input:
 
     json = {
@@ -421,6 +462,131 @@ async def saveSummary(summ: Summary):
         except Exception as e:
             print("Serialization error:", e)
             raise
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+    finally:
+        await conn.close()
+
+
+# VSCode auto coded alot of this (somehow) + Chatgpt helped refine
+@router.get("/api/getFlashcardsFromSet")
+async def getFlashcardsFromSet(flashset: FlashcardSet):
+    """
+    API Endpoint for getting all Flashcards in an associated set
+
+    Returns an array of Flash Cards given a user's email and
+    the name of the flashcard set.
+
+    NOTE: I am unsure as to how the frontend will display/store the information
+    related to the flashcard sets, so currently I am assuming the users will not
+    create flashcard sets of a a duplicate name, and therefore we are using the email
+    and set name in tandum to return the flash cards. This is open to modification if
+    required.
+    """
+    try:
+        conn = await asyncpg.connect(
+            host=os.getenv("DATABASE_HOST"),
+            database=os.getenv("DATABASE_NAME"),
+            user=os.getenv("DATABASE_USER"),
+            password=os.getenv("DATABASE_PASSWORD"),
+        )
+
+        user = await conn.fetchrow(
+            """
+            SELECT id FROM users WHERE email = $1
+            """,
+            flashset.user_email,
+        )
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid Email",
+            )
+        user_id = user["id"]
+
+        flashset = await conn.fetchrow(
+            """
+            SELECT fcset_id, user_id
+            FROM flash_card_set
+            WHERE user_id = $1 AND set_title = $2
+            """,
+            user_id,
+            flashset.title,
+        )
+
+        if not flashset:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid Flashcard Set",
+            )
+
+        flashset_id = flashset["fcset_id"]
+        flashcards = await conn.fetch(
+            """
+            SELECT fc_id, question, answer
+            FROM flash_card
+            WHERE fcset_id = $1
+            """,
+            flashset_id,
+        )
+
+        flashcard_list = [dict(row) for row in flashcards]
+
+        return JSONResponse(status_code=200, content={"response": flashcard_list})
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+    finally:
+        await conn.close()
+
+
+@router.get("/api/getAllFlashcardSets")
+async def getAllFlashcardSets(user_info: User):
+    """
+    API Endpoint for getting all Flashcard Sets
+
+    Returns an array of Flash Card Sets given the users email
+    """
+    try:
+        conn = await asyncpg.connect(
+            host=os.getenv("DATABASE_HOST"),
+            database=os.getenv("DATABASE_NAME"),
+            user=os.getenv("DATABASE_USER"),
+            password=os.getenv("DATABASE_PASSWORD"),
+        )
+
+        user = await conn.fetchrow(
+            """
+            SELECT id FROM users WHERE email = $1
+            """,
+            user_info.email,
+        )
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid Email",
+            )
+        user_id = user["id"]
+
+        flashset = await conn.fetch(
+            """
+            SELECT fcset_id, set_title
+            FROM flash_card_set
+            WHERE user_id = $1
+            """,
+            user_id,
+        )
+        if not flashset:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="No Flashcard Sets",
+            )
+        flashset_list = [dict(row) for row in flashset]
+
+        return JSONResponse(status_code=200, content={"response": flashset_list})
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")

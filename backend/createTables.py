@@ -8,8 +8,10 @@ import asyncio
 
 max_retries = 10
 retry_delay = 2
+
+
 async def init_db():
-    '''
+    """
     Initializes and sets up the PostgreSQL database schema, including required tables and extensions.
 
     This function will attempt to connect to the database up to `max_retries` times,
@@ -66,21 +68,22 @@ async def init_db():
     - last_login    : TIMESTAMP — last login timestamp
     - auth_level    : user_role DEFAULT 'user'
         - either admin or user
-    '''
+    """
     for attempt in range(max_retries):
         try:
             conn = await asyncpg.connect(
                 host=os.getenv("DATABASE_HOST"),
                 database=os.getenv("DATABASE_NAME"),
                 user=os.getenv("DATABASE_USER"),
-                password=os.getenv("DATABASE_PASSWORD")
-                )
+                password=os.getenv("DATABASE_PASSWORD"),
+            )
 
             # attach pgvector onto our app
             await conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
 
             # add a user_role which is either "user, admin"
-            await conn.execute("""
+            await conn.execute(
+                """
             DO $$
             BEGIN
                 IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
@@ -88,7 +91,8 @@ async def init_db():
                 END IF;
             END
             $$;
-            """)
+            """
+            )
 
             create_textbook_table_query = """
             CREATE TABLE IF NOT EXISTS textbooks (
@@ -101,8 +105,6 @@ async def init_db():
             """
             await conn.execute(create_textbook_table_query)
 
-
-
             chaptersTable = """
             CREATE TABLE chapters (
                 textbook_id INTEGER NOT NULL,
@@ -114,7 +116,6 @@ async def init_db():
             );
             """
             await conn.execute(chaptersTable)
-
 
             embeddingTable = """
             CREATE TABLE IF NOT EXISTS chapter_embeddings (
@@ -192,8 +193,10 @@ async def init_db():
             break
 
         except Exception as e:
-            print(f"❌ Attempt {attempt+1}/{max_retries}: Database not ready, retrying in {retry_delay}s...")
+            print(
+                f"❌ Attempt {attempt+1}/{max_retries}: Database not ready, retrying in {retry_delay}s..."
+            )
             await asyncio.sleep(retry_delay)
-            
+
 
 asyncio.run(init_db())
