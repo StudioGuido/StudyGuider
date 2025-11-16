@@ -162,7 +162,8 @@ async def init_db():
             CREATE TABLE flash_card_set (
             fcset_id SERIAL PRIMARY KEY,
             set_title VARCHAR(255) UNIQUE NOT NULL,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE (user_id, set_title)
             );
             """
             await conn.execute(flashCardSetTable)

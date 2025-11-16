@@ -2,6 +2,9 @@ import requests
 import asyncio
 import time
 
+# Updates for Username/email + Set Titles
+# Logging and monitoring?
+
 
 def testUserCreation():
     url = "http://0.0.0.0:8000/api/createUser"
@@ -18,240 +21,64 @@ def testUserCreation():
 
 
 def testUserDeletion():
-    username = "pierce"
-    url = f"http://0.0.0.0:8000/api/deleteUser/{username}"
+    email = "pwex@gmail.com"
+    url = f"http://0.0.0.0:8000/api/deleteUser/{email}"
 
     response = requests.delete(url)
     print("DELETED USER")
     print(response.json())
 
 
-# createFlashCardSet
-
-
-def testFlashCardSetCreation():
-    url = "http://0.0.0.0:8000/api/createFlashCardSet"
-
-    headers = {"Content-Type": "application/json"}
-
-    json1 = {
-        "user_email": "pwex@gmail.com",
-        "title": "Basic Math FlashCards",
-    }
-    response1 = requests.post(url=url, json=json1, headers=headers)
-    json2 = {
-        "user_email": "pwex@gmail.com",
-        "title": "Advanced Math FlashCards",
-    }
-    response2 = requests.post(url=url, json=json2, headers=headers)
-    print(f"CREATED FLASH CARD SETS")
-    print(response1.json())
-    print(response2.json())
-
-
-def testFlashCardsCreation():
-    url = "http://0.0.0.0:8000/api/addToFlashCardSet"
-    headers = {"Content-Type": "application/json"}
-    json1 = [
-        {
-            "flashcardset": {
-                "user_email": "pwex@gmail.com",
-                "title": "Basic Math FlashCards",
-            },
-            "question": "1 + 1",
-            "answer": "2",
-        },
-        {
-            "flashcardset": {
-                "user_email": "pwex@gmail.com",
-                "title": "Basic Math FlashCards",
-            },
-            "question": "1 - 1",
-            "answer": "0",
-        },
-        {
-            "flashcardset": {
-                "user_email": "pwex@gmail.com",
-                "title": "Basic Math FlashCards",
-            },
-            "question": "1 * 1",
-            "answer": "1",
-        },
-        {
-            "flashcardset": {
-                "user_email": "pwex@gmail.com",
-                "title": "Basic Math FlashCards",
-            },
-            "question": "1 / 1",
-            "answer": "1",
-        },
-        {
-            "flashcardset": {
-                "user_email": "pwex@gmail.com",
-                "title": "Basic Math FlashCards",
-            },
-            "question": "1 ^ 1",
-            "answer": "1",
-        },
-    ]
-    response1 = requests.post(url=url, json=json1, headers=headers)
-
-    json2 = [
-        {
-            "flashcardset": {
-                "user_email": "pwex@gmail.com",
-                "title": "Advanced Math FlashCards",
-            },
-            "question": "f(x) = 2x^2, What is f'(x)",
-            "answer": "4x",
-        },
-        {
-            "flashcardset": {
-                "user_email": "pwex@gmail.com",
-                "title": "Advanced Math FlashCards",
-            },
-            "question": "f(x) = 2x, What is f'(x)",
-            "answer": "2",
-        },
-        {
-            "flashcardset": {
-                "user_email": "pwex@gmail.com",
-                "title": "Advanced Math FlashCards",
-            },
-            "question": "f(x) = 2, What is f'(x)",
-            "answer": "0",
-        },
-        {
-            "flashcardset": {
-                "user_email": "pwex@gmail.com",
-                "title": "Advanced Math FlashCards",
-            },
-            "question": "417 % 10",
-            "answer": "17",
-        },
-        {
-            "flashcardset": {
-                "user_email": "pwex@gmail.com",
-                "title": "Advanced Math FlashCards",
-            },
-            "question": "5!",
-            "answer": "120",
-        },
-    ]
-    response2 = requests.post(url=url, json=json2, headers=headers)
-    print(f"CREATED FLASH CARDS")
-    print(response1.json())
-    print(response2.json())
-
-
-def testFlashCardSetDeletion1():
-    url = f"http://0.0.0.0:8000/api/deleteFlashSet"
-    headers = {"Content-Type": "application/json"}
-
-    json = {
-        "user_email": "pwex@gmail.com",
-        "title": "Basic Math FlashCards",
-    }
-
-    response = requests.delete(url=url, json=json, headers=headers)
-    print("DELETED FLASHSET")
-    print(response.json())
-
-
-def testFlashCardSetDeletion2():
-    url = f"http://0.0.0.0:8000/api/deleteFlashSet"
-    headers = {"Content-Type": "application/json"}
-
-    json = {
-        "user_email": "pwex@gmail.com",
-        "title": "Advanced Math FlashCards",
-    }
-
-    response = requests.delete(url=url, json=json, headers=headers)
-    print("DELETED FLASHSET")
-    print(response.json())
-
-
-def testSummarySaving():
-    url = "http://0.0.0.0:8000/api/saveSummary"
+def testUserUpdates():
+    url = "http://0.0.0.0:8000/api/updateUser"
 
     headers = {"Content-Type": "application/json"}
 
     json = {
-        "user_email": "pwex@gmail.com",
-        "title": "Important Generated Summary",
-        "content": "Chatgpt says that ......",
-    }
-    response = requests.post(url=url, json=json, headers=headers)
-    print(f"SAVED SUMMARY")
-    print(response.json())
-
-
-def testGetFlashCardsFromSet():
-    url = "http://0.0.0.0:8000/api/getFlashcardsFromSet"
-
-    headers = {"Content-Type": "application/json"}
-
-    json = {
-        "user_email": "pwex@gmail.com",
-        "title": "Advanced Math FlashCards",
-    }
-    response = requests.get(url=url, json=json, headers=headers)
-    print(f"Got Flash Cards")
-    print(response.json())
-
-
-def testGetAllFlashcardSets():
-    url = "http://0.0.0.0:8000/api/getAllFlashcardSets"
-
-    headers = {"Content-Type": "application/json"}
-
-    json = {
-        "username": "pierce",
+        "username": "pierce's cooler username",
         "email": "pwex@gmail.com",
     }
-    response = requests.get(url=url, json=json, headers=headers)
-    print(f"Got Flash Card Sets")
+    response = requests.put(url=url, json=json, headers=headers)
+    print("Updated USER")
     print(response.json())
 
 
-# time.sleep(10)
+def testUserGet():
+    email = "pwex@gmail.com"
+    url = f"http://0.0.0.0:8000/api/getUsername/{email}"
+
+    response = requests.get(url)
+    print("ASSOCIATED USERNAME:")
+    print(response.json())
+
+
 test_no = 1
 match test_no:
     case 0:
         print("No tests ran")
     case 1:
         """
-        Test 1: Basic User, Flash Card Set, and Flash Card creation:
+        Test 1: Basic User creation and viewing of username:
         """
         testUserCreation()
-        testFlashCardSetCreation()
-        testFlashCardsCreation()
-        testFlashCardSetDeletion1()
-        testFlashCardSetDeletion2()
-        testSummarySaving()
-        testUserDeletion()
+        testUserGet()
     case 2:
         """
-        Test 2: Gathering all Flash Cards in a set for front end display purposes:
+        Test 2: Update username and view result:
         """
-        testUserCreation()
-        testFlashCardSetCreation()
-        testFlashCardsCreation()
-        testGetFlashCardsFromSet()
-        #
-        testFlashCardSetDeletion2()
-        testFlashCardSetDeletion1()
-        testUserDeletion()
+        testUserUpdates()
+        testUserGet()
     case 3:
         """
-        Test 3: Gathering all Flash Card Sets for front end display purposes:
+        Test 3: Delete user:
+        """
+        testUserDeletion()
+    case 4:
+        """
+        Test 4: All tests combined:
         """
         testUserCreation()
-        testFlashCardSetCreation()
-        testFlashCardsCreation()
-        testGetAllFlashcardSets()
-        #
-        testFlashCardSetDeletion2()
-        testFlashCardSetDeletion1()
+        testUserGet()
+        testUserUpdates()
+        testUserGet()
         testUserDeletion()
