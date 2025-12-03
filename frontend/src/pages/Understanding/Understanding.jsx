@@ -1,57 +1,24 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { fakeApi } from "../../services/fakeApi";
+import { useState } from "react";
 import ChapterSidebarNav from "../../components/ChapterSidebar";
+import PhaseNavbar from "../../components/PhaseNavbar";
 
-export default function Understanding({ defaultMode = "summary" }) {
-  const { bookId, chapterId } = useParams();
-  const [mode, setMode] = useState(defaultMode); // "summary" | "askai"
-  const [summary, setSummary] = useState(null);
-
-  useEffect(() => {
-    if (mode === "summary") {
-      fakeApi.getSummary(bookId, chapterId).then(setSummary);
-    }
-  }, [bookId, chapterId, mode]);
+export default function Understanding() {
+  const [activePhase, setActivePhase] = useState("understanding");
 
   return (
+    <section className="grid grid-cols-[20rem_1fr] gap-6">
+      <ChapterSidebarNav />
+      <div className="flex flex-col gap-6">
+        <PhaseNavbar activePhase={activePhase} onSelectPhase={setActivePhase} />
 
-  <section className="grid grid-cols-[20rem_1fr] gap-4">
-  <ChapterSidebarNav />
-  <div>
-    {/* existing Understanding right-side content */}
-    {/* Left PDF placeholder + Right modes can remain inside this div,
-        or split if you want. Keeping it simple: */}
-    <section className="grid grid-cols-2 gap-4">
-      <div className="border rounded p-4">PDF Viewer (placeholder)</div>
-      <div>
-        {/* existing mode toggle + summary/ask-ai content */}
+        {activePhase === "understanding" && (
+          <div className="w-full rounded-3xl border border-neutral-800 bg-neutral-950 p-6 text-slate-200 shadow-lg">
+            <div className="flex min-h-[70vh] items-center justify-center rounded-2xl border border-dashed border-neutral-700 bg-neutral-900">
+              <span className="text-sm text-slate-400">PDF viewer placeholder</span>
+            </div>
+          </div>
+        )}
       </div>
     </section>
-  </div>
-</section>
-    // <section className="grid grid-cols-2 gap-4">
-    //   {/* Left: PDF viewer placeholder */}
-    //   <div className="border rounded p-4">PDF Viewer (placeholder)</div>
-
-    //   {/* Right: Summary / AskAI */}
-    //   <div>
-    //     <div className="mb-3 flex gap-2">
-    //       <button className={`px-3 py-2 rounded ${mode==="summary"?"bg-gray-200":""}`} onClick={() => setMode("summary")}>Summary</button>
-    //       <button className={`px-3 py-2 rounded ${mode==="askai"?"bg-gray-200":""}`} onClick={() => setMode("askai")}>AskAI</button>
-    //     </div>
-
-    //     {mode === "summary" ? (
-    //       <div className="border rounded p-4 h-[60vh] overflow-auto whitespace-pre-wrap">
-    //         {summary?.text ?? "No summary yet."}
-    //       </div>
-    //     ) : (
-    //       <div className="border rounded p-4 h-[60vh]">
-    //         <p className="mb-2 text-sm text-gray-600">AskAI (mock):</p>
-    //         <div className="text-gray-800">Q: What’s the gist of this chapter?<br/>A: (Pretend AI answer goes here.)</div>
-    //       </div>
-    //     )}
-    //   </div>
-    // </section>
   );
 }

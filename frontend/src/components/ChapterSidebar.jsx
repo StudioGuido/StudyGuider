@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { NavLink, useParams } from "react-router-dom";
 import { fakeApi } from "../services/fakeApi";
 
@@ -77,9 +77,7 @@ export default function ChapterSidebar({ className = "", target = "understanding
                 className="w-full rounded-lg px-4 py-3 bg-neutral-900 ring-1 ring-neutral-800 hover:bg-neutral-800 hover:ring-neutral-700 flex items-center justify-between"
               >
                 <span>Select New Chapter</span>
-                <span className="text-slate-300" aria-hidden>
-                  ＋
-                </span>
+                <span className="text-slate-300" aria-hidden>＋</span>
               </button>
             </li>
           </ul>
@@ -99,7 +97,7 @@ export default function ChapterSidebar({ className = "", target = "understanding
           >
             <button
               type="button"
-              className="absolute right-4 top-4 h-6 w-6 rounded-full border border-white/60 text-sm font-semibold text-white hover:bg-white/10"
+              className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border border-white/60 text-white text-base font-semibold leading-none hover:bg-white/10"
               onClick={() => setModalOpen(false)}
               aria-label="Close"
             >
@@ -127,4 +125,7 @@ export default function ChapterSidebar({ className = "", target = "understanding
     </>
   );
 }
+
+
+
 
