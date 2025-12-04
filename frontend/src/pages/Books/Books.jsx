@@ -1,9 +1,11 @@
 import { fakeApi } from "../../services/fakeApi";
 import { useEffect, useState } from "react";
 import BookCard from "../../components/BookCard";
+import BookModal from "../../components/BookModal";
 
 export default function Books() {
   const [books, setBooks] = useState(null);
+  const [selectedBook, setSelectedBook] = useState(null);
   useEffect(() => {
     fakeApi.getBooks().then(setBooks);
   }, []);
@@ -27,7 +29,11 @@ export default function Books() {
         <div className="bg-[#0b0b0b] border border-gray-800 rounded-2xl p-6 space-y-4 shadow-xl">
           <ul className="space-y-3">
             {books.map((b) => (
-              <BookCard key={b.id} book={b} />
+              <BookCard
+                key={b.id}
+                book={b}
+                onSelect={(book) => setSelectedBook(book)}
+              />
             ))}
           </ul>
 
@@ -41,6 +47,12 @@ export default function Books() {
             </button>
           </div>
         </div>
+        {selectedBook && (
+          <BookModal
+            book={selectedBook}
+            onClose={() => setSelectedBook(null)}
+          />
+        )}
       </section>
     </main>
   );
