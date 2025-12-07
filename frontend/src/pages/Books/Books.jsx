@@ -1,9 +1,13 @@
-import { Link } from "react-router-dom";
 import { fakeApi } from "../../services/fakeApi";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import BookCard from "../../components/BookCard";
+import BookModal from "../../components/BookModal";
 
 export default function Books() {
   const [books, setBooks] = useState(null);
+  const [selectedBook, setSelectedBook] = useState(null);
+  const navigate = useNavigate();
   useEffect(() => {
     fakeApi.getBooks().then(setBooks);
   }, []);
@@ -13,6 +17,7 @@ export default function Books() {
         Loading…
       </p>
     );
+
 
   return (
     <main className="min-h-screen text-white flex items-center justify-center px-4">
@@ -27,19 +32,11 @@ export default function Books() {
         <div className="bg-[#0b0b0b] border border-gray-800 rounded-2xl p-6 space-y-4 shadow-xl">
           <ul className="space-y-3">
             {books.map((b) => (
-              <li key={b.id}>
-                <Link to={`/books/${b.id}/chapters`} className="block w-full">
-                  <div className="flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="text-lg font-semibold">{b.title}</div>
-                      <div className="text-xl">{b.emoji ?? "📘"}</div>
-                    </div>
-                    <div className="text-sm text-gray-400">
-                      {Array.isArray(b.author) ? b.author.join(", ") : b.author}
-                    </div>
-                  </div>
-                </Link>
-              </li>
+              <BookCard
+                key={b.id}
+                book={b}
+                onSelect={(book) => setSelectedBook(book)}
+              />
             ))}
           </ul>
 
@@ -53,6 +50,12 @@ export default function Books() {
             </button>
           </div>
         </div>
+        {selectedBook && (
+          <BookModal
+            book={selectedBook}
+            onClose={() => setSelectedBook(null)}
+          />
+        )}
       </section>
     </main>
   );
