@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { fakeApi } from "../../services/fakeApi";
+import ChapterSidebarNav from "../../components/ChapterSidebar";
+import PhaseNavbar from "../../components/PhaseNavbar";
+
 import Flashcard from "../../components/Flashcard";
 
 export default function Reinforce({ type = "flashcards", showResults = false }) {
@@ -46,6 +49,16 @@ export default function Reinforce({ type = "flashcards", showResults = false }) 
   const done = !loading && items.length > 0 && index >= items.length;
   const baseRoute = `/books/${bookId}/chapters/${chapterId}/reinforce/${type}`;
   const resultsRoute = `${baseRoute}/results`;
+
+  const handlePhaseSelect = (phase) => {
+    if (phase === "understanding") {
+      navigate(`/books/${bookId}/chapters/${chapterId}/understanding`);
+      return;
+    }
+    if (phase === "reinforcing") {
+      return;
+    }
+  };
 
   if (showResults) {
     return (

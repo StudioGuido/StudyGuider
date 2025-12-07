@@ -27,7 +27,7 @@ export default function PdfViewer({ fileUrl, initialScale = 1 }) {
   }, [numPages, page, setPage]);
 
   return (
-    <div className="flex h-screen flex-col bg-slate-950 text-slate-100">
+    <div className="flex flex-col h-full min-h-0 bg-slate-950 text-slate-100">
       {/* Top toolbar */}
       <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-slate-800 bg-slate-900/95 px-4 py-2 backdrop-blur">
         {/* Pagination controls */}
