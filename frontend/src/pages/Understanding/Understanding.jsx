@@ -27,6 +27,7 @@ export default function Understanding({ defaultMode = "summary" }) {
   const [mode, setMode] = useState(defaultMode);
   const [activePhase, setActivePhase] = useState("understanding")
   const [summary, setSummary] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (mode === "summary") {
@@ -56,7 +57,7 @@ export default function Understanding({ defaultMode = "summary" }) {
     
         <section className="flex-1 grid grid-cols-2 gap-4 min-h-0">
           {/* Left: PDF viewer placeholder */}
-          <div className="rounded p-4 bg-slate-950 min-h-0 flex flex-col">
+          <div className="rounded min-h-0 flex flex-col">
             <PdfViewer fileUrl={samplePdf} />
           </div>
 

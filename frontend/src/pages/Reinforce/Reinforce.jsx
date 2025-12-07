@@ -16,6 +16,8 @@ export default function Reinforce({ type = "flashcards", showResults = false }) 
   const [loading, setLoading] = useState(true);
   const shuffleToken = location.state?.shuffleToken ?? null;
 
+  const [activePhase] = useState("reinforcing");
+
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -62,7 +64,10 @@ export default function Reinforce({ type = "flashcards", showResults = false }) 
 
   if (showResults) {
     return (
-      <section className="flex flex-col items-center">
+      <section className="h-screen flex overflow-hidden">
+        <ChapterSidebarNav />
+        <div className="flex-1 px-8 py-6 flex flex-col gap-6 overflow-hidden min-h-0">
+          <PhaseNavbar activePhase={activePhase} onSelectPhase={handlePhaseSelect} />
         {loading ? (
           <p className="text-slate-500">Loading flashcards…</p>
         ) : items.length === 0 ? (
@@ -98,6 +103,7 @@ export default function Reinforce({ type = "flashcards", showResults = false }) 
             </div>
           </>
         )}
+        </div>
       </section>
     );
   }
@@ -118,7 +124,10 @@ export default function Reinforce({ type = "flashcards", showResults = false }) 
   };
 
   return (
-    <section>
+    <section className="h-screen flex overflow-hidden">
+      <ChapterSidebarNav />
+      <div className="flex-1 px-8 py-6 flex flex-col gap-6 overflow-hidden min-h-0">
+        <PhaseNavbar activePhase={activePhase} onSelectPhase={handlePhaseSelect} />
         <div className="flex flex-col items-center gap-4">
           {loading ? (
             <div className="w-full max-w-lg border border-dashed border-slate-200 rounded-xl p-8 text-center text-slate-500">
@@ -158,6 +167,7 @@ export default function Reinforce({ type = "flashcards", showResults = false }) 
             </>
           )}
         </div>
+      </div>
     </section>
   );
 }
