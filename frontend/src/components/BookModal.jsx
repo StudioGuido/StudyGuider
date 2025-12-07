@@ -1,13 +1,27 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { fakeApi } from "../services/fakeApi";
 
 export default function BookModal({ book, onClose }) {
   const navigate = useNavigate();
   if (!book) return null;
 
-  function handleStart() {
+  const goToFirstChapter = async () => {
+    const chapters = await fakeApi.getChapters(book.id);
+    const first = chapters[0];
+    if (first) {
+      navigate(`/books/${book.id}/chapters/${first.id}/understanding`);
+      return true;
+    }
+    return false;
+  };
+
+  async function handleStart() {
     onClose();
-    navigate(`/books/${book.id}/chapters`);
+    const navigated = await goToFirstChapter();
+    if (!navigated) {
+      navigate(`/books/${book.id}/chapters`);
+    }
   }
 
   return (

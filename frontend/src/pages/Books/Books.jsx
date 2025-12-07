@@ -1,11 +1,13 @@
 import { fakeApi } from "../../services/fakeApi";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import BookCard from "../../components/BookCard";
 import BookModal from "../../components/BookModal";
 
 export default function Books() {
   const [books, setBooks] = useState(null);
   const [selectedBook, setSelectedBook] = useState(null);
+  const navigate = useNavigate();
   useEffect(() => {
     fakeApi.getBooks().then(setBooks);
   }, []);
@@ -16,15 +18,6 @@ export default function Books() {
       </p>
     );
 
-  const goToFirstChapter = async (bookId) => {
-    const chapters = await fakeApi.getChapters(bookId);
-    const first = chapters[0];
-    if (first) {
-      navigate(`/books/${bookId}/chapters/${first.id}/understanding`);
-    } else {
-      navigate(`/books/${bookId}/chapters`);
-    }
-  };
 
   return (
     <main className="min-h-screen text-white flex items-center justify-center px-4">

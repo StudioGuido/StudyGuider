@@ -32,6 +32,17 @@ export default function ChapterSidebar({ className = "", target = "understanding
     ? book.authors.join(", ")
     : book?.author ?? "";
 
+  const getChapterClasses = (isActive) => {
+    const base =
+      "block rounded-lg px-4 py-3 ring-1 transition-colors";
+    if (isActive) {
+      // Active: invert to white background with black text, keep hover consistent.
+      return `${base} bg-white text-black visited:text-black ring-neutral-200 hover:bg-white hover:ring-neutral-200`;
+    }
+    // Inactive: dark background with hover to slightly lighter gray.
+    return `${base} bg-neutral-900 text-slate-100 ring-neutral-800 hover:bg-neutral-800 hover:ring-neutral-700`;
+  };
+
   return (
     <>
       <aside
@@ -53,16 +64,8 @@ export default function ChapterSidebar({ className = "", target = "understanding
               <li key={c.id}>
                 <NavLink
                   to={`/books/${bookId}/chapters/${c.id}/${target}`}
-                  className={({ isActive }) =>
-                    [
-                      "block rounded-lg px-4 py-3",
-                      "bg-neutral-900 ring-1 ring-neutral-800",
-                      "hover:bg-neutral-800 hover:ring-neutral-700",
-                      isActive && "bg-neutral-800 ring-neutral-600",
-                    ] 
-                      .filter(Boolean)
-                      .join(" ")
-                  }
+                  className={({ isActive }) => getChapterClasses(isActive)}
+                  style={({ isActive }) => (isActive ? { color: "#000000" } : undefined)}
                   end={false}
                 >
                   <span className="font-medium">{`Chapter ${idx + 1}: ${c.title}`}</span>

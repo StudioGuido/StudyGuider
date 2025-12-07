@@ -9,14 +9,14 @@ function getPhaseButtonStyle(isActive) {
     return {
       className:
         "flex flex-col items-center justify-center rounded-xl px-6 py-4 text-sm font-semibold transition border shadow-lg border-white bg-white text-black",
-      style: { backgroundColor: "#ffffff", color: "#000000" },
+      style: { backgroundColor: "#ffffff", color: "#000000ff" },
     };
   }
 
   return {
     className:
       "flex flex-col items-center justify-center rounded-xl px-6 py-4 text-sm font-semibold transition border border-neutral-800 bg-neutral-900 text-slate-100 hover:bg-neutral-800",
-    style: { backgroundColor: "#0f0f0f", color: "#e5e7eb" },
+    style: { backgroundColor: "#0f0f0f", color: "#ffffffff" },
   };
 }
 

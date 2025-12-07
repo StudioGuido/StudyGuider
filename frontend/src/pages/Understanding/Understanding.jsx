@@ -1,7 +1,7 @@
 import ChapterSidebarNav from "../../components/ChapterSidebar";
 import PhaseNavbar from "../../components/PhaseNavbar";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { fakeApi } from "../../services/fakeApi";
 import PdfViewer from "./PdfViewer";
 import samplePdf from "../../assets/sample.pdf";
@@ -9,6 +9,7 @@ import samplePdf from "../../assets/sample.pdf";
 
 export default function Understanding() {
   const { bookId, chapterId } = useParams();
+  const navigate = useNavigate();
   const [activePhase, setActivePhase] = useState("understanding");
 
   const [summary, setSummary] = useState(null);
@@ -19,12 +20,21 @@ export default function Understanding() {
     }
   }, [bookId, chapterId, activePhase]);
 
+
+  const handlePhaseSelect = (phase) => {
+    if (phase === "reinforcing") {
+      navigate(`/books/${bookId}/chapters/${chapterId}/reinforce/flashcards`);
+      return;
+    }
+    setActivePhase(phase);
+  };
+
   return (
 
     <section className="h-screen flex overflow-hidden">
       <ChapterSidebarNav />
       <div className="flex-1 px-8 py-6 flex flex-col gap-6 overflow-hidden min-h-0">
-        <PhaseNavbar activePhase={activePhase} onSelectPhase={setActivePhase} />
+        <PhaseNavbar activePhase={activePhase} onSelectPhase={handlePhaseSelect} />
 
         <section className="flex-1 grid grid-cols-2 gap-4 min-h-0">
           {/* Left: PDF viewer placeholder */}

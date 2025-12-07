@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fakeApi } from "../../services/fakeApi";
 import ChapterSidebarNav from "../../components/ChapterSidebar";
+import PhaseNavbar from "../../components/PhaseNavbar";
+
 
 export default function Reinforce({ type = "flashcards", showResults = false }) {
   const { bookId, chapterId } = useParams();
@@ -20,6 +22,16 @@ export default function Reinforce({ type = "flashcards", showResults = false }) 
 
   const done = index >= items.length;
   const resultsRoute = `/books/${bookId}/chapters/${chapterId}/reinforce/${type}/results`;
+
+  const handlePhaseSelect = (phase) => {
+    if (phase === "understanding") {
+      navigate(`/books/${bookId}/chapters/${chapterId}/understanding`);
+      return;
+    }
+    if (phase === "reinforcing") {
+      return;
+    }
+  };
 
   if (showResults) {
     return (
@@ -42,7 +54,29 @@ export default function Reinforce({ type = "flashcards", showResults = false }) 
   <section className="grid grid-cols-[20rem_1fr] gap-4">
     <ChapterSidebarNav />
     <div>
-      {/* existing Reinforce content unchanged */}
+      <div className="mb-4">
+        <PhaseNavbar activePhase="reinforcing" onSelectPhase={handlePhaseSelect} />
+      </div>
+
+      {type === "flashcards" ? (
+        <div className="border rounded p-6 bg-white text-black shadow">
+          <p className="font-medium mb-2">Q: {card?.front ?? "…"} </p>
+          <details className="mb-4">
+            <summary className="cursor-pointer">Show Answer</summary>
+            <p className="mt-2">A: {card?.back}</p>
+          </details>
+          <button className="px-3 py-2 border rounded bg-black text-white" onClick={() => setIndex((i) => i + 1)}>Next</button>
+        </div>
+      ) : (
+        <div className="border rounded p-6 bg-white text-black shadow">
+          <p className="font-medium mb-4">Quiz (mock) — choose an answer</p>
+          <div className="flex gap-2">
+            <button className="px-3 py-2 border rounded" onClick={() => setIndex((i) => i + 1)}>Option A</button>
+            <button className="px-3 py-2 border rounded" onClick={() => setIndex((i) => i + 1)}>Option B</button>
+            <button className="px-3 py-2 border rounded" onClick={() => setIndex((i) => i + 1)}>Option C</button>
+          </div>
+        </div>
+      )}
       {/* results view OR card/quiz flow goes here */}
     </div>
   </section>
