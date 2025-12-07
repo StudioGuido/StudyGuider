@@ -4,19 +4,35 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fakeApi } from "../../services/fakeApi";
 import PdfViewer from "./PdfViewer";
+import Summary from "./Summary";
+import AskAI from "./AskAI";
 import samplePdf from "../../assets/sample.pdf";
 
+function getTabStyle(isActive) {
+  if (isActive) {
+    return {
+      className: "w-1/2 rounded-full py-2 text-sm font-medium transition",
+      style: { backgroundColor: "#ffffff", color: "#000000" },
+    };
+  }
+  return {
+    className:
+      "w-1/2 rounded-full py-2 text-sm font-medium transition hover:text-white",
+    style: { backgroundColor: "transparent", color: "#94a3b8" },
+  };
+}
 
-export default function Understanding() {
+export default function Understanding({ defaultMode = "summary" }) {
   const { bookId, chapterId } = useParams();
-  const navigate = useNavigate();
-  const [activePhase, setActivePhase] = useState("understanding");
-
+  const [mode, setMode] = useState(defaultMode);
+  const [activePhase, setActivePhase] = useState("understanding")
   const [summary, setSummary] = useState(null);
 
   useEffect(() => {
-    if (activePhase === "summary") {
-      fakeApi.getSummary(bookId, chapterId).then(setSummary);
+    if (mode === "summary") {
+      fakeApi
+        .getSummary(bookId, chapterId)
+        .then((data) => setSummary(data?.text ?? null));
     }
   }, [bookId, chapterId, activePhase]);
 
@@ -29,13 +45,15 @@ export default function Understanding() {
     setActivePhase(phase);
   };
 
-  return (
+  const bookTitle = "Sample Book Title";
+  const chapterTitle = "Chapter 1: Introduction";
 
+  return (
     <section className="h-screen flex overflow-hidden">
       <ChapterSidebarNav />
       <div className="flex-1 px-8 py-6 flex flex-col gap-6 overflow-hidden min-h-0">
         <PhaseNavbar activePhase={activePhase} onSelectPhase={handlePhaseSelect} />
-
+    
         <section className="flex-1 grid grid-cols-2 gap-4 min-h-0">
           {/* Left: PDF viewer placeholder */}
           <div className="rounded p-4 bg-slate-950 min-h-0 flex flex-col">
@@ -43,36 +61,33 @@ export default function Understanding() {
           </div>
 
           {/* Right: Summary / AskAI */}
-          <div className="border border-neutral-800 rounded-xl p-4 flex flex-col min-h-0">
-            <div className="mb-3 flex gap-2">
-              <button
-                className={`px-3 py-2 rounded ${activePhase === "summary" ? "bg-gray-200" : ""}`}
-                onClick={() => setActivePhase("summary")}
-              >
-                Summary
-              </button>
-              <button
-                className={`px-3 py-2 rounded ${activePhase === "askai" ? "bg-gray-200" : ""}`}
-                onClick={() => setActivePhase("askai")}
-              >
-                AskAI
-              </button>
+          <div className="flex h-[70vh] flex-col rounded-3xl border border-neutral-800 bg-[#0a0a0f] px-5 pt-4 pb-4 text-slate-100">
+            <div className="w-full">
+              <div className="flex w-full rounded-full bg-neutral-900 p-1">
+                <button
+                  {...getTabStyle(mode === "summary")}
+                  onClick={() => setMode("summary")}
+                >
+                  Summary
+                </button>
+                <button
+                  {...getTabStyle(mode === "askai")}
+                  onClick={() => setMode("askai")}
+                >
+                  AskAI
+                </button>
+              </div>
             </div>
 
-            <div className="flex-1 min-h-0">
-              {activePhase === "summary" ? (
-                <div className="rounded p-4 h-full overflow-auto whitespace-pre-wrap">
-                  {summary?.text ?? "No summary yet."}
-                </div>
+            <div className="mt-4 flex-1 overflow-hidden">
+              {mode === "summary" ? (
+                <Summary
+                  bookTitle={bookTitle}
+                  chapterTitle={chapterTitle}
+                  initialSummary={summary}
+                />
               ) : (
-                <div className="rounded p-4 h-full overflow-auto">
-                  <p className="mb-2 text-sm text-gray-600">AskAI (mock):</p>
-                  <div className="text-gray-800">
-                    Q: What’s the gist of this chapter?
-                    <br />
-                    A: (Pretend AI answer goes here.)
-                  </div>
-                </div>
+                <AskAI bookTitle={bookTitle} chapterTitle={chapterTitle} />
               )}
             </div>
           </div>
