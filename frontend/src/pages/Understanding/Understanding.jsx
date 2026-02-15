@@ -1,7 +1,7 @@
 import ChapterSidebarNav from "../../components/ChapterSidebar";
 import PhaseNavbar from "../../components/PhaseNavbar";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { fakeApi } from "../../services/fakeApi";
 import PdfViewer from "./PdfViewer";
 import Summary from "./Summary";
@@ -25,9 +25,7 @@ function getTabStyle(isActive) {
 export default function Understanding({ defaultMode = "summary" }) {
   const { bookId, chapterId } = useParams();
   const [mode, setMode] = useState(defaultMode);
-  const [activePhase, setActivePhase] = useState("understanding")
   const [summary, setSummary] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (mode === "summary") {
@@ -35,64 +33,48 @@ export default function Understanding({ defaultMode = "summary" }) {
         .getSummary(bookId, chapterId)
         .then((data) => setSummary(data?.text ?? null));
     }
-  }, [bookId, chapterId, activePhase]);
-
-
-  const handlePhaseSelect = (phase) => {
-    if (phase === "reinforcing") {
-      navigate(`/books/${bookId}/chapters/${chapterId}/reinforce/flashcards`);
-      return;
-    }
-    setActivePhase(phase);
-  };
+  }, [bookId, chapterId, mode]); // revisit
 
   const bookTitle = "Sample Book Title";
   const chapterTitle = "Chapter 1: Introduction";
 
   return (
-    <section className="h-screen flex overflow-hidden">
-      <ChapterSidebarNav />
-      <div className="flex-1 px-8 py-6 flex flex-col gap-6 overflow-hidden min-h-0">
-        <PhaseNavbar activePhase={activePhase} onSelectPhase={handlePhaseSelect} />
-    
-        <section className="flex-1 grid grid-cols-2 gap-4 min-h-0">
-          {/* Left: PDF viewer placeholder */}
-          <div className="rounded min-h-0 flex flex-col">
-            <PdfViewer fileUrl={samplePdf} />
-          </div>
+    <section className="flex-1 grid grid-cols-2 gap-4 min-h-0">
+      {/* Left: PDF viewer placeholder */}
+      <div className="rounded min-h-0 flex flex-col">
+        <PdfViewer fileUrl={samplePdf} />
+      </div>
 
-          {/* Right: Summary / AskAI */}
-          <div className="flex h-[70vh] flex-col rounded-3xl border border-neutral-800 bg-[#0a0a0f] px-5 pt-4 pb-4 text-slate-100">
-            <div className="w-full">
-              <div className="flex w-full rounded-full bg-neutral-900 p-1">
-                <button
-                  {...getTabStyle(mode === "summary")}
-                  onClick={() => setMode("summary")}
-                >
-                  Summary
-                </button>
-                <button
-                  {...getTabStyle(mode === "askai")}
-                  onClick={() => setMode("askai")}
-                >
-                  AskAI
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-4 flex-1 overflow-hidden">
-              {mode === "summary" ? (
-                <Summary
-                  bookTitle={bookTitle}
-                  chapterTitle={chapterTitle}
-                  initialSummary={summary}
-                />
-              ) : (
-                <AskAI bookTitle={bookTitle} chapterTitle={chapterTitle} />
-              )}
-            </div>
+      {/* Right: Summary / AskAI */}
+      <div className="flex h-[70vh] flex-col rounded-3xl border border-neutral-800 bg-[#0a0a0f] px-5 pt-4 pb-4 text-slate-100">
+        <div className="w-full">
+          <div className="flex w-full rounded-full bg-neutral-900 p-1">
+            <button
+              {...getTabStyle(mode === "summary")}
+              onClick={() => setMode("summary")}
+            >
+              Summary
+            </button>
+            <button
+              {...getTabStyle(mode === "askai")}
+              onClick={() => setMode("askai")}
+            >
+              AskAI
+            </button>
           </div>
-        </section>
+        </div>
+
+        <div className="mt-4 flex-1 overflow-hidden">
+          {mode === "summary" ? (
+            <Summary
+              bookTitle={bookTitle}
+              chapterTitle={chapterTitle}
+              initialSummary={summary}
+            />
+          ) : (
+            <AskAI bookTitle={bookTitle} chapterTitle={chapterTitle} />
+          )}
+        </div>
       </div>
     </section>
   );

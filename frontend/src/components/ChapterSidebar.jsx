@@ -2,7 +2,7 @@
 import { NavLink, useParams } from "react-router-dom";
 import { fakeApi } from "../services/fakeApi";
 
-export default function ChapterSidebar({ className = "", target = "understanding" }) {
+export default function ChapterSidebar({ className = "", activePhase }) {
   const { bookId } = useParams();
   const [book, setBook] = useState(null);
   const [chapters, setChapters] = useState([]);
@@ -30,11 +30,10 @@ export default function ChapterSidebar({ className = "", target = "understanding
   const title = book?.title ?? "Loading...";
   const authors = Array.isArray(book?.authors)
     ? book.authors.join(", ")
-    : book?.author ?? "";
+    : (book?.author ?? "");
 
   const getChapterClasses = (isActive) => {
-    const base =
-      "block rounded-lg px-4 py-3 ring-1 transition-colors";
+    const base = "block rounded-lg px-4 py-3 ring-1 transition-colors";
     if (isActive) {
       // Active: invert to white background with black text, keep hover consistent.
       return `${base} bg-white text-black visited:text-black ring-neutral-200 hover:bg-white hover:ring-neutral-200`;
@@ -52,7 +51,7 @@ export default function ChapterSidebar({ className = "", target = "understanding
           className,
         ].join(" ")}
         aria-label="Chapter navigation"
-      > 
+      >
         <header className="px-4 pb-3 pt-5 border-b border-neutral-800">
           <h2 className="text-xl font-semibold">{title}</h2>
           {authors && <p className="text-sm text-slate-300">{authors}</p>}
@@ -63,9 +62,11 @@ export default function ChapterSidebar({ className = "", target = "understanding
             {chapters.map((c, idx) => (
               <li key={c.id}>
                 <NavLink
-                  to={`/books/${bookId}/chapters/${c.id}/${target}`}
+                  to={`/books/${bookId}/chapters/${c.id}/${activePhase === "understanding" ? "understanding" : "reinforce/flashcards"}`}
                   className={({ isActive }) => getChapterClasses(isActive)}
-                  style={({ isActive }) => (isActive ? { color: "#000000" } : undefined)}
+                  style={({ isActive }) =>
+                    isActive ? { color: "#000000" } : undefined
+                  }
                   end={false}
                 >
                   <span className="font-medium">{`Chapter ${idx + 1}: ${c.title}`}</span>
@@ -80,7 +81,9 @@ export default function ChapterSidebar({ className = "", target = "understanding
                 className="w-full rounded-lg px-4 py-3 bg-neutral-900 ring-1 ring-neutral-800 hover:bg-neutral-800 hover:ring-neutral-700 flex items-center justify-between"
               >
                 <span>Select New Chapter</span>
-                <span className="text-slate-300" aria-hidden>＋</span>
+                <span className="text-slate-300" aria-hidden>
+                  ＋
+                </span>
               </button>
             </li>
           </ul>
@@ -116,7 +119,11 @@ export default function ChapterSidebar({ className = "", target = "understanding
                 className="w-full bg-transparent text-white focus:outline-none"
               >
                 {chapters.map((chapter, idx) => (
-                  <option key={chapter.id} value={chapter.id} className="bg-[#111] text-white">
+                  <option
+                    key={chapter.id}
+                    value={chapter.id}
+                    className="bg-[#111] text-white"
+                  >
                     {`Chapter ${idx + 1}: ${chapter.title}`}
                   </option>
                 ))}
@@ -128,7 +135,3 @@ export default function ChapterSidebar({ className = "", target = "understanding
     </>
   );
 }
-
-
-
-
