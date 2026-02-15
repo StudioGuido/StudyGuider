@@ -67,7 +67,7 @@ export default function Reinforce({
 
   if (showResults) {
     return (
-      <>
+      <div className="mx-auto">
         {loading ? (
           <p className="text-slate-500">Loading flashcards…</p>
         ) : items.length === 0 ? (
@@ -93,7 +93,7 @@ export default function Reinforce({
                 </article>
               ))}
             </div>
-            <div className="flex gap-3 mt-4">
+            <div className="flex gap-3 mt-4 justify-center">
               <button
                 className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-500"
                 onClick={() => navigate(baseRoute, { replace: true })}
@@ -114,7 +114,7 @@ export default function Reinforce({
             </div>
           </>
         )}
-      </>
+      </div>
     );
   }
 

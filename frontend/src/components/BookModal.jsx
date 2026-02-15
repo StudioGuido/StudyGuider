@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { fakeApi } from "../services/fakeApi";
+import { X } from 'lucide-react';
 
 export default function BookModal({ book, onClose }) {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ export default function BookModal({ book, onClose }) {
             className="absolute right-6 top-6 text-sm text-gray-300 hover:text-white"
             aria-label="Close"
           >
-            exit
+            <X size={20} color="white" />
           </button>
 
           <h2 className="text-3xl md:text-4xl font-extrabold leading-tight mb-2">

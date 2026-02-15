@@ -24,7 +24,7 @@ export const mockBooks = [
   },
   {
     id: "b3",
-    title: "Artificial Intelligence: A Modern Approach",
+    title: "AI: A Modern Approach",
     author: "Stuart Russell & Peter Norvig",
     description:
       "An introduction to the foundations of AI — including agents, search algorithms, machine learning, and reasoning under uncertainty.",
