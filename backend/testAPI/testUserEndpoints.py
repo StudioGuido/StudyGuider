@@ -1,54 +1,84 @@
+import requests
+import asyncio
+import time
+
+# Updates for Username/email + Set Titles
+# Logging and monitoring?
+
+
 def testUserCreation():
-    url = 'http://0.0.0.0:8000/api/createUser'
+    url = "http://0.0.0.0:8000/api/createUser"
 
-    headers = {
-        "Content-Type": "application/json"
-    }
+    headers = {"Content-Type": "application/json"}
 
     json = {
-        "username": "firerazor420Blazer",
-        "email": "minecrafter8@icloud.com",
-        "password": "alibutt",
-        "first_name": "Niv",
-        "last_name": "Butt",
-        "provider": None,
-        "provider_id": None
+        "username": "pierce",
+        "email": "pwex@gmail.com",
     }
     response = requests.post(url=url, json=json, headers=headers)
-    chunk_data = response.json()
+    print("CREATED USER")
+    print(response.json())
 
-    print(chunk_data['response'])
+
+def testUserDeletion():
+    email = "pwex@gmail.com"
+    url = f"http://0.0.0.0:8000/api/deleteUser/{email}"
+
+    response = requests.delete(url)
+    print("DELETED USER")
+    print(response.json())
 
 
-def testgetCreation():
-    url = 'http://0.0.0.0:8000/api/getUser'
+def testUserUpdates():
+    url = "http://0.0.0.0:8000/api/updateUser"
 
-    headers = {
-        "Content-Type": "application/json"
-    }
+    headers = {"Content-Type": "application/json"}
+
     json = {
-        "username": "firerazor420Blazer",
-        "password": "alibutt"
+        "username": "pierce's cooler username",
+        "email": "pwex@gmail.com",
     }
-    response = requests.post(url=url, json=json, headers=headers)
-    chunk_data = response.json()
-
-    print(response.status_code)
-    print(chunk_data['response'])
+    response = requests.put(url=url, json=json, headers=headers)
+    print("Updated USER")
+    print(response.json())
 
 
-def testDeleteUser():
-    url = 'http://0.0.0.0:8000/api/deleteUser'
+def testUserGet():
+    email = "pwex@gmail.com"
+    url = f"http://0.0.0.0:8000/api/getUsername/{email}"
 
-    headers = {
-        "Content-Type": "application/json"
-    }
-    json = {
-        "username": "firerazor420Blazer",
-        "password": "alibutt"
-    }
-    response = requests.post(url=url, json=json, headers=headers)
-    chunk_data = response.json()
+    response = requests.get(url)
+    print("ASSOCIATED USERNAME:")
+    print(response.json())
 
-    print(response.status_code)
-    print(chunk_data['response'])
+
+test_no = 1
+match test_no:
+    case 0:
+        print("No tests ran")
+    case 1:
+        """
+        Test 1: Basic User creation and viewing of username:
+        """
+        testUserCreation()
+        testUserGet()
+    case 2:
+        """
+        Test 2: Update username and view result:
+        """
+        testUserUpdates()
+        testUserGet()
+    case 3:
+        """
+        Test 3: Delete user:
+        """
+        testUserDeletion()
+    case 4:
+        """
+        Test 4: All tests combined:
+        """
+        testUserCreation()
+        testUserGet()
+        testUserUpdates()
+        testUserGet()
+        testUserDeletion()
