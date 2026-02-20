@@ -152,6 +152,7 @@ async def init_db():
             id SERIAL PRIMARY KEY,
             username VARCHAR(150) UNIQUE NOT NULL,
             email VARCHAR(255) UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT NOW(),
             last_login TIMESTAMP
             );
