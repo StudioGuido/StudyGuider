@@ -34,11 +34,11 @@ async def generate_endpoint(request: PromptRequest):
     print("in\n\n")
 
     try:
-        modelResponse = await generate_Helper(prompt, chapter, textbook)
+        modelResponse, context = await generate_Helper(prompt, chapter, textbook) # added context
 
         return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"response": modelResponse}
+        content={"response": modelResponse, "context": context} # return content with context included
         )
     
     except HTTPException:
