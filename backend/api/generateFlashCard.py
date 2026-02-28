@@ -8,6 +8,14 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 from .openAIHelper import get_openai_response
 
+#for perf testing
+import csv
+import time
+
+
+latency_csv_path="api/latency.csv"
+throughput_csv_path="api/throughput.csv"
+
 router = APIRouter()
 
 class FlashRequest(BaseModel):
@@ -27,6 +35,15 @@ async def generate_endpoint(request: FlashRequest):
     chapter = request.chapter
     textbook = request.textbook
     count = request.count
+
+    #Start the timer for performance testing
+    request_start = time.perf_counter()
+
+    #initialize log variables for perf testing
+    status_code = None
+    cards_returned = 0
+    error = ""
+    requested_count = request.count
 
     print(chapter)
     print(textbook)
@@ -91,7 +108,11 @@ async def generate_endpoint(request: FlashRequest):
 
         question_answer_pair = {}
         selectedChunks = set()
+
+        latencyTime = []
+        throughPutStartTime = time.time()
         for c in range(count):
+            latencyStartTime = time.time()
 
             # generate a random number between 1 and chunk count
             while True:
@@ -146,11 +167,35 @@ async def generate_endpoint(request: FlashRequest):
 
             except Exception as e:
                 continue
+
+            # flashcard has been generated
+            latencyTime.append(round(time.time() - latencyStartTime, 4))
             
         
         if not question_answer_pair:
             print("Here")
             raise HTTPException(status_code=422, detail="No valid flashcards were generated.")
+
+        #set log values for perf teting
+        status_code = 200
+        cards_returned = len(question_answer_pair)
+
+        # Cards are completed
+        throughput = (time.time() - throughPutStartTime) / count
+        #test print
+        print("Latency List: ", latencyTime)
+        print("Throughput: ", throughput)
+        # send write these results to a different csv file
+        """
+        latecny CSV
+        throughput CSV
+        
+        Prep: Print out if the times code I just wrote worked
+        1. Read a csv using pandas
+        2. Fill out the columns that will be Latency
+        2. FIll out the columns that will be throughput 
+        3. Run your previous file that you wrote to activate multiple test
+        """
 
 
         return JSONResponse(
@@ -158,9 +203,76 @@ async def generate_endpoint(request: FlashRequest):
         content={"response": question_answer_pair}
         )
 
-    except HTTPException:
+    except HTTPException as e:
+        status_code = e.status_code
+        error = str(e.detail) if e.detail is not None else str(e)
         raise
     except Exception as e:
+        status_code = 500
+        error = str(e)
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
+        #compute elapsed time
+        elapsed_time = round(time.perf_counter() - request_start, 4)
+
+        #building throughput CSV
+        row = {
+            "timestamp": int(time.time()),
+            "endpoint": "/api/generateFlashCard",
+            "textbook": textbook,
+            "chapter": chapter,
+            "requested_count": requested_count,
+            "status_code": status_code if status_code is not None else "",
+            "cards_returned": cards_returned,
+            "throughput": throughput,
+            "error": error,
+        }
+
+        fieldnames = [
+            "timestamp",
+            "endpoint",
+            "textbook",
+            "chapter",
+            "requested_count",
+            "status_code",
+            "cards_returned",
+            "throughput",
+            "error",
+        ]
+
+        os.makedirs(os.path.dirname(throughput_csv_path), exist_ok=True)
+        file_exists = os.path.exists(throughput_csv_path)
+        file_empty = (not file_exists) or os.path.getsize(throughput_csv_path) == 0
+        
+        with open(throughput_csv_path, "a", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            if file_empty:
+                writer.writeheader()
+            writer.writerow(row)
+        
+        #building latency stats CSV
+        row = {
+            "textbook": textbook,
+            "chapter": chapter,
+            "cards_returned": cards_returned,
+            "latency_time": latencyTime
+        }
+
+        fieldnames = [
+            "textbook",
+            "chapter",
+            "cards_returned",
+            "latency_time",
+        ]
+
+        os.makedirs(os.path.dirname(latency_csv_path), exist_ok=True)
+        file_exists = os.path.exists(latency_csv_path)
+        file_empty = (not file_exists) or os.path.getsize(latency_csv_path) == 0
+        
+        with open(latency_csv_path, "a", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            if file_empty:
+                writer.writeheader()
+            writer.writerow(row)
+
         await conn.close()
