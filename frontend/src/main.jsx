@@ -8,8 +8,8 @@ import Summary from './pages/Summary.jsx'
 import Test from './pages/Test.jsx'
 import TestResults from './pages/TestResults.jsx'
 import Admin from './pages/Admin.jsx'
-
-
+import Auth from './pages/Auth.jsx'
+import SignUp from './pages/SignUp.jsx'
 
 createRoot(document.getElementById('root')).render(
     <StrictMode>
@@ -21,6 +21,8 @@ createRoot(document.getElementById('root')).render(
                 <Route path="/test" element={<Test />} />
                 <Route path="/results" element={<TestResults />} />
                 <Route path="/admin" element={<Admin /> } />
+                <Route path="/auth" element={<Auth /> } />
+                <Route path="/signup" element={<SignUp />} />
             </Routes>
         </Router>
     </StrictMode>,
