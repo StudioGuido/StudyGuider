@@ -1,7 +1,5 @@
 import requests
 import pandas as pd
-import os
-import time
 
 
 """
@@ -34,10 +32,6 @@ questions = [
     # ch 19 - inheritance
 ]
 
-
-df = pd.read_csv("../../backend/bookAdders/csv/thinkpython2.csv")
-print(df['chunk_text'])
-print(df)
 
 '''
 
