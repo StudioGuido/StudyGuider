@@ -24,7 +24,7 @@ for chapter, group in df.groupby("chapter"):
         "text": full_text
     })
 
-chapters = chapters[:1] # TEMP: only look at chapter 1 for testing purposes
+# chapters = chapters[:1] # TEMP: only look at chapter 1 for testing purposes
 
 client = OpenAI()
 

@@ -1,0 +1,101 @@
+textbook,chapter,question
+thinkpython2,1,"What are the basic types of instructions that appear in almost every programming language, and how do they contribute to performing computations?"
+thinkpython2,1,"How does a formal language differ from a natural language, and why are programming languages considered formal languages?"
+thinkpython2,1,"What is the role of the Python interpreter, and how can you identify whether you are running Python 2 or Python 3?"
+thinkpython2,1,"Explain the difference between a value and its type in Python, giving examples of at least three different types."
+thinkpython2,1,"Why is debugging an important skill for programmers, and what strategies can help manage the emotional challenges that come with debugging?"
+thinkpython2,1,"What are the basic types of instructions that appear in almost every programming language, and what does each type do?"
+thinkpython2,1,How does a formal language differ from a natural language in terms of ambiguity and syntax?
+thinkpython2,1,What is the difference between the print statement in Python 2 and the print() function in Python 3?
+thinkpython2,1,"Why does the expression `1,000,000` not represent one million in Python, and what does it actually represent?"
+thinkpython2,1,"What is debugging, and why is it an important skill for a computer scientist?"
+thinkpython2,2,"What is the difference between an expression and a statement in Python, and how does the interpreter handle each in interactive mode versus script mode?"
+thinkpython2,2,"Why are some variable names illegal in Python, and what role do keywords play in this restriction? Provide examples of illegal variable names and explain why they cause errors."
+thinkpython2,2,"Explain the order of operations (PEMDAS) in Python with an example involving multiple operators, and how parentheses can be used to change the order of evaluation."
+thinkpython2,2,"How do the string operators `+` and `*` work in Python? Give examples of string concatenation and repetition, and explain what types of operands are required."
+thinkpython2,2,"Describe the three main types of errors in Python programming: syntax errors, runtime errors, and semantic errors. How can understanding these help in debugging a program?"
+thinkpython2,3,What is the difference between a fruitful function and a void function in Python?
+thinkpython2,3,How does Python handle the flow of execution when a function is called within another function?
+thinkpython2,3,Explain the concept of local variables and parameters inside a function. How do they relate to variables outside the function?
+thinkpython2,3,"What is a module in Python, and how do you use dot notation to access functions within a module?"
+thinkpython2,3,Describe what happens if you try to call a function before its definition appears in the program. What kind of error do you expect?
+thinkpython2,4,"What is encapsulation in the context of writing functions with the turtle module, and why is it beneficial?"
+thinkpython2,4,"How does generalization improve a function, and how was it applied when modifying the square-drawing function?"
+thinkpython2,4,Explain how the `polyline` function helps improve code reuse and interface design compared to directly using `polygon` and `arc`.
+thinkpython2,4,"Why is it important to design a ""clean"" interface for a function, and how does the circle function demonstrate this principle?"
+thinkpython2,4,"What are preconditions and postconditions in function interfaces, and how can they assist with debugging?"
+thinkpython2,5,"What is the difference between the floor division operator (//) and the modulus operator (%) in Python, and how can each be used with an example?"
+thinkpython2,5,"Explain the difference between the assignment operator (=) and the relational operator (==), and why confusing them might cause errors in a program."
+thinkpython2,5,"How do logical operators (and, or, not) work in combining boolean expressions, and how can they be used to simplify nested conditionals?"
+thinkpython2,5,"Describe how a recursive function works, including the roles of the base case and recursive case, and what happens if a recursive function does not have a proper base case."
+thinkpython2,5,"How can the input() function be used to get user input, and what precautions should be taken when converting input to other data types like integers?"
+thinkpython2,6,"What is the difference between a void function and a fruitful function in Python, and how does the `return` statement work in a fruitful function?"
+thinkpython2,6,Explain the concept of incremental development and describe why it is useful when writing complex functions.
+thinkpython2,6,How can you use composition to build new functions from existing ones? Provide an example based on the functions discussed in the chapter.
+thinkpython2,6,"What is a recursive function, and how does the ""leap of faith"" approach help in understanding recursive function calls?"
+thinkpython2,6,"What is a guardian in programming, and how can it be used to improve the robustness of a recursive function like `factorial`?"
+thinkpython2,7,What is the difference between reassignment and initialization of a variable in Python?
+thinkpython2,7,"How does a while loop determine when to stop executing its body, and what role does the loop condition play?"
+thinkpython2,7,"Why can testing floating-point equality (e.g., using `y == x`) be problematic in iterative numerical algorithms, and how can this issue be addressed?"
+thinkpython2,7,Explain how the `break` statement affects the flow of a while loop and provide an example scenario where it is useful.
+thinkpython2,7,"What is an algorithm, and how does Newton’s method for computing square roots illustrate the characteristics of an algorithm?"
+thinkpython2,8,What is the difference between using a positive index and a negative index when accessing characters in a string?
+thinkpython2,8,"How does the slice operator [n:m] work in Python strings, and what does it mean when you omit the first or second index?"
+thinkpython2,8,"Why are strings considered immutable in Python, and how can you modify a string if you need to change one of its characters?"
+thinkpython2,8,"How does the find method on strings differ from the custom find function described in the chapter, and what optional arguments can the string method take?"
+thinkpython2,8,"Explain the common pattern of using a counter variable in a loop when processing strings, and how you might use it to count occurrences of a specific character."
+thinkpython2,9,"How does the function `has_no_e` determine whether a word contains the letter ""e"", and why does it return `False` immediately upon finding an ""e""?"
+thinkpython2,9,Explain the difference between the functions `avoids` and `uses_only` in terms of their logic and what they check for in a word.
+thinkpython2,9,"What is meant by ""reduction to a previously solved problem,"" and how is it applied in the implementation of the `uses_all` function?"
+thinkpython2,9,Describe how the function `is_abecedarian` checks whether the letters of a word appear in alphabetical order. What approaches can be used to implement this?
+thinkpython2,9,"Why is testing with special cases, such as the empty string or very short words, important when verifying functions like `has_no_e` or `is_abecedarian`?"
+thinkpython2,10,"What is the difference between a list and a string in Python, and how are their elements accessed?"
+thinkpython2,10,"How does aliasing affect mutable objects like lists, and why can it lead to bugs if not handled carefully?"
+thinkpython2,10,Explain the difference between list methods that modify a list in place (like `append` and `sort`) and operations that create new lists (like the `+` operator or slicing).
+thinkpython2,10,How can you use slicing to both access and update multiple elements in a list?
+thinkpython2,10,"Describe the map, filter, and reduce processing patterns and give an example of each using lists."
+thinkpython2,11,"What is a dictionary in Python, and how does it differ from a list in terms of indexing?"
+thinkpython2,11,"How does the `get` method of a dictionary work, and how can it be used to simplify code that updates counts or frequencies?"
+thinkpython2,11,Explain why dictionary keys must be hashable and why mutable types like lists cannot be used as keys.
+thinkpython2,11,"What is memoization, and how can dictionaries be used to improve the performance of recursive functions like Fibonacci?"
+thinkpython2,11,Describe how you would invert a dictionary that maps keys to values when multiple keys might share the same value.
+thinkpython2,12,"What is the main difference between tuples and lists in Python, and how does this difference affect how you can use tuples?"
+thinkpython2,12,"How do you create a tuple with a single element, and why is the trailing comma necessary in this case?"
+thinkpython2,12,Explain how tuple assignment works in Python and give an example of swapping two variables using tuple assignment.
+thinkpython2,12,"What are the gather and scatter operators in Python, and how are they used with functions that take variable-length argument lists?"
+thinkpython2,12,"How can tuples be used as dictionary keys, and why are lists not suitable for this purpose?"
+thinkpython2,13,"What are the main steps involved in processing a text file to create a word frequency histogram, and which Python string methods are useful for cleaning and normalizing the words?"
+thinkpython2,13,How does the use of a dictionary facilitate efficient counting and retrieval of word frequencies compared to other data structures like lists?
+thinkpython2,13,Explain how Markov analysis can be used to generate random text and describe the role of prefixes and suffixes in this method.
+thinkpython2,13,What are the advantages and disadvantages of using lists versus dictionaries (histograms) to store collections of suffixes in Markov analysis?
+thinkpython2,13,"How can set subtraction be applied to identify words in a book that are not present in a given word list, and why might this be useful for tasks like spell checking or vocabulary analysis?"
+thinkpython2,14,"What is the difference between a transient program and a persistent program, and how does persistent storage enable persistence?"
+thinkpython2,14,"How do you open a file for writing in Python, and what happens if the file already exists?"
+thinkpython2,14,"Explain how the format operator (%) works in Python, including how to format multiple values in a string."
+thinkpython2,14,"What are relative and absolute paths, and how can the `os` module help you work with them?"
+thinkpython2,14,"How does the `pickle` module differ from the `dbm` module in terms of storing data, and why might you use `pickle` when working with databases?"
+thinkpython2,15,What is the difference between a class and an instance in Python's object-oriented programming?
+thinkpython2,15,How do you assign and access attributes of an instance in a programmer-defined class like Point?
+thinkpython2,15,"What is the difference between a shallow copy and a deep copy of an object, and why might you prefer one over the other?"
+thinkpython2,15,How does aliasing affect the behavior of functions that modify objects passed as arguments?
+thinkpython2,15,Describe how you would implement a function that moves a Rectangle object by changing its corner attribute using dx and dy.
+thinkpython2,16,"What is the difference between a pure function and a modifier function in the context of the Time class, and when might you prefer to use each?"
+thinkpython2,16,"How does the prototype and patch development plan work, and what are its advantages and disadvantages compared to designed development?"
+thinkpython2,16,"Explain how the functions `time_to_int` and `int_to_time` simplify operations on Time objects, and why this approach might be preferred over handling hour, minute, and second attributes directly."
+thinkpython2,16,"What is an invariant in programming, and how can assert statements and functions like `valid_time` help maintain invariants in the Time class?"
+thinkpython2,16,"Describe how you would write a function `increment` that adds a given number of seconds to a Time object without using loops, and why this might be more efficient than using while loops."
+thinkpython2,17,"What is the difference between a function and a method in Python, and how does the syntax for invoking each differ?"
+thinkpython2,17,"How does the special method `__init__` work in a Python class, and why is it important to define it?"
+thinkpython2,17,Explain how operator overloading works in Python using the example of the `__add__` method in the Time class.
+thinkpython2,17,"What is type-based dispatch, and how can it be used within a method like `__add__` to handle different operand types?"
+thinkpython2,17,"Why is it important to separate the interface of a class from its implementation, and how does this principle benefit software maintainability?"
+thinkpython2,18,"What is the difference between class attributes and instance attributes in Python classes, and how are they accessed?"
+thinkpython2,18,"How does the `__lt__` method enable comparison of user-defined objects like `Card`, and what is the significance of the method resolution order (MRO) in this context?"
+thinkpython2,18,Explain how inheritance works in Python using the example of the `Hand` class inheriting from the `Deck` class. What happens when the child class overrides the `__init__` method?
+thinkpython2,18,"What are the IS-A and HAS-A relationships between classes, and how are they typically represented in class diagrams?"
+thinkpython2,18,Describe the process of data encapsulation as a development plan. How can global variables and related functions be refactored into a class with instance attributes and methods?
+thinkpython2,19,How can you rewrite an if-else statement that assigns a value to a single variable using a conditional expression? Provide an example.
+thinkpython2,19,What are the advantages and disadvantages of using list comprehensions compared to traditional for loops?
+thinkpython2,19,Explain the difference between a list comprehension and a generator expression. When might you prefer to use one over the other?
+thinkpython2,19,"How do the built-in functions `any` and `all` work, and how can they be used effectively with generator expressions?"
+thinkpython2,19,What are the benefits of using `defaultdict` and `Counter` from the `collections` module compared to regular dictionaries? Give an example use case for each.
