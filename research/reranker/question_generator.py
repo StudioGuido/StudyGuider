@@ -3,6 +3,10 @@ from openai import OpenAI
 from pathlib import Path
 import os
 import csv
+from dotenv import load_dotenv
+
+# load env so we can use openai API key
+load_dotenv()
 
 # use pandas to read CSV
 csv_path = "../../backend/bookAdders/csv/thinkpython2.csv"
@@ -83,6 +87,7 @@ with open(output_file, "a", newline="", encoding="utf-8") as f:
                 question = line.split(".", 1)[1].strip()
                 questions.append(question)
 
+        # append questions to the CSV
         for q in questions:
             writer.writerow([textbook, chapter_number, q])
 
