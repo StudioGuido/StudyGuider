@@ -19,8 +19,9 @@ chapters = []
 # creates an array of dictonaryies where every entry has a key "chapter" and value "text"
 for chapter, group in df.groupby("chapter"):
     full_text = " ".join(group["chunk_text"])
+    chapter_name = group["Chapter_Name"].iloc[0]
     chapters.append({
-        "chapter": chapter,
+        "chapter": chapter_name,
         "text": full_text
     })
 
@@ -42,9 +43,9 @@ with open(output_file, "a", newline="", encoding="utf-8") as f:
 
     # for each chapter, prompt openai to generate 5 questions
     # store those 5 questions into a CSV --> |textbook, chapter, question|
-    for chapter in chapters:
-        chapter_number = chapter["chapter"]
-        full_text = chapter["text"]
+    for chapter_data in chapters:
+        chapter = chapter_data["chapter"]
+        full_text = chapter_data["text"]
 
         # create clear and concise prompt for generating questions via LLM
         prompt = f"""
@@ -89,5 +90,5 @@ with open(output_file, "a", newline="", encoding="utf-8") as f:
 
         # append questions to the CSV
         for q in questions:
-            writer.writerow([textbook, chapter_number, q])
+            writer.writerow([textbook, chapter, q])
 

@@ -3,34 +3,57 @@ import pandas as pd
 
 
 """
-1. Look into summary to reunite chuncks
-2. Ask questions on those chuncks
-3. Make a CSV --> |textbook, chapter, question|
-4. Write a different script that will read in CSV and reformat data into what you want
+1. Look into summary to reunite chuncks - DONE
+2. Ask questions on those chuncks - DONE
+3. Make a CSV --> |textbook, chapter, question| - DONE
+4. Write a different script that will read in CSV and reformat data into what you want - DONE
 5. Write a function that will send this to our server
 6. Save what the server writes back on a CSV
 7. Another file read that CSV and set-up LLM as a judge
 """
-questions = [
-    # ch 1 - the way of the program
-    # ch 2 - variables, expressions and statements
-    # ch 3 - functions
-    # ch 4 - case study: interface design
-    # ch 5 - conditionals and recursion
-    # ch 6 - fruitful functions
-    # ch 7 - iteration
-    # ch 8 - strings
-    # ch 9 - case study: word play
-    # ch 10 - lists
-    # ch 11 - dictionaries
-    # ch 12 - tuples
-    # ch 13 - case study: data structure selection
-    # ch 14 - files
-    # ch 16 - clsses and object
-    # ch 17 - classes and functions
-    # ch 18 - classes and methods
-    # ch 19 - inheritance
-]
+
+# read the questions csv using pandas
+df = pd.read_csv("generated_questions.csv")
+
+# create an empty list to store the questions
+questions = []
+
+# iterate through the csv writing each row to a json object and appending it to the list
+for i, row in df.iterrows():
+    textbook = row["textbook"]
+    chapter = row["chapter"]
+    question = row["question"]
+
+    data = {
+        "prompt": question,
+        "textbook": textbook,
+        "chapter": chapter
+    }
+
+    questions.append(data)
+
+llm_responses = []
+
+for question in questions:
+    response = requests.post("http://0.0.0.0:8000/api/generate", json=question)
+    print(response.status_code)
+    print(response.text)
+    data = response.json()
+    answer = data["response"]
+    context = data["context"]
+
+    llm_responses.append({
+        "input": question["prompt"],
+        "context": context,
+        "response": response
+    })
+
+print(llm_responses)
+
+
+
+
+
 
 
 '''
