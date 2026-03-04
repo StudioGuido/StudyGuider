@@ -21,11 +21,7 @@ def run_flashcard_timing_test(counts=(1, 5, 10), trials_per_count=2, textbook="t
     return total_cards_returned
 
 def main():
-    suite_start = time.perf_counter()
     total_cards_returned = run_flashcard_timing_test(counts=(1, 5, 10), trials_per_count=2)
-    suite_seconds = time.perf_counter() - suite_start
-    flashcards_per_second = total_cards_returned / suite_seconds if suite_seconds > 0 else 0.0
-    print("Flashcards per second: ", flashcards_per_second)
 
 if __name__ == "__main__":
     main()
