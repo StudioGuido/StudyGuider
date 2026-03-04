@@ -181,13 +181,13 @@ async def generate_endpoint(request: FlashRequest):
         cards_returned = len(question_answer_pair)
 
         # Cards are completed
-        throughput = (time.time() - throughPutStartTime) / count
+        throughput = round(count / (time.time() - throughPutStartTime), 4)
         #test print
         print("Latency List: ", latencyTime)
         print("Throughput: ", throughput)
         # send write these results to a different csv file
         """
-        latecny CSV
+        latency CSV
         throughput CSV
         
         Prep: Print out if the times code I just wrote worked
