@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 import os
@@ -6,32 +6,22 @@ import asyncpg
 from fastapi.responses import JSONResponse
 from fastapi import status
 from typing import List
+from api.auth import verify_jwt
 
 router = APIRouter()
 
 
 class User(BaseModel):
     username: str
-    email: str
 
 
 @router.post("/api/createUser")
-async def SGUser(userData: User):
-    """
-    API Endpoint for user creation
+async def create_user(userData: User):
 
-    Current Implementation only holds a username and email value, with OAuth
-    functionality TBI.
-
-    example json input:
-
-    json = {
-    "username": "pwex",
-    "email": "pwex@gmail.com",
-    }
-    """
     username = userData.username
     email = userData.email
+
+    conn = None
 
     try:
         conn = await asyncpg.connect(
@@ -40,9 +30,9 @@ async def SGUser(userData: User):
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD"),
         )
-        try:
-            row = await conn.fetchrow(
-                """
+
+        row = await conn.fetchrow(
+            """
             INSERT INTO users
               (username, email)
             VALUES
@@ -50,45 +40,37 @@ async def SGUser(userData: User):
             RETURNING
               id, username, email;
             """,
-                username,
-                email,
-            )
-
-        except Exception as e:
-            raise HTTPException(500, f"Error in making a user: {e}")
+            username,
+            email,
+        )
 
         user_dict = dict(row)
-        # token = create_access_token(subject=user_dict["username"])
 
         response_content = {
             "id": user_dict["id"],
             "username": user_dict["username"],
             "email": user_dict["email"],
         }
-        print(response_content)
-        try:
-            return JSONResponse(
-                status_code=status.HTTP_201_CREATED,
-                content=jsonable_encoder({"response": response_content}),
-            )
-        except Exception as e:
-            print("Serialization error:", e)
-            raise
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_201_CREATED,
+            content=jsonable_encoder({"response": response_content}),
+        )
+
+    except Exception:
+        raise HTTPException(status_code=500, detail="Database error")
 
     finally:
-        await conn.close()
+        if conn:
+            await conn.close()
 
 
-@router.delete("/api/deleteUser/{email}")
-async def SGUser(email: str):
-    """
-    API Endpoint for user deletion
+@router.delete("/api/users/me")
+async def delete_user(user_valid=Depends(verify_jwt)):
 
-    Takes in a email endpoint path paramter and deletes the account associated with that email.
-    """
+    email = user_valid["email"]
+    conn = None
+
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),
@@ -96,51 +78,36 @@ async def SGUser(email: str):
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD"),
         )
-        user = await conn.fetchrow(
+
+        db_user = await conn.fetchrow(
             """
-        SELECT id
-        FROM users
-        WHERE email = $1
-        """,
+            SELECT id FROM users WHERE email=$1
+            """,
             email,
         )
 
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username"
-            )
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found")
 
-        # remove the user
-        user_dict = dict(user)
-        user = await conn.execute(
-            """
-        DELETE FROM users
-        WHERE id = $1
-        """,
-            user_dict["id"],
+        await conn.execute(
+            "DELETE FROM users WHERE id=$1",
+            db_user["id"],
         )
 
-        return JSONResponse(
-            status_code=status.HTTP_200_OK, content={"response": user_dict}
-        )
-
-    except HTTPException:
-        raise
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        return {"deleted_user": email}
 
     finally:
-        await conn.close()
+        if conn:
+            await conn.close()
 
 
 @router.put("/api/updateUser")
-async def SGUser(userData: User):
-    """
-    API Endpoint for user updates
+async def update_user(userData: User, user_valid=Depends(verify_jwt)):
 
-    Takes in a User basemodel with and email and an username to update to.
-    """
+    email = user_valid["email"]
+
+    conn = None
+
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),
@@ -149,40 +116,44 @@ async def SGUser(userData: User):
             password=os.getenv("DATABASE_PASSWORD"),
         )
 
-        user = await conn.execute(
+        result = await conn.execute(
             """
             UPDATE users
             SET username = $1
             WHERE email = $2
             """,
             userData.username,
-            userData.email,
+            email,
         )
-        if not user:
+
+        if result == "UPDATE 0":
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Email"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
             )
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"response": "username Update Sucessful"},
+            content={"response": "username Update Successful"},
         )
 
     except HTTPException:
         raise
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Database error")
 
     finally:
-        await conn.close()
+        if conn:
+            await conn.close()
 
 
-@router.get("/api/getUsername/{email}")
-async def SGUser(email: str):
-    """
-    API Endpoint for getting the username of a user account given the email.
-    """
+@router.get("/api/users/me")
+async def get_username(user_valid=Depends(verify_jwt)):
+
+    email = user_valid["email"]
+    conn = None
+
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),
@@ -190,30 +161,33 @@ async def SGUser(email: str):
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD"),
         )
+
         user = await conn.fetchrow(
             """
-        SELECT id, username
-        FROM users
-        WHERE email = $1
-        """,
+            SELECT id, username
+            FROM users
+            WHERE email = $1
+            """,
             email,
         )
 
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
             )
 
-        user_dict = dict(user)
         return JSONResponse(
-            status_code=status.HTTP_200_OK, content={"response": user_dict}
+            status_code=status.HTTP_200_OK,
+            content={"response": dict(user)},
         )
 
     except HTTPException:
         raise
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Database error")
 
     finally:
-        await conn.close()
+        if conn:
+            await conn.close()

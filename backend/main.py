@@ -6,9 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.user import router as user_router
 from api.user_studymat import router as user_studymat_router
 
-
 from api.generateFlashCard import router as flashcard_router
 from api.generateSummary import router as summary_router
+
 app = FastAPI()
 
 # Register endpoints

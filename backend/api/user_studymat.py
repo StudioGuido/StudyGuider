@@ -1,13 +1,17 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, EmailStr, Field
 import os
 import asyncpg
 from fastapi.responses import JSONResponse
-from fastapi import status
 from typing import List
+from api.auth import verify_jwt
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/api",
+    tags=["user_studymat"],
+    dependencies=[Depends(verify_jwt)],
+)
 
 
 class User(BaseModel):
