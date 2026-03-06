@@ -148,6 +148,15 @@ async def update_user(userData: User, user_valid=Depends(verify_jwt)):
             await conn.close()
 
 
+def _username_from_payload(payload: dict) -> str:
+    """Derive username from JWT payload: user_metadata.username or email prefix."""
+    meta = payload.get("user_metadata") or {}
+    if isinstance(meta, dict) and meta.get("username"):
+        return str(meta["username"])[:150]
+    email = payload.get("email") or ""
+    return (email.split("@")[0] or "user")[:150]
+
+
 @router.get("/api/users/me")
 async def get_username(user_valid=Depends(verify_jwt)):
 
@@ -172,9 +181,15 @@ async def get_username(user_valid=Depends(verify_jwt)):
         )
 
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found",
+            username = _username_from_payload(user_valid)
+            user = await conn.fetchrow(
+                """
+                INSERT INTO users (username, email)
+                VALUES ($1, $2)
+                RETURNING id, username
+                """,
+                username,
+                email,
             )
 
         return JSONResponse(
