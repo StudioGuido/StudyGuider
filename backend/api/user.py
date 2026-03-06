@@ -160,9 +160,9 @@ def _username_from_payload(payload: dict) -> str:
 @router.get("/api/users/me")
 async def get_username(user_valid=Depends(verify_jwt)):
 
+    print("1")
     email = user_valid["email"]
     conn = None
-
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),

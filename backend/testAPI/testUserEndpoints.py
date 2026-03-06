@@ -1,6 +1,16 @@
+import os
 import requests
 import asyncio
 import time
+from pathlib import Path
+
+# from dotenv import load_dotenv
+
+# # Load .env from backend dir and project root so test uses same config as backend
+# _backend_dir = Path(__file__).resolve().parent.parent
+# _project_root = _backend_dir.parent
+# load_dotenv(_backend_dir / ".env")
+# load_dotenv(_project_root / ".env")
 
 SUPABASE_URL = "https://bafblcxwhdvikgcpcnds.supabase.co"
 SUPABASE_ANON_KEY = "sb_publishable_EHbCfU3Xd5oku8EZZTLD7g_1bxWBYnC"
@@ -95,13 +105,13 @@ match test_no:
 
     case 0:
         print(get_jwt())
-        print("No tests ran")
+        testUserGet()
 
     case 1:
         """
         Test 1: Basic User creation and viewing of username:
         """
-        testUserCreation()
+        # testUserCreation()
         testUserGet()
 
     case 2:
