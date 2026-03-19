@@ -157,6 +157,21 @@ async def init_db():
             );
             """
             await conn.execute(usersTable)
+            
+            master_flashcard_table = """
+            CREATE TABLE IF NOT EXISTS master_flashcard(
+            id SERIAL PRIMARY KEY, 
+            question TEXT NOT NULL,
+            answer TEXT NOT NULL, 
+            textbook_id INTEGER NOT NULL,
+            chapter_number INTEGER NOT NULL,
+            chunk_index INTEGER NOT NULL,
+            FOREIGN KEY (textbook_id, chapter_number) 
+            REFERENCES chapters(textbook_id, chapter_number) 
+            ON DELETE CASCADE
+            );
+            """
+            await conn.execute(master_flashcard_table)
 
             flashCardSetTable = """
             CREATE TABLE flash_card_set (
