@@ -16,10 +16,12 @@ class User(BaseModel):
 
 
 @router.post("/api/createUser")
-async def create_user(userData: User):
+async def create_user(user_valid=Depends(verify_jwt)):
 
-    username = userData.username
-    email = userData.email
+    username = _username_from_payload(user_valid)
+    supabase_uid = user_valid.get("sub")
+    if not supabase_uid:
+        raise HTTPException(status_code=401, detail="Missing supabase uid in token")
 
     conn = None
 
@@ -31,25 +33,24 @@ async def create_user(userData: User):
             password=os.getenv("DATABASE_PASSWORD"),
         )
 
+        # Upsert by Supabase UID so the identity is stable even if email changes.
         row = await conn.fetchrow(
             """
-            INSERT INTO users
-              (username, email)
-            VALUES
-              ($1, $2)
-            RETURNING
-              id, username, email;
+            INSERT INTO users (supabase_uid, username)
+            VALUES ($1, $2)
+            ON CONFLICT (supabase_uid) DO UPDATE
+            SET username = EXCLUDED.username
+            RETURNING supabase_uid, username;
             """,
+            supabase_uid,
             username,
-            email,
         )
 
         user_dict = dict(row)
 
         response_content = {
-            "id": user_dict["id"],
+            "supabase_uid": user_dict["supabase_uid"],
             "username": user_dict["username"],
-            "email": user_dict["email"],
         }
 
         return JSONResponse(
@@ -68,7 +69,9 @@ async def create_user(userData: User):
 @router.delete("/api/users/me")
 async def delete_user(user_valid=Depends(verify_jwt)):
 
-    email = user_valid["email"]
+    supabase_uid = user_valid.get("sub")
+    if not supabase_uid:
+        raise HTTPException(status_code=401, detail="Missing supabase uid in token")
     conn = None
 
     try:
@@ -79,22 +82,14 @@ async def delete_user(user_valid=Depends(verify_jwt)):
             password=os.getenv("DATABASE_PASSWORD"),
         )
 
-        db_user = await conn.fetchrow(
-            """
-            SELECT id FROM users WHERE email=$1
-            """,
-            email,
+        deleted = await conn.fetchrow(
+            "DELETE FROM users WHERE supabase_uid=$1 RETURNING supabase_uid",
+            supabase_uid,
         )
-
-        if not db_user:
+        if not deleted:
             raise HTTPException(status_code=404, detail="User not found")
 
-        await conn.execute(
-            "DELETE FROM users WHERE id=$1",
-            db_user["id"],
-        )
-
-        return {"deleted_user": email}
+        return {"deleted_user": supabase_uid}
 
     finally:
         if conn:
@@ -104,10 +99,12 @@ async def delete_user(user_valid=Depends(verify_jwt)):
 @router.put("/api/updateUser")
 async def update_user(userData: User, user_valid=Depends(verify_jwt)):
 
-    email = user_valid["email"]
+    supabase_uid = user_valid.get("sub")
+    if not supabase_uid:
+        raise HTTPException(status_code=401, detail="Missing supabase uid in token")
 
     conn = None
-
+    
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),
@@ -120,10 +117,10 @@ async def update_user(userData: User, user_valid=Depends(verify_jwt)):
             """
             UPDATE users
             SET username = $1
-            WHERE email = $2
+            WHERE supabase_uid = $2
             """,
             userData.username,
-            email,
+            supabase_uid,
         )
 
         if result == "UPDATE 0":
@@ -149,19 +146,19 @@ async def update_user(userData: User, user_valid=Depends(verify_jwt)):
 
 
 def _username_from_payload(payload: dict) -> str:
-    """Derive username from JWT payload: user_metadata.username or email prefix."""
+    """Derive username from JWT payload: user_metadata.username or a safe default."""
     meta = payload.get("user_metadata") or {}
     if isinstance(meta, dict) and meta.get("username"):
         return str(meta["username"])[:150]
-    email = payload.get("email") or ""
-    return (email.split("@")[0] or "user")[:150]
+    return "user"[:150]
 
 
 @router.get("/api/users/me")
 async def get_username(user_valid=Depends(verify_jwt)):
-
-    print("1")
-    email = user_valid["email"]
+    
+    supabase_uid = user_valid.get("sub")
+    if not supabase_uid:
+        raise HTTPException(status_code=401, detail="Missing supabase uid in token")
     conn = None
     try:
         conn = await asyncpg.connect(
@@ -173,23 +170,23 @@ async def get_username(user_valid=Depends(verify_jwt)):
 
         user = await conn.fetchrow(
             """
-            SELECT id, username
+            SELECT supabase_uid, username
             FROM users
-            WHERE email = $1
+            WHERE supabase_uid = $1
             """,
-            email,
+            supabase_uid,
         )
 
         if not user:
             username = _username_from_payload(user_valid)
             user = await conn.fetchrow(
                 """
-                INSERT INTO users (username, email)
+                INSERT INTO users (supabase_uid, username)
                 VALUES ($1, $2)
-                RETURNING id, username
+                RETURNING supabase_uid, username
                 """,
+                supabase_uid,
                 username,
-                email,
             )
 
         return JSONResponse(

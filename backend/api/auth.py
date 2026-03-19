@@ -22,13 +22,8 @@ def verify_jwt(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
         header = jwt.get_unverified_header(token)
         kid = header["kid"]
-        print("This is the kid:", kid)
-
         key = next(k for k in jwks["keys"] if k["kid"] == kid)
-        print("This is the key:", key)
         
-        
-        print(header)
         
         payload = jwt.decode(
             token,
@@ -39,6 +34,10 @@ def verify_jwt(credentials: HTTPAuthorizationCredentials = Depends(security)):
         )
         
         print(f"Verifying JWT")
+        print(header)
+        
+        print("""Decoded JWT payload:""")
+        print(payload)
 
         return payload
 

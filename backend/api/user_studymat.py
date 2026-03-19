@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel
 import os
 import asyncpg
 from fastapi.responses import JSONResponse
@@ -10,17 +10,16 @@ from api.auth import verify_jwt
 router = APIRouter(
     prefix="/api",
     tags=["user_studymat"],
-    dependencies=[Depends(verify_jwt)],
 )
 
 
 class User(BaseModel):
-    username: str
-    email: str
+    username: str | None = None
 
 
 class FlashcardSet(BaseModel):
-    user_email: str
+    # Backward-compatible: we no longer use this server-side, identity comes from JWT `sub`.
+    user_email: str | None = None
     title: str
 
 
@@ -31,13 +30,53 @@ class Flashcard(BaseModel):
 
 
 class Summary(BaseModel):
-    user_email: str
+    # Backward-compatible: we no longer use this server-side, identity comes from JWT `sub`.
+    user_email: str | None = None
     title: str
     content: str
 
 
+def _username_from_payload(payload: dict) -> str:
+    """Derive username from JWT payload: user_metadata.username or a safe default."""
+    meta = payload.get("user_metadata") or {}
+    if isinstance(meta, dict) and meta.get("username"):
+        return str(meta["username"])[:150]
+    return "user"
+
+
+async def _get_or_create_user_id(conn: asyncpg.Connection, user_valid: dict) -> str:
+    """
+    Resolve app `users.supabase_uid` (primary key) from Supabase JWT `sub`.
+    Creates the user row if it doesn't exist.
+    """
+    user_uid = user_valid.get("sub")
+    if not user_uid:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing supabase uid in token")
+
+    user = await conn.fetchrow(
+        "SELECT supabase_uid FROM users WHERE supabase_uid = $1",
+        user_uid,
+    )
+    if user:
+        return str(user["supabase_uid"])
+
+    username = _username_from_payload(user_valid)
+    created = await conn.fetchrow(
+        """
+        INSERT INTO users (supabase_uid, username)
+        VALUES ($1, $2)
+        ON CONFLICT (supabase_uid) DO UPDATE
+        SET username = EXCLUDED.username
+        RETURNING supabase_uid
+        """,
+        user_uid,
+        username,
+    )
+    return str(created["supabase_uid"])
+
+
 @router.post("/api/createFlashCardSet")
-async def flashCardSet(flashset: FlashcardSet):
+async def flashCardSet(flashset: FlashcardSet, user_valid=Depends(verify_jwt)):
     """
     API Endpoint for flash card set creation
 
@@ -52,7 +91,9 @@ async def flashCardSet(flashset: FlashcardSet):
     }
 
     """
-    user_email = flashset.user_email
+    user_uid = user_valid.get("sub")
+    if not user_uid:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing supabase uid in token")
     title = flashset.title
     try:
         conn = await asyncpg.connect(
@@ -61,22 +102,7 @@ async def flashCardSet(flashset: FlashcardSet):
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD"),
         )
-        user = await conn.fetchrow(
-            """
-            SELECT id
-            FROM users
-            WHERE email = $1
-            """,
-            user_email,
-        )
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User with email does not exist",
-            )
-
-        user_dict = dict(user)
-        user_id = user_dict["id"]
+        user_id = await _get_or_create_user_id(conn, user_valid)
         try:
             row = await conn.fetchrow(
                 """
@@ -118,7 +144,7 @@ async def flashCardSet(flashset: FlashcardSet):
 
 
 @router.delete("/api/deleteFlashSet")
-async def flashCardSet(flashset: FlashcardSet):
+async def flashCardSet(flashset: FlashcardSet, user_valid=Depends(verify_jwt)):
     """ "
     API Endpoint for flash card set deletion
 
@@ -132,20 +158,7 @@ async def flashCardSet(flashset: FlashcardSet):
             password=os.getenv("DATABASE_PASSWORD"),
         )
 
-        user = await conn.fetchrow(
-            """
-            SELECT id FROM users WHERE email = $1
-            """,
-            flashset.user_email,
-        )
-
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User with email does not exist",
-            )
-
-        user_id = user["id"]
+        user_id = await _get_or_create_user_id(conn, user_valid)
 
         result = await conn.execute(
             """
@@ -179,7 +192,7 @@ async def flashCardSet(flashset: FlashcardSet):
 
 
 @router.put("/api/updateFlashSet/{update_title}")
-async def flashCardSet(update_title: str, flashset: FlashcardSet):
+async def flashCardSet(update_title: str, flashset: FlashcardSet, user_valid=Depends(verify_jwt)):
     """ "
     API Endpoint for updating name of flashcard set.
     """
@@ -190,19 +203,7 @@ async def flashCardSet(update_title: str, flashset: FlashcardSet):
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD"),
         )
-        user = await conn.fetchrow(
-            """
-            SELECT id FROM users WHERE email = $1
-            """,
-            flashset.user_email,
-        )
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User with email does not exist",
-            )
-
-        user_id = user["id"]   
+        user_id = await _get_or_create_user_id(conn, user_valid)
 
         fcs = await conn.execute(
             """
@@ -237,7 +238,7 @@ async def flashCardSet(update_title: str, flashset: FlashcardSet):
 
 
 @router.post("/api/addToFlashCardSet")
-async def addToFlashCardSet(flashcards: List[Flashcard]):
+async def addToFlashCardSet(flashcards: List[Flashcard], user_valid=Depends(verify_jwt)):
     """
     API Endpoint for flash card creation
 
@@ -274,6 +275,10 @@ async def addToFlashCardSet(flashcards: List[Flashcard]):
     ]
 
     """
+    user_uid = user_valid.get("sub")
+    if not user_uid:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing supabase uid in token")
+
     set_title = flashcards[0].flashcardset.title
     try:
         conn = await asyncpg.connect(
@@ -282,12 +287,15 @@ async def addToFlashCardSet(flashcards: List[Flashcard]):
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD"),
         )
+        user_id = await _get_or_create_user_id(conn, user_valid)
+
         fcset = await conn.fetchrow(
             """
             SELECT fcset_id
             FROM flash_card_set
-            WHERE set_title = $1
+            WHERE user_id = $1 AND set_title = $2
             """,
+            user_id,
             set_title,
         )
         if not fcset:
@@ -335,7 +343,7 @@ async def addToFlashCardSet(flashcards: List[Flashcard]):
 
 
 @router.post("/api/saveSummary")
-async def summary(summ: Summary):
+async def summary(summ: Summary, user_valid=Depends(verify_jwt)):
     """
     API Endpoint for summary creation
 
@@ -350,9 +358,11 @@ async def summary(summ: Summary):
     }
 
     """
-    user_email = summ.user_email
     title = summ.title
     content = summ.content
+    user_uid = user_valid.get("sub")
+    if not user_uid:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing supabase uid in token")
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),
@@ -361,21 +371,7 @@ async def summary(summ: Summary):
             password=os.getenv("DATABASE_PASSWORD"),
         )
 
-        user = await conn.fetchrow(
-            """
-            SELECT id
-            FROM users
-            WHERE email = $1
-            """,
-            user_email,
-        )
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User with email does not exist",
-            )
-        user_dict = dict(user)
-        user_id = user_dict["id"]
+        user_id = await _get_or_create_user_id(conn, user_valid)
         try:
             row = await conn.fetchrow(
                 """
@@ -421,7 +417,7 @@ async def summary(summ: Summary):
 
 
 @router.get("/api/getFlashcardsFromSet")
-async def getFlashcardsFromSet(flashset: FlashcardSet):
+async def getFlashcardsFromSet(flashset: FlashcardSet, user_valid=Depends(verify_jwt)):
     """
     API Endpoint for getting all Flashcards in an associated set
 
@@ -442,18 +438,11 @@ async def getFlashcardsFromSet(flashset: FlashcardSet):
             password=os.getenv("DATABASE_PASSWORD"),
         )
 
-        user = await conn.fetchrow(
-            """
-            SELECT id FROM users WHERE email = $1
-            """,
-            flashset.user_email,
-        )
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User with email does not exist",
-            )
-        user_id = user["id"]
+        user_uid = user_valid.get("sub")
+        if not user_uid:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing supabase uid in token")
+
+        user_id = await _get_or_create_user_id(conn, user_valid)
 
         flashset = await conn.fetchrow(
             """
@@ -499,7 +488,7 @@ async def getFlashcardsFromSet(flashset: FlashcardSet):
 
 
 @router.get("/api/getAllFlashcardSets")
-async def getAllFlashcardSets(user_info: User):
+async def getAllFlashcardSets(user_valid=Depends(verify_jwt), user_info: User | None = None):
     """
     API Endpoint for getting all Flashcard Sets
 
@@ -513,18 +502,11 @@ async def getAllFlashcardSets(user_info: User):
             password=os.getenv("DATABASE_PASSWORD"),
         )
 
-        user = await conn.fetchrow(
-            """
-            SELECT id FROM users WHERE email = $1
-            """,
-            user_info.email,
-        )
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User with email does not exist",
-            )
-        user_id = user["id"]
+        user_uid = user_valid.get("sub")
+        if not user_uid:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing supabase uid in token")
+
+        user_id = await _get_or_create_user_id(conn, user_valid)
 
         flashset = await conn.fetch(
             """

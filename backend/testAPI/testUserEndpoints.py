@@ -54,13 +54,12 @@ def testUserCreation():
 
     json = {
         "username": "pierce",
-        "email": "pwex@gmail.com",
     }
 
     response = requests.post(
         url=url,
         json=json,
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", **AUTH_HEADERS},
     )
 
     print("CREATED USER")
@@ -81,7 +80,6 @@ def testUserUpdates():
 
     json = {
         "username": "pierce's cooler username",
-        "email": "pwex@gmail.com",
     }
 
     response = requests.put(url=url, json=json, headers=AUTH_HEADERS)
@@ -95,24 +93,22 @@ def testUserGet():
 
     response = requests.get(url, headers=AUTH_HEADERS)
 
-    print("ASSOCIATED USERNAME:")
+    print("USER json:")
     print(response.json())
 
 
-test_no = 0
+test_no = 1
 
 match test_no:
 
     case 0:
-        print(get_jwt())
         testUserGet()
 
     case 1:
         """
         Test 1: Basic User creation and viewing of username:
         """
-        # testUserCreation()
-        testUserGet()
+        testUserCreation()
 
     case 2:
         """
@@ -132,7 +128,11 @@ match test_no:
         Test 4: All tests combined:
         """
         testUserCreation()
+        time.sleep(5)  
         testUserGet()
+        time.sleep(5)
         testUserUpdates()
+        time.sleep(5)
         testUserGet()
+        time.sleep(5)
         testUserDeletion()
