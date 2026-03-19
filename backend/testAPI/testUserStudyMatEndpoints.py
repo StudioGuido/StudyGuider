@@ -36,20 +36,18 @@ TOKEN = get_jwt()
 AUTH_HEADERS = {
     "Authorization": f"Bearer {TOKEN}",
 }
+JSON_AUTH_HEADERS = {"Content-Type": "application/json", **AUTH_HEADERS}
 
 
 def testFlashCardSetCreation():
     url = "http://0.0.0.0:8000/api/createFlashCardSet"
-
-    headers = {"Content-Type": "application/json", **AUTH_HEADERS}
+    headers = JSON_AUTH_HEADERS
 
     json1 = {
-        "user_email": "pwex@gmail.com",
         "title": "Basic Math FlashCards",
     }
     response1 = requests.post(url=url, json=json1, headers=headers)
     json2 = {
-        "user_email": "pwex@gmail.com",
         "title": "Advanced Math FlashCards",
     }
     response2 = requests.post(url=url, json=json2, headers=headers)
@@ -61,10 +59,9 @@ def testFlashcardSetUpdates():
     updated_title = "REALLY Advanced Math FlashCards"
     url = f"http://0.0.0.0:8000/api/updateFlashSet/{updated_title}"
 
-    headers = {"Content-Type": "application/json", **AUTH_HEADERS}
+    headers = JSON_AUTH_HEADERS
 
     json = {
-        "user_email": "pwex@gmail.com",
         "title": "Advanced Math FlashCards",
     }
     response = requests.put(url=url, json=json, headers=headers)
@@ -73,11 +70,10 @@ def testFlashcardSetUpdates():
 
 def testFlashCardsCreation():
     url = "http://0.0.0.0:8000/api/addToFlashCardSet"
-    headers = {"Content-Type": "application/json", **AUTH_HEADERS}
+    headers = JSON_AUTH_HEADERS
     json1 = [
         {
             "flashcardset": {
-                "user_email": "pwex@gmail.com",
                 "title": "Basic Math FlashCards",
             },
             "question": "1 + 1",
@@ -85,7 +81,6 @@ def testFlashCardsCreation():
         },
         {
             "flashcardset": {
-                "user_email": "pwex@gmail.com",
                 "title": "Basic Math FlashCards",
             },
             "question": "1 - 1",
@@ -93,7 +88,6 @@ def testFlashCardsCreation():
         },
         {
             "flashcardset": {
-                "user_email": "pwex@gmail.com",
                 "title": "Basic Math FlashCards",
             },
             "question": "1 * 1",
@@ -101,7 +95,6 @@ def testFlashCardsCreation():
         },
         {
             "flashcardset": {
-                "user_email": "pwex@gmail.com",
                 "title": "Basic Math FlashCards",
             },
             "question": "1 / 1",
@@ -109,7 +102,6 @@ def testFlashCardsCreation():
         },
         {
             "flashcardset": {
-                "user_email": "pwex@gmail.com",
                 "title": "Basic Math FlashCards",
             },
             "question": "1 ^ 1",
@@ -121,7 +113,6 @@ def testFlashCardsCreation():
     json2 = [
         {
             "flashcardset": {
-                "user_email": "pwex@gmail.com",
                 "title": "Advanced Math FlashCards",
             },
             "question": "f(x) = 2x^2, What is f'(x)",
@@ -129,7 +120,6 @@ def testFlashCardsCreation():
         },
         {
             "flashcardset": {
-                "user_email": "pwex@gmail.com",
                 "title": "Advanced Math FlashCards",
             },
             "question": "f(x) = 2x, What is f'(x)",
@@ -137,7 +127,6 @@ def testFlashCardsCreation():
         },
         {
             "flashcardset": {
-                "user_email": "pwex@gmail.com",
                 "title": "Advanced Math FlashCards",
             },
             "question": "f(x) = 2, What is f'(x)",
@@ -145,7 +134,6 @@ def testFlashCardsCreation():
         },
         {
             "flashcardset": {
-                "user_email": "pwex@gmail.com",
                 "title": "Advanced Math FlashCards",
             },
             "question": "417 % 10",
@@ -153,7 +141,6 @@ def testFlashCardsCreation():
         },
         {
             "flashcardset": {
-                "user_email": "pwex@gmail.com",
                 "title": "Advanced Math FlashCards",
             },
             "question": "5!",
@@ -168,10 +155,9 @@ def testFlashCardsCreation():
 
 def testFlashCardSetDeletion1():
     url = f"http://0.0.0.0:8000/api/deleteFlashSet"
-    headers = {"Content-Type": "application/json", **AUTH_HEADERS}
+    headers = JSON_AUTH_HEADERS
 
     json = {
-        "user_email": "pwex@gmail.com",
         "title": "Basic Math FlashCards",
     }
 
@@ -182,10 +168,9 @@ def testFlashCardSetDeletion1():
 
 def testFlashCardSetDeletion2():
     url = f"http://0.0.0.0:8000/api/deleteFlashSet"
-    headers = {"Content-Type": "application/json", **AUTH_HEADERS}
+    headers = JSON_AUTH_HEADERS
 
     json = {
-        "user_email": "pwex@gmail.com",
         "title": "REALLY Advanced Math FlashCards",
     }
 
@@ -197,11 +182,9 @@ def testFlashCardSetDeletion2():
 
 def testSummarySaving():
     url = "http://0.0.0.0:8000/api/saveSummary"
-
-    headers = {"Content-Type": "application/json", **AUTH_HEADERS}
+    headers = JSON_AUTH_HEADERS
 
     json = {
-        "user_email": "pwex@gmail.com",
         "title": "Important Generated Summary",
         "content": "Chatgpt says that ......",
     }
@@ -212,11 +195,9 @@ def testSummarySaving():
 
 def testGetFlashCardsFromSet2():
     url = "http://0.0.0.0:8000/api/getFlashcardsFromSet"
-
-    headers = {"Content-Type": "application/json", **AUTH_HEADERS}
+    headers = JSON_AUTH_HEADERS
 
     json = {
-        "user_email": "pwex@gmail.com",
         "title": "Advanced Math FlashCards",
     }
     response = requests.get(url=url, json=json, headers=headers)
@@ -226,14 +207,8 @@ def testGetFlashCardsFromSet2():
 
 def testGetAllFlashcardSets():
     url = "http://0.0.0.0:8000/api/getAllFlashcardSets"
-
-    headers = {"Content-Type": "application/json", **AUTH_HEADERS}
-
-    json = {
-        "username": "pierce",
-        "email": "pwex@gmail.com",
-    }
-    response = requests.get(url=url, json=json, headers=headers)
+    headers = JSON_AUTH_HEADERS
+    response = requests.get(url=url, headers=headers)
     print(f"Got Flash Card Sets")
     print(response.json())
 
