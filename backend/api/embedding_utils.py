@@ -8,11 +8,11 @@ import asyncio
 from fastapi import HTTPException
 from .openAIHelper import get_openai_response
 
-OLLAMA_HOST  = os.getenv("OLLAMA_HOST")        # in Compose, service name "ollama"
-OLLAMA_PORT  = os.getenv("OLLAMA_PORT")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL")     # default model
-TIMEOUT_SEC   = float(os.getenv("OLLAMA_TIMEOUT_SEC"))
-OLLAMA_URL = f"http://{OLLAMA_HOST}:{OLLAMA_PORT}/api/generate"
+# OLLAMA_HOST  = os.getenv("OLLAMA_HOST")        # in Compose, service name "ollama"
+# OLLAMA_PORT  = os.getenv("OLLAMA_PORT")
+# OLLAMA_MODEL = os.getenv("OLLAMA_MODEL")     # default model
+# TIMEOUT_SEC   = float(os.getenv("OLLAMA_TIMEOUT_SEC"))
+# OLLAMA_URL = f"http://{OLLAMA_HOST}:{OLLAMA_PORT}/api/generate"
 
 # OLLAMA_HOST=127.0.0.1:11435 ollama serve
 

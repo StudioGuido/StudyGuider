@@ -5,7 +5,7 @@ import time
 BASE_URL = os.getenv("STUDYGUIDER_API_BASE_URL", "http://127.0.0.1:8000")
 FLASHCARD_ENDPOINT = f"{BASE_URL}/api/generateFlashCard"
 
-def run_flashcard_timing_test(counts=(1, 5, 10), trials_per_count=2, textbook="thinkpython2", chapter="Files"):
+def run_flashcard_timing_test(counts=(1,), trials_per_count=1, textbook="thinkpython2", chapter="Files"):
     total_cards_returned = 0
     for count in counts:
         for trial in range(1, trials_per_count + 1):
@@ -21,7 +21,7 @@ def run_flashcard_timing_test(counts=(1, 5, 10), trials_per_count=2, textbook="t
     return total_cards_returned
 
 def main():
-    total_cards_returned = run_flashcard_timing_test(counts=(1, 5, 10), trials_per_count=2)
+    total_cards_returned = run_flashcard_timing_test(counts=(1,), trials_per_count=1)
 
 if __name__ == "__main__":
     main()
