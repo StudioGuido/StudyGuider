@@ -1,22 +1,16 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel
 import os
 import asyncpg
 from fastapi.responses import JSONResponse
-from fastapi import status
 from typing import List
+from api.auth import verify_jwt
 
 router = APIRouter()
 
 
-class User(BaseModel):
-    username: str
-    email: str
-
-
 class FlashcardSet(BaseModel):
-    user_email: str
     title: str
 
 
@@ -27,28 +21,38 @@ class Flashcard(BaseModel):
 
 
 class Summary(BaseModel):
-    user_email: str
     title: str
     content: str
 
 
+async def get_valid_user(conn: asyncpg.Connection, user_valid: dict) -> str:
+    """
+    Resolve and validate app user from Supabase JWT `sub`.
+    Raises if token is missing `sub` or user row does not exist.
+    """
+    user_uid = user_valid.get("sub")
+    if not user_uid:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing supabase uid in token")
+
+    user = await conn.fetchrow(
+        "SELECT supabase_uid FROM users WHERE supabase_uid = $1",
+        user_uid,
+    )
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User has not been created",
+        )
+    return str(user["supabase_uid"])
+
+
 @router.post("/api/createFlashCardSet")
-async def flashCardSet(flashset: FlashcardSet):
+async def create_flashcard_set(flashset: FlashcardSet, user_valid=Depends(verify_jwt)):
     """
     API Endpoint for flash card set creation
 
-    Creates a Flash Card set that references an associated user account and holds
-    a title string.
-
-    example json input:
-
-    json = {
-    "user_email": "pwex@gmail.com",
-    "title": "Basic Math FlashCards",
-    }
-
+    Creates a flashcard set scoped to the authenticated user.
     """
-    user_email = flashset.user_email
     title = flashset.title
     try:
         conn = await asyncpg.connect(
@@ -57,22 +61,10 @@ async def flashCardSet(flashset: FlashcardSet):
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD"),
         )
-        user = await conn.fetchrow(
-            """
-            SELECT id
-            FROM users
-            WHERE email = $1
-            """,
-            user_email,
-        )
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User with email does not exist",
-            )
+        print("""User validation payload in create_flashcard_set:""")
+        print(user_valid)
+        user_id = await get_valid_user(conn, user_valid)
 
-        user_dict = dict(user)
-        user_id = user_dict["id"]
         try:
             row = await conn.fetchrow(
                 """
@@ -114,12 +106,8 @@ async def flashCardSet(flashset: FlashcardSet):
 
 
 @router.delete("/api/deleteFlashSet")
-async def flashCardSet(flashset: FlashcardSet):
-    """ "
-    API Endpoint for flash card set deletion
-
-    Deletes a flashcard set based on user email and flashcard set name.
-    """
+async def delete_flashcard_set(flashset: FlashcardSet, user_valid=Depends(verify_jwt)):
+    """Delete a flashcard set owned by the authenticated user."""
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),
@@ -128,20 +116,7 @@ async def flashCardSet(flashset: FlashcardSet):
             password=os.getenv("DATABASE_PASSWORD"),
         )
 
-        user = await conn.fetchrow(
-            """
-            SELECT id FROM users WHERE email = $1
-            """,
-            flashset.user_email,
-        )
-
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User with email does not exist",
-            )
-
-        user_id = user["id"]
+        user_id = await get_valid_user(conn, user_valid)
 
         result = await conn.execute(
             """
@@ -175,10 +150,8 @@ async def flashCardSet(flashset: FlashcardSet):
 
 
 @router.put("/api/updateFlashSet/{update_title}")
-async def flashCardSet(update_title: str, flashset: FlashcardSet):
-    """ "
-    API Endpoint for updating name of flashcard set.
-    """
+async def update_flashcard_set(update_title: str, flashset: FlashcardSet, user_valid=Depends(verify_jwt)):
+    """Update the title of a flashcard set owned by the authenticated user."""
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),
@@ -186,19 +159,7 @@ async def flashCardSet(update_title: str, flashset: FlashcardSet):
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD"),
         )
-        user = await conn.fetchrow(
-            """
-            SELECT id FROM users WHERE email = $1
-            """,
-            flashset.user_email,
-        )
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User with email does not exist",
-            )
-
-        user_id = user["id"]   
+        user_id = await get_valid_user(conn, user_valid)
 
         fcs = await conn.execute(
             """
@@ -233,7 +194,7 @@ async def flashCardSet(update_title: str, flashset: FlashcardSet):
 
 
 @router.post("/api/addToFlashCardSet")
-async def addToFlashCardSet(flashcards: List[Flashcard]):
+async def addToFlashCardSet(flashcards: List[Flashcard], user_valid=Depends(verify_jwt)):
     """
     API Endpoint for flash card creation
 
@@ -278,12 +239,15 @@ async def addToFlashCardSet(flashcards: List[Flashcard]):
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD"),
         )
+        user_id = await get_valid_user(conn, user_valid)
+
         fcset = await conn.fetchrow(
             """
             SELECT fcset_id
             FROM flash_card_set
-            WHERE set_title = $1
+            WHERE user_id = $1 AND set_title = $2
             """,
+            user_id,
             set_title,
         )
         if not fcset:
@@ -331,22 +295,12 @@ async def addToFlashCardSet(flashcards: List[Flashcard]):
 
 
 @router.post("/api/saveSummary")
-async def summary(summ: Summary):
+async def summary(summ: Summary, user_valid=Depends(verify_jwt)):
     """
     API Endpoint for summary creation
 
-    Saves an input summary to an associated user account
-
-    example json input:
-
-    json = {
-    "user_email": "pwex@gmail.com",
-    "title": "My Summary",
-    "content": "This is an excerpt from ChatGPT"
-    }
-
+    Saves an input summary to the authenticated user.
     """
-    user_email = summ.user_email
     title = summ.title
     content = summ.content
     try:
@@ -357,21 +311,7 @@ async def summary(summ: Summary):
             password=os.getenv("DATABASE_PASSWORD"),
         )
 
-        user = await conn.fetchrow(
-            """
-            SELECT id
-            FROM users
-            WHERE email = $1
-            """,
-            user_email,
-        )
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User with email does not exist",
-            )
-        user_dict = dict(user)
-        user_id = user_dict["id"]
+        user_id = await get_valid_user(conn, user_valid)
         try:
             row = await conn.fetchrow(
                 """
@@ -417,18 +357,11 @@ async def summary(summ: Summary):
 
 
 @router.get("/api/getFlashcardsFromSet")
-async def getFlashcardsFromSet(flashset: FlashcardSet):
+async def getFlashcardsFromSet(flashset: FlashcardSet, user_valid=Depends(verify_jwt)):
     """
     API Endpoint for getting all Flashcards in an associated set
 
-    Returns an array of Flash Cards given a user's email and
-    the name of the flashcard set.
-
-    NOTE: I am unsure as to how the frontend will display/store the information
-    related to the flashcard sets, so currently I am assuming the users will not
-    create flashcard sets of a a duplicate name, and therefore we are using the email
-    and set name in tandum to return the flash cards. This is open to modification if
-    required.
+    Returns all flashcards for one set belonging to the authenticated user.
     """
     try:
         conn = await asyncpg.connect(
@@ -438,18 +371,7 @@ async def getFlashcardsFromSet(flashset: FlashcardSet):
             password=os.getenv("DATABASE_PASSWORD"),
         )
 
-        user = await conn.fetchrow(
-            """
-            SELECT id FROM users WHERE email = $1
-            """,
-            flashset.user_email,
-        )
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User with email does not exist",
-            )
-        user_id = user["id"]
+        user_id = await get_valid_user(conn, user_valid)
 
         flashset = await conn.fetchrow(
             """
@@ -495,11 +417,11 @@ async def getFlashcardsFromSet(flashset: FlashcardSet):
 
 
 @router.get("/api/getAllFlashcardSets")
-async def getAllFlashcardSets(user_info: User):
+async def getAllFlashcardSets(user_valid=Depends(verify_jwt)):
     """
     API Endpoint for getting all Flashcard Sets
 
-    Returns an array of Flash Card Sets given the users email
+    Returns all flashcard sets for the authenticated user.
     """
     try:
         conn = await asyncpg.connect(
@@ -509,18 +431,7 @@ async def getAllFlashcardSets(user_info: User):
             password=os.getenv("DATABASE_PASSWORD"),
         )
 
-        user = await conn.fetchrow(
-            """
-            SELECT id FROM users WHERE email = $1
-            """,
-            user_info.email,
-        )
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User with email does not exist",
-            )
-        user_id = user["id"]
+        user_id = await get_valid_user(conn, user_valid)
 
         flashset = await conn.fetch(
             """

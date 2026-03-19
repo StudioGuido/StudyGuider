@@ -149,9 +149,8 @@ async def init_db():
 
             usersTable = """
             CREATE TABLE users (
-            id SERIAL PRIMARY KEY,
+            supabase_uid VARCHAR(255) PRIMARY KEY,
             username VARCHAR(150) UNIQUE NOT NULL,
-            email VARCHAR(255) UNIQUE NOT NULL,
             created_at TIMESTAMP DEFAULT NOW(),
             last_login TIMESTAMP
             );
@@ -162,7 +161,7 @@ async def init_db():
             CREATE TABLE flash_card_set (
             fcset_id SERIAL PRIMARY KEY,
             set_title VARCHAR(255) UNIQUE NOT NULL,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
             UNIQUE (user_id, set_title)
             );
             """
@@ -181,7 +180,7 @@ async def init_db():
             summaryTable = """
             CREATE TABLE summary (
             summary_id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
             title VARCHAR(255) NOT NULL,
             content TEXT NOT NULL
             );
