@@ -6,7 +6,7 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 import re
 
-from .openAIHelper import get_openai_response
+from .AIHelper import get_gemini_response
 
 router = APIRouter()
 
@@ -72,18 +72,18 @@ async def generate_endpoint(request: SummaryRequest):
             if row["chunk_text"].strip()
         )
 
-        # Build the OpenAI prompt
+        # Build the Gemini prompt
         prompt = f"""
         Summarize the following chapter so that a student can easily understand the main ideas, key concepts, and important details. Use clear and simple language.
 
         Chapter Content:
         {chapter_text}
         """
-        # Call OpenAI asynchronously
+        # Call Gemini asynchronously
         try:
-            modelResponse = await get_openai_response(prompt)
+            modelResponse = await get_gemini_response(prompt)
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"OpenAI API error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Gemini API error: {str(e)}")
 
 
         return JSONResponse(
@@ -100,19 +100,19 @@ async def generate_endpoint(request: SummaryRequest):
     finally:
         await conn.close()
 '''
-    Endpoint to generate a chapter summary using OpenAI.
+    Endpoint to generate a chapter summary using Gemini.
     
     1. Extract textbook and chapter from the user request.
     2. Connect asynchronously to PostgreSQL and fetch chapter info.
     3. Fetch all text chunks for the chapter.
     4. Clean and combine all chunks into a single text string.
-    5. Build a prompt and call OpenAI asynchronously.
+    5. Build a prompt and call Gemini asynchronously.
     6. Return the summary as JSON.
 
     Raises:
     - HTTPException(400) if the textbook or chapter is invalid.
     - HTTPException(404) if no chunks are found in the database.
-    - HTTPException(500) for database or OpenAI API errors.
+    - HTTPException(500) for database or Gemini API errors.
     '''
 
 '''
@@ -124,5 +124,5 @@ Library:
 - status: readable HTTP status codes
 - JSONResponse: sends Python data as JSON to the frontend
 - re: regular expressions for text cleaning
-- openAIHelper.get_openai_response: async OpenAI call for generating summaries
+- AIHelper.get_gemini_response: async Gemini call for generating summaries
 '''
