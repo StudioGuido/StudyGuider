@@ -26,7 +26,6 @@ export default function Auth() {
       alert(error.message);
     } else {
       console.log("Signed up user:", data.user);
-      alert("Check your email!");
     }
   };
 
