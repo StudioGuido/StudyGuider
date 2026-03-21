@@ -8,7 +8,7 @@ import PhaseLayout from "./components/PhaseLayout";
 
 // --- NEW IMPORTS FOR AUTH ---
 import { useAuth } from "./context/AuthContext"; // Import the hook to access user state
-import Login from "./pages/Auth/Login"; // Import your new login page
+import LoginSignup from "./pages/Auth/LoginSignup"; // Import your new login page
 // ----------------------------
 
 export default function App() {
@@ -25,7 +25,7 @@ export default function App() {
   // PURPOSE: If there is no user session, we only render the Login page.
   // Once the user logs in, 'user' becomes true and the full app renders below.
   if (!user) {
-    return <Login />;
+    return <LoginSignup />;
   }
 
 
