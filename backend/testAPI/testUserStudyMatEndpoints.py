@@ -2,6 +2,8 @@ import requests
 import asyncio
 import time
 
+# Flashcard POSTs need a valid chapter_embeddings row; run once: psql < backend/test_seed_minimal.sql
+
 SUPABASE_URL = "https://bafblcxwhdvikgcpcnds.supabase.co"
 SUPABASE_ANON_KEY = "sb_publishable_EHbCfU3Xd5oku8EZZTLD7g_1bxWBYnC"
 
@@ -38,9 +40,33 @@ AUTH_HEADERS = {
 }
 JSON_AUTH_HEADERS = {"Content-Type": "application/json", **AUTH_HEADERS}
 
+API_BASE = "http://0.0.0.0:8000"
+
+
+def _create_master(headers, question: str, answer: str) -> int:
+    """POST /api/createMasterFlashcard — needs chapter_embeddings (1,1,0); see test_seed_minimal.sql."""
+    r = requests.post(
+        f"{API_BASE}/api/createMasterFlashcard",
+        headers=headers,
+        json={
+            "question": question,
+            "answer": answer,
+            "textbook_id": 1,
+            "chapter_number": 1,
+            "chunk_index": 0,
+        },
+    )
+    r.raise_for_status()
+    return r.json()["response"]["fc_id"]
+
+
+def _assign_to_set(set_title: str, master_fc_id: int) -> dict:
+    """Payload for /api/addToFlashCardSet."""
+    return {"flashcardset": {"title": set_title}, "master_fc_id": master_fc_id}
+
 
 def testFlashCardSetCreation():
-    url = "http://0.0.0.0:8000/api/createFlashCardSet"
+    url = f"{API_BASE}/api/createFlashCardSet"
     headers = JSON_AUTH_HEADERS
 
     json1 = {
@@ -57,7 +83,7 @@ def testFlashCardSetCreation():
 
 def testFlashcardSetUpdates():
     updated_title = "REALLY Advanced Math FlashCards"
-    url = f"http://0.0.0.0:8000/api/updateFlashSet/{updated_title}"
+    url = f"{API_BASE}/api/updateFlashSet/{updated_title}"
 
     headers = JSON_AUTH_HEADERS
 
@@ -69,83 +95,32 @@ def testFlashcardSetUpdates():
     print(response.json())
 
 def testFlashCardsCreation():
-    url = "http://0.0.0.0:8000/api/addToFlashCardSet"
+    url = f"{API_BASE}/api/addToFlashCardSet"
     headers = JSON_AUTH_HEADERS
+
+    basics = [
+        ("1 + 1", "2"),
+        ("1 - 1", "0"),
+        ("1 * 1", "1"),
+        ("1 / 1", "1"),
+        ("1 ^ 1", "1"),
+    ]
     json1 = [
-        {
-            "flashcardset": {
-                "title": "Basic Math FlashCards",
-            },
-            "question": "1 + 1",
-            "answer": "2",
-        },
-        {
-            "flashcardset": {
-                "title": "Basic Math FlashCards",
-            },
-            "question": "1 - 1",
-            "answer": "0",
-        },
-        {
-            "flashcardset": {
-                "title": "Basic Math FlashCards",
-            },
-            "question": "1 * 1",
-            "answer": "1",
-        },
-        {
-            "flashcardset": {
-                "title": "Basic Math FlashCards",
-            },
-            "question": "1 / 1",
-            "answer": "1",
-        },
-        {
-            "flashcardset": {
-                "title": "Basic Math FlashCards",
-            },
-            "question": "1 ^ 1",
-            "answer": "1",
-        },
+        _assign_to_set("Basic Math FlashCards", _create_master(headers, q, a))
+        for q, a in basics
     ]
     response1 = requests.post(url=url, json=json1, headers=headers)
 
+    advanced = [
+        ("f(x) = 2x^2, What is f'(x)", "4x"),
+        ("f(x) = 2x, What is f'(x)", "2"),
+        ("f(x) = 2, What is f'(x)", "0"),
+        ("417 % 10", "17"),
+        ("5!", "120"),
+    ]
     json2 = [
-        {
-            "flashcardset": {
-                "title": "Advanced Math FlashCards",
-            },
-            "question": "f(x) = 2x^2, What is f'(x)",
-            "answer": "4x",
-        },
-        {
-            "flashcardset": {
-                "title": "Advanced Math FlashCards",
-            },
-            "question": "f(x) = 2x, What is f'(x)",
-            "answer": "2",
-        },
-        {
-            "flashcardset": {
-                "title": "Advanced Math FlashCards",
-            },
-            "question": "f(x) = 2, What is f'(x)",
-            "answer": "0",
-        },
-        {
-            "flashcardset": {
-                "title": "Advanced Math FlashCards",
-            },
-            "question": "417 % 10",
-            "answer": "17",
-        },
-        {
-            "flashcardset": {
-                "title": "Advanced Math FlashCards",
-            },
-            "question": "5!",
-            "answer": "120",
-        },
+        _assign_to_set("Advanced Math FlashCards", _create_master(headers, q, a))
+        for q, a in advanced
     ]
     response2 = requests.post(url=url, json=json2, headers=headers)
     print(f"CREATED FLASH CARDS")
@@ -154,7 +129,7 @@ def testFlashCardsCreation():
 
 
 def testFlashCardSetDeletion1():
-    url = f"http://0.0.0.0:8000/api/deleteFlashSet"
+    url = f"{API_BASE}/api/deleteFlashSet"
     headers = JSON_AUTH_HEADERS
 
     json = {
@@ -167,7 +142,7 @@ def testFlashCardSetDeletion1():
 
 
 def testFlashCardSetDeletion2():
-    url = f"http://0.0.0.0:8000/api/deleteFlashSet"
+    url = f"{API_BASE}/api/deleteFlashSet"
     headers = JSON_AUTH_HEADERS
 
     json = {
@@ -181,7 +156,7 @@ def testFlashCardSetDeletion2():
 
 
 def testSummarySaving():
-    url = "http://0.0.0.0:8000/api/saveSummary"
+    url = f"{API_BASE}/api/saveSummary"
     headers = JSON_AUTH_HEADERS
 
     json = {
@@ -194,7 +169,7 @@ def testSummarySaving():
 
 
 def testGetFlashCardsFromSet2():
-    url = "http://0.0.0.0:8000/api/getFlashcardsFromSet"
+    url = f"{API_BASE}/api/getFlashcardsFromSet"
     headers = JSON_AUTH_HEADERS
 
     json = {
@@ -206,14 +181,14 @@ def testGetFlashCardsFromSet2():
 
 
 def testGetAllFlashcardSets():
-    url = "http://0.0.0.0:8000/api/getAllFlashcardSets"
+    url = f"{API_BASE}/api/getAllFlashcardSets"
     headers = JSON_AUTH_HEADERS
     response = requests.get(url=url, headers=headers)
     print(f"Got Flash Card Sets")
     print(response.json())
 
 
-test_no = 3
+test_no = 1
 match test_no:
     case 0:
         print("No tests ran")

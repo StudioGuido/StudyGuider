@@ -19,6 +19,8 @@ print("Loaded JWKS:", jwks)
 
 def verify_jwt(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
+    print(f"Received JWT for verification: {token}")
+    
     try:
         header = jwt.get_unverified_header(token)
         kid = header["kid"]
@@ -33,11 +35,7 @@ def verify_jwt(credentials: HTTPAuthorizationCredentials = Depends(security)):
             issuer=f"{SUPABASE_URL}/auth/v1",
         )
         
-        print(f"Verifying JWT")
-        print(header)
-        
-        print("""Decoded JWT payload:""")
-        print(payload)
+        print("JWT successfully verified. Payload:", payload)
 
         return payload
 

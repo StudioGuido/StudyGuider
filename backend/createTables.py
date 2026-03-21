@@ -24,6 +24,11 @@ async def init_db():
        - chapters
        - chapter_embeddings (includes pgvector field)
        - users
+       - flash_card_set
+       - master_flashcard
+       - flash_card_set_assignment (weak entity: set ↔ master_flashcard)
+       - seen_card
+       - summary
 
     Table Schemas:
     ---------------
@@ -54,20 +59,41 @@ async def init_db():
     - PRIMARY KEY     : (textbook_id, chapter_number, chunk_index)
     - FOREIGN KEY     : (textbook_id, chapter_number) REFERENCES chapters(textbook_id, chapter_number) ON DELETE CASCADE
 
-    users:
-    --------
-    - id            : SERIAL PRIMARY KEY — unique user ID
-    - username      : VARCHAR(150) UNIQUE NOT NULL — login name
-    - email         : VARCHAR(255) UNIQUE NOT NULL — user email
-    - password_hash : TEXT NOT NULL — hashed password
-    - first_name    : VARCHAR(255) — optional
-    - last_name     : VARCHAR(255) — optional
-    - created_at    : TIMESTAMP DEFAULT NOW() — account creation time
-    - provider      : VARCHAR(50) — e.g., 'google', 'github'
-    - provider_id   : VARCHAR(255) — ID from OAuth provider
-    - last_login    : TIMESTAMP — last login timestamp
-    - auth_level    : user_role DEFAULT 'user'
-        - either admin or user
+    users
+    -----
+    - supabase_uid : VARCHAR(255) PRIMARY KEY — Supabase auth user id
+    - username     : VARCHAR(150) UNIQUE NOT NULL
+    - created_at   : TIMESTAMP DEFAULT NOW()
+    - last_login   : TIMESTAMP — optional
+
+    flash_card_set
+    ----------------
+    - fcset_id  : SERIAL PRIMARY KEY
+    - set_title : VARCHAR(255) NOT NULL — title unique per user
+    - user_id   : VARCHAR(255) NOT NULL — FK to users(supabase_uid)
+    - UNIQUE (user_id, set_title)
+
+    master_flashcard
+    -----------------
+    - fc_id : SERIAL PRIMARY KEY — canonical Q/A tied to one text chunk
+    - question, answer : TEXT NOT NULL
+    - textbook_id, chapter_number, chunk_index — FK to chapter_embeddings (same composite key)
+
+    flash_card_set_assignment (weak entity)
+    -----------------------------------------
+    - Identifying owners: flash_card_set(fcset_id), master_flashcard(fc_id)
+    - PRIMARY KEY (fcset_id, master_fc_id) — each master card at most once per set
+
+    seen_card
+    ---------
+    - user_id, flashcard_id — PK; tracks which master cards a user has seen
+
+    summary
+    -------
+    - summary_id : SERIAL PRIMARY KEY
+    - user_id    : VARCHAR(255) — FK to users(supabase_uid)
+    - title      : VARCHAR(255) NOT NULL
+    - content    : TEXT NOT NULL
     """
     for attempt in range(max_retries):
         try:
@@ -106,7 +132,7 @@ async def init_db():
             await conn.execute(create_textbook_table_query)
 
             chaptersTable = """
-            CREATE TABLE chapters (
+            CREATE TABLE IF NOT EXISTS chapters (
                 textbook_id INTEGER NOT NULL,
                 chapter_number INTEGER NOT NULL,
                 chapter_title TEXT NOT NULL,
@@ -130,25 +156,9 @@ async def init_db():
             );
             """
             await conn.execute(embeddingTable)
-
-            # usersTable = """
-            # CREATE TABLE users (
-            # id SERIAL PRIMARY KEY,
-            # username VARCHAR(150) UNIQUE NOT NULL,
-            # email VARCHAR(255) UNIQUE NOT NULL,
-            # password_hash TEXT NOT NULL,
-            # first_name VARCHAR(255),
-            # last_name VARCHAR(255),
-            # created_at TIMESTAMP DEFAULT NOW(),
-            # provider VARCHAR(50),
-            # provider_id VARCHAR(255),
-            # last_login TIMESTAMP,
-            # auth_level user_role DEFAULT 'user'
-            # );
-            # """
-
+            
             usersTable = """
-            CREATE TABLE users (
+            CREATE TABLE IF NOT EXISTS users (
             supabase_uid VARCHAR(255) PRIMARY KEY,
             username VARCHAR(150) UNIQUE NOT NULL,
             created_at TIMESTAMP DEFAULT NOW(),
@@ -158,27 +168,50 @@ async def init_db():
             await conn.execute(usersTable)
 
             flashCardSetTable = """
-            CREATE TABLE flash_card_set (
-            fcset_id SERIAL PRIMARY KEY,
-            set_title VARCHAR(255) UNIQUE NOT NULL,
-            user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
-            UNIQUE (user_id, set_title)
+            CREATE TABLE IF NOT EXISTS flash_card_set (
+                fcset_id SERIAL PRIMARY KEY,
+                set_title VARCHAR(255) NOT NULL,
+                user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
+                UNIQUE (user_id, set_title)
             );
             """
             await conn.execute(flashCardSetTable)
 
-            flashCardTable = """
-            CREATE TABLE flash_card (
-            fc_id SERIAL PRIMARY KEY,
-            fcset_id INTEGER REFERENCES flash_card_set(fcset_id) ON DELETE CASCADE,
-            question TEXT NOT NULL,
-            answer TEXT NOT NULL
+            master_flashcard_table = """
+            CREATE TABLE IF NOT EXISTS master_flashcard(
+                fc_id SERIAL PRIMARY KEY,
+                question TEXT NOT NULL,
+                answer TEXT NOT NULL,
+                textbook_id INTEGER NOT NULL,
+                chapter_number INTEGER NOT NULL,
+                chunk_index INTEGER NOT NULL,
+                FOREIGN KEY (textbook_id, chapter_number, chunk_index)
+                REFERENCES chapter_embeddings(textbook_id, chapter_number, chunk_index)
+                ON DELETE CASCADE
             );
             """
-            await conn.execute(flashCardTable)
+            await conn.execute(master_flashcard_table)
+
+            flash_card_set_assignment_table = """
+            CREATE TABLE IF NOT EXISTS flash_card_set_assignment (
+                fcset_id INTEGER NOT NULL REFERENCES flash_card_set(fcset_id) ON DELETE CASCADE,
+                master_fc_id INTEGER NOT NULL REFERENCES master_flashcard(fc_id) ON DELETE CASCADE,
+                PRIMARY KEY (fcset_id, master_fc_id)
+            );
+            """
+            await conn.execute(flash_card_set_assignment_table)
+            
+            seenflashcards_table = """
+            CREATE TABLE IF NOT EXISTS seen_card (
+                user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
+                flashcard_id INTEGER NOT NULL REFERENCES master_flashcard(fc_id) ON DELETE CASCADE,
+                PRIMARY KEY (user_id, flashcard_id)
+            );
+            """
+            await conn.execute(seenflashcards_table)
 
             summaryTable = """
-            CREATE TABLE summary (
+            CREATE TABLE IF NOT EXISTS summary (
             summary_id SERIAL PRIMARY KEY,
             user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
             title VARCHAR(255) NOT NULL,
@@ -194,7 +227,7 @@ async def init_db():
 
         except Exception as e:
             print(
-                f"❌ Attempt {attempt+1}/{max_retries}: Database not ready, retrying in {retry_delay}s..."
+                f"❌ Attempt {attempt+1}/{max_retries}: Database not ready, retrying in {retry_delay}s... ({e})"
             )
             await asyncio.sleep(retry_delay)
 

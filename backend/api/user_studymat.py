@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import os
 import asyncpg
 from fastapi.responses import JSONResponse
-from typing import List
+from typing import List, Dict, Any
 from api.auth import verify_jwt
 
 router = APIRouter()
@@ -14,10 +14,21 @@ class FlashcardSet(BaseModel):
     title: str
 
 
-class Flashcard(BaseModel):
-    flashcardset: FlashcardSet
+class MasterFlashcardCreate(BaseModel):
+    """Body for inserting one row into `master_flashcard` (canonical Q/A + chunk FK)."""
+
     question: str
     answer: str
+    textbook_id: int
+    chapter_number: int
+    chunk_index: int
+
+
+class Flashcard(BaseModel):
+    """Assign an existing master flashcard into a user set."""
+
+    flashcardset: FlashcardSet
+    master_fc_id: int
 
 
 class Summary(BaseModel):
@@ -44,6 +55,50 @@ async def get_valid_user(conn: asyncpg.Connection, user_valid: dict) -> str:
             detail="User has not been created",
         )
     return str(user["supabase_uid"])
+
+
+@router.post("/api/createMasterFlashcard")
+async def create_master_flashcard(body: MasterFlashcardCreate, user_valid=Depends(verify_jwt)):
+    """Insert a single row into `master_flashcard`. Use `/api/addToFlashCardSet` to put it in a set."""
+    conn = None
+    try:
+        conn = await asyncpg.connect(
+            host=os.getenv("DATABASE_HOST"),
+            database=os.getenv("DATABASE_NAME"),
+            user=os.getenv("DATABASE_USER"),
+            password=os.getenv("DATABASE_PASSWORD"),
+        )
+        await get_valid_user(conn, user_valid)
+
+        try:
+            row = await conn.fetchrow(
+                """
+                INSERT INTO master_flashcard
+                    (question, answer, textbook_id, chapter_number, chunk_index)
+                VALUES ($1, $2, $3, $4, $5)
+                RETURNING fc_id, question, answer, textbook_id, chapter_number, chunk_index
+                """,
+                body.question,
+                body.answer,
+                body.textbook_id,
+                body.chapter_number,
+                body.chunk_index,
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error creating master flashcard: {e}")
+
+        return JSONResponse(
+            status_code=status.HTTP_201_CREATED,
+            content=jsonable_encoder({"response": dict(row)}),
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        if conn:
+            await conn.close()
 
 
 @router.post("/api/createFlashCardSet")
@@ -196,40 +251,8 @@ async def update_flashcard_set(update_title: str, flashset: FlashcardSet, user_v
 @router.post("/api/addToFlashCardSet")
 async def addToFlashCardSet(flashcards: List[Flashcard], user_valid=Depends(verify_jwt)):
     """
-    API Endpoint for flash card creation
-
-    Adds an List of flash card json objects to an existing flash card set.
-
-    example json input:
-
-    json = [
-        {
-        "set_title": "Basic Math FlashCards",
-        "question": "1 + 1",
-        "answer": "2",
-        },
-        {
-        "set_title": "Basic Math FlashCards",
-        "question": "1 - 1",
-        "answer": "0",
-        },
-        {
-        "set_title": "Basic Math FlashCards",
-        "question": "1 * 1",
-        "answer": "1",
-        },
-        {
-        "set_title": "Basic Math FlashCards",
-        "question": "1 / 1",
-        "answer": "1",
-        },
-        {
-        "set_title": "Basic Math FlashCards",
-        "question": "1 ^ 1",
-        "answer": "1",
-        },
-    ]
-
+    Link existing `master_flashcard` rows (by `master_fc_id`) into a user flashcard set.
+    Create masters first via `/api/createMasterFlashcard`.
     """
     set_title = flashcards[0].flashcardset.title
     try:
@@ -257,23 +280,21 @@ async def addToFlashCardSet(flashcards: List[Flashcard], user_valid=Depends(veri
             )
         fcset_dict = dict(fcset)
         fcset_id = fcset_dict["fcset_id"]
-        response_content = {}
+        added: List[Dict[str, Any]] = []
         try:
             for flashcard in flashcards:
                 row = await conn.fetchrow(
                     """
-                INSERT INTO flash_card
-                (fcset_id, question, answer)
-                VALUES
-                ($1, $2, $3)
-                RETURNING
-                fc_id, question, answer;
-                """,
+                    INSERT INTO flash_card_set_assignment (fcset_id, master_fc_id)
+                    VALUES ($1, $2)
+                    ON CONFLICT (fcset_id, master_fc_id) DO NOTHING
+                    RETURNING fcset_id, master_fc_id
+                    """,
                     fcset_id,
-                    flashcard.question,
-                    flashcard.answer,
+                    flashcard.master_fc_id,
                 )
-                response_content.update(dict(row))
+                if row:
+                    added.append(dict(row))
 
         except Exception as e:
             raise HTTPException(500, f"Error in making flashcard: {e}")
@@ -281,7 +302,7 @@ async def addToFlashCardSet(flashcards: List[Flashcard], user_valid=Depends(veri
         try:
             return JSONResponse(
                 status_code=status.HTTP_201_CREATED,
-                content=jsonable_encoder({"response": response_content}),
+                content=jsonable_encoder({"response": added}),
             )
         except Exception as e:
             print("Serialization error:", e)
@@ -392,9 +413,18 @@ async def getFlashcardsFromSet(flashset: FlashcardSet, user_valid=Depends(verify
         flashset_id = flashset["fcset_id"]
         flashcards = await conn.fetch(
             """
-            SELECT fc_id, question, answer
-            FROM flash_card
-            WHERE fcset_id = $1
+            SELECT
+                fcsa.fcset_id,
+                fcsa.master_fc_id,
+                mf.question,
+                mf.answer,
+                mf.textbook_id,
+                mf.chapter_number,
+                mf.chunk_index
+            FROM flash_card_set_assignment AS fcsa
+            INNER JOIN master_flashcard AS mf ON mf.fc_id = fcsa.master_fc_id
+            WHERE fcsa.fcset_id = $1
+            ORDER BY fcsa.master_fc_id
             """,
             flashset_id,
         )
