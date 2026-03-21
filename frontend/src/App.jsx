@@ -6,7 +6,31 @@ import Understanding from "./pages/Understanding/Understanding";
 import Reinforce from "./pages/Reinforce/Reinforce";
 import PhaseLayout from "./components/PhaseLayout";
 
+// --- NEW IMPORTS FOR AUTH ---
+import { useAuth } from "./context/AuthContext"; // Import the hook to access user state
+import LoginSignup from "./pages/Auth/LoginSignup"; // Import your new login page
+// ----------------------------
+
 export default function App() {
+
+  // Access user and loading status from our AuthContext
+  const { user, loading } = useAuth();
+
+  // PURPOSE: Prevents the app from showing the login page for a split second 
+  // while Supabase checks if a session already exists in local storage.
+  if (loading) {
+    return <div className="loading-screen">Loading StudyGuider...</div>;
+  }
+
+  // PURPOSE: If there is no user session, we only render the Login page.
+  // Once the user logs in, 'user' becomes true and the full app renders below.
+  if (!user) {
+    return <LoginSignup />;
+  }
+
+
+
+
   return (
     <BrowserRouter>
       <Layout>
