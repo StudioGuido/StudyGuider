@@ -1,15 +1,27 @@
 import { fakeApi } from "../../services/fakeApi";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { supabase } from '../../services/supabaseClient';
 import BookCard from "../../components/BookCard";
 import BookModal from "../../components/BookModal";
 
 export default function Books() {
   const [books, setBooks] = useState(null);
   const [selectedBook, setSelectedBook] = useState(null);
+  const { user } = useAuth();
   const navigate = useNavigate();
+
+  const getJWT = async() => {
+    const { data, error } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    console.log(token);
+  }
+  
   useEffect(() => {
     fakeApi.getBooks().then(setBooks);
+    console.log(user);
+    getJWT();
   }, []);
   if (!books)
     return (
@@ -23,7 +35,7 @@ export default function Books() {
     <main className="min-h-screen text-white flex items-center justify-center px-4">
       <section className="w-full max-w-2xl">
         <header className="text-center mb-6">
-          <h1 className="text-4xl font-extrabold">Welcome Nivar!</h1>
+          <h1 className="text-4xl font-extrabold">Welcome, {user?.user_metadata?.firstName || user?.email || "User"}!</h1>
           <p className="text-gray-300 mt-2">
             Please select the textbook you want to access
           </p>
