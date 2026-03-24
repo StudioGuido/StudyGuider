@@ -15,7 +15,7 @@ export default function Books() {
   const getJWT = async() => {
     const { data, error } = await supabase.auth.getSession();
     const token = data.session?.access_token;
-    console.log(token);
+    // console.log(token);
   }
   
   useEffect(() => {

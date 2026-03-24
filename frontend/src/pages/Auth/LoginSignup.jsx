@@ -11,12 +11,14 @@ export default function Auth() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    // Destructure both data and error
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
+    
     if (error) {
       alert(error.message);
     } else {
       console.log("Logged in user:", data.user);
+      alert("Welcome back!");
     }
   };
 
@@ -43,7 +45,39 @@ export default function Auth() {
     } else {
       console.log("Signed up user:", data.user);
     }
+
+    createUserBackend();
   };
+
+  const createUserBackend = async () => {
+    const { data, error } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+
+    if (!token) {
+      console.error("No session found. Please log in.");
+      return;
+    }
+
+    // 2. Make the POST request
+    const response = await fetch("http://localhost:8000/api/createUser", {
+      method: "POST", // Must match @router.post
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`, // The "bouncer" check
+      },
+      // Even if your FastAPI function doesn't take a body yet, 
+      // POST requests usually expect at least an empty object.
+      body: JSON.stringify({}), 
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log("User created successfully:", result);
+    } else {
+      const errorData = await response.json();
+      console.error("Error creating user:", errorData);
+    }
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4">

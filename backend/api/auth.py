@@ -7,23 +7,34 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
+raw_url = os.getenv("SUPABASE_URL")
+if not raw_url:
+    raise RuntimeError("Supabase URL not found in environment variables")
 
+# .rstrip("/") removes the trailing slash if it exists
+SUPABASE_URL = raw_url.rstrip("/")
 JWKS_URL = f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json"
 
 security = HTTPBearer()
 
 # Load Supabase public signing keys
-jwks = requests.get(JWKS_URL).json()
-print("Loaded JWKS:", jwks)
+try:
+    response = requests.get(JWKS_URL)
+    response.raise_for_status()
+    jwks = response.json()
+    print("Successfully loaded JWKS")
+except Exception as e:
+    print(f"Failed to load JWKS from {JWKS_URL}: {e}")
+    jwks = {"keys": []}
 
 def verify_jwt(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     try:
         header = jwt.get_unverified_header(token)
         kid = header["kid"]
-        key = next(k for k in jwks["keys"] if k["kid"] == kid)
         
+        # Find the matching key
+        key = next(k for k in jwks["keys"] if k["kid"] == kid)
         
         payload = jwt.decode(
             token,
@@ -32,15 +43,8 @@ def verify_jwt(credentials: HTTPAuthorizationCredentials = Depends(security)):
             audience="authenticated",
             issuer=f"{SUPABASE_URL}/auth/v1",
         )
-        
-        print(f"Verifying JWT")
-        print(header)
-        
-        print("""Decoded JWT payload:""")
-        print(payload)
-
         return payload
 
     except Exception as e:
-        logger.exception("JWT verification failed")
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        logger.error(f"JWT verification failed: {str(e)}")
+        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")

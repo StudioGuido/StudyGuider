@@ -1,30 +1,24 @@
-from fastapi import APIRouter, HTTPException, Request, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import os
 import asyncpg
-from fastapi.responses import JSONResponse
-from fastapi import status
-from typing import List
+import logging
 from api.auth import verify_jwt
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
-
-class User(BaseModel):
-    username: str
-
-
+# --- 1. CREATE USER (Sync with Supabase) ---
 @router.post("/api/createUser")
 async def create_user(user_valid=Depends(verify_jwt)):
-
-    username = _username_from_payload(user_valid)
     supabase_uid = user_valid.get("sub")
+    
     if not supabase_uid:
-        raise HTTPException(status_code=401, detail="Missing supabase uid in token")
+        raise HTTPException(status_code=401, detail="Missing UID")
 
     conn = None
-
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),
@@ -33,47 +27,101 @@ async def create_user(user_valid=Depends(verify_jwt)):
             password=os.getenv("DATABASE_PASSWORD"),
         )
 
-        # Upsert by Supabase UID so the identity is stable even if email changes.
         row = await conn.fetchrow(
             """
-            INSERT INTO users (supabase_uid, username)
-            VALUES ($1, $2)
-            ON CONFLICT (supabase_uid) DO UPDATE
-            SET username = EXCLUDED.username
-            RETURNING supabase_uid, username;
+            INSERT INTO users (supabase_uid)
+            VALUES ($1)
+            ON CONFLICT (supabase_uid) DO NOTHING
+            RETURNING supabase_uid;
             """,
             supabase_uid,
-            username,
         )
 
         user_dict = dict(row)
-
-        response_content = {
-            "supabase_uid": user_dict["supabase_uid"],
-            "username": user_dict["username"],
-        }
-
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
-            content=jsonable_encoder({"response": response_content}),
+            content={"response": {
+                "supabase_uid": str(user_dict["supabase_uid"]),
+            }},
         )
-
-    except Exception:
-        raise HTTPException(status_code=500, detail="Database error")
-
+    except Exception as e:
+        logger.error(f"Error in createUser: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
-        if conn:
-            await conn.close()
+        if conn: await conn.close()
 
+# --- 2. GET MY PROFILE ---
+# @router.get("/api/users/me")
+# async def get_my_profile(user_valid=Depends(verify_jwt)):
+#     supabase_uid = user_valid.get("sub")
+#     conn = None
+#     try:
+#         conn = await asyncpg.connect(
+#             host=os.getenv("DATABASE_HOST"),
+#             database=os.getenv("DATABASE_NAME"),
+#             user=os.getenv("DATABASE_USER"),
+#             password=os.getenv("DATABASE_PASSWORD"),
+#         )
 
+#         user = await conn.fetchrow(
+#             "SELECT * FROM users WHERE supabase_uid = $1",
+#             supabase_uid,
+#         )
+
+#         if not user:
+#             # If they exist in Supabase but not our DB, create them now (JIT)
+#             user = await conn.fetchrow(
+#                 "INSERT INTO users (supabase_uid, email) VALUES ($1, $2) RETURNING *",
+#                 supabase_uid, user_valid.get("email")
+#             )
+
+#         return {"response": dict(user)}
+#     except Exception as e:
+#         logger.error(f"Error in get_me: {e}")
+#         raise HTTPException(status_code=500, detail="Database error")
+#     finally:
+#         if conn: await conn.close()
+
+# --- 3. UPDATE USER PROFILE ---
+# @router.put("/api/updateUser")
+# async def update_user(userData: UserUpdate, user_valid=Depends(verify_jwt)):
+#     supabase_uid = user_valid.get("sub")
+#     conn = None
+#     try:
+#         conn = await asyncpg.connect(
+#             host=os.getenv("DATABASE_HOST"),
+#             database=os.getenv("DATABASE_NAME"),
+#             user=os.getenv("DATABASE_USER"),
+#             password=os.getenv("DATABASE_PASSWORD"),
+#         )
+
+#         # We update names instead of a unique username
+#         result = await conn.execute(
+#             """
+#             UPDATE users
+#             SET first_name = $1, last_name = $2
+#             WHERE supabase_uid = $3
+#             """,
+#             userData.first_name,
+#             userData.last_name,
+#             supabase_uid,
+#         )
+
+#         if result == "UPDATE 0":
+#             raise HTTPException(status_code=404, detail="User not found")
+
+#         return {"response": "Profile Update Successful"}
+#     except Exception as e:
+#         logger.error(f"Error in update_user: {e}")
+#         raise HTTPException(status_code=500, detail=str(e))
+#     finally:
+#         if conn: await conn.close()
+
+# --- 4. DELETE USER ---
 @router.delete("/api/users/me")
 async def delete_user(user_valid=Depends(verify_jwt)):
-
     supabase_uid = user_valid.get("sub")
-    if not supabase_uid:
-        raise HTTPException(status_code=401, detail="Missing supabase uid in token")
     conn = None
-
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),
@@ -89,117 +137,9 @@ async def delete_user(user_valid=Depends(verify_jwt)):
         if not deleted:
             raise HTTPException(status_code=404, detail="User not found")
 
-        return {"deleted_user": supabase_uid}
-
-    finally:
-        if conn:
-            await conn.close()
-
-
-@router.put("/api/updateUser")
-async def update_user(userData: User, user_valid=Depends(verify_jwt)):
-
-    supabase_uid = user_valid.get("sub")
-    if not supabase_uid:
-        raise HTTPException(status_code=401, detail="Missing supabase uid in token")
-
-    conn = None
-    
-    try:
-        conn = await asyncpg.connect(
-            host=os.getenv("DATABASE_HOST"),
-            database=os.getenv("DATABASE_NAME"),
-            user=os.getenv("DATABASE_USER"),
-            password=os.getenv("DATABASE_PASSWORD"),
-        )
-
-        result = await conn.execute(
-            """
-            UPDATE users
-            SET username = $1
-            WHERE supabase_uid = $2
-            """,
-            userData.username,
-            supabase_uid,
-        )
-
-        if result == "UPDATE 0":
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found",
-            )
-
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"response": "username Update Successful"},
-        )
-
-    except HTTPException:
-        raise
-
-    except Exception:
+        return {"deleted_user": str(deleted["supabase_uid"])}
+    except Exception as e:
+        logger.error(f"Error in delete_user: {e}")
         raise HTTPException(status_code=500, detail="Database error")
-
     finally:
-        if conn:
-            await conn.close()
-
-
-def _username_from_payload(payload: dict) -> str:
-    """Derive username from JWT payload: user_metadata.username or a safe default."""
-    meta = payload.get("user_metadata") or {}
-    if isinstance(meta, dict) and meta.get("username"):
-        return str(meta["username"])[:150]
-    return "user"[:150]
-
-
-@router.get("/api/users/me")
-async def get_username(user_valid=Depends(verify_jwt)):
-    
-    supabase_uid = user_valid.get("sub")
-    if not supabase_uid:
-        raise HTTPException(status_code=401, detail="Missing supabase uid in token")
-    conn = None
-    try:
-        conn = await asyncpg.connect(
-            host=os.getenv("DATABASE_HOST"),
-            database=os.getenv("DATABASE_NAME"),
-            user=os.getenv("DATABASE_USER"),
-            password=os.getenv("DATABASE_PASSWORD"),
-        )
-
-        user = await conn.fetchrow(
-            """
-            SELECT supabase_uid, username
-            FROM users
-            WHERE supabase_uid = $1
-            """,
-            supabase_uid,
-        )
-
-        if not user:
-            username = _username_from_payload(user_valid)
-            user = await conn.fetchrow(
-                """
-                INSERT INTO users (supabase_uid, username)
-                VALUES ($1, $2)
-                RETURNING supabase_uid, username
-                """,
-                supabase_uid,
-                username,
-            )
-
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"response": dict(user)},
-        )
-
-    except HTTPException:
-        raise
-
-    except Exception:
-        raise HTTPException(status_code=500, detail="Database error")
-
-    finally:
-        if conn:
-            await conn.close()
+        if conn: await conn.close()

@@ -149,10 +149,7 @@ async def init_db():
 
             usersTable = """
             CREATE TABLE users (
-            supabase_uid VARCHAR(255) PRIMARY KEY,
-            username VARCHAR(150) UNIQUE NOT NULL,
-            created_at TIMESTAMP DEFAULT NOW(),
-            last_login TIMESTAMP
+            supabase_uid VARCHAR(255) PRIMARY KEY
             );
             """
             await conn.execute(usersTable)
