@@ -3,7 +3,9 @@ from pydantic import BaseModel
 from .embedding_utils import generate_Helper
 from fastapi import status
 from fastapi.responses import JSONResponse
+import logging
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -26,12 +28,11 @@ async def generate_endpoint(request: PromptRequest):
         chapter: str
 
     '''
-    print("in\n\n")
+
+    logger.info(f"Generating response for request: ({request.prompt}, {request.textbook}, {request.chapter})")
     prompt = request.prompt
     chapter = request.chapter
     textbook = request.textbook
-
-    print("in\n\n")
 
     try:
         modelResponse = await generate_Helper(prompt, chapter, textbook)

@@ -1,5 +1,4 @@
 import numpy as np
-from transformers import AutoTokenizer, AutoModel
 import torch
 import os
 import httpx
@@ -7,12 +6,10 @@ import asyncpg
 import asyncio
 from fastapi import HTTPException
 from .AIHelper import get_gemini_response
+from sentence_transformers import SentenceTransformer
 
 
-# Load tokenizer and model
-model_id = "sentence-transformers/all-MiniLM-L6-v2"
-tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModel.from_pretrained(model_id)
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Use MPS if available (Macs), otherwise CPU
 device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
@@ -31,22 +28,15 @@ def _generate_embeddings_blocking(texts):
     This is a blocking function that will generate embeddings for any given text
     using the all-MiniLM-L6-v2 model
     '''
-
     try:
         # Check input type
         if not isinstance(texts, (str, list)):
             raise ValueError("Input must be a string or list of strings.")
-        
-        inputs = tokenizer(texts, padding=True, truncation=True, return_tensors='pt').to(device)
-        with torch.no_grad():
-            outputs = model(**inputs)
-        embeddings = outputs.last_hidden_state.mean(dim=1)
-        return embeddings.cpu().numpy().tolist()
+
+        return model.encode(texts)
     
     except Exception as e:
         raise RuntimeError(f"Error generating embeddings: {e}")
-
-    
 
 async def generate_Helper(prompt, chapter, textbook):
     '''
@@ -65,15 +55,14 @@ async def generate_Helper(prompt, chapter, textbook):
             status_code=400,
             detail=str(e)
         )
-
     try:
         embedding = await generate_embeddings(prompt)
     except Exception as e:
         raise
 
-    
+
     # set embedding to string of float32 values
-    embedding = str(np.array(embedding).astype("float32")[0].tolist())
+    embedding = str(np.array(embedding).astype("float32").tolist())
 
     try:
         conn = await asyncpg.connect(
@@ -117,13 +106,6 @@ async def generate_Helper(prompt, chapter, textbook):
         context = "\n".join(row[0] for row in rows)
         prompt = f"Context:\n{context}\n\nQuestion: {prompt}\nAnswer: Provide a concise response\nIf no similiar content then respond with: No Context Applies"
 
-        # try:
-        #     answer = await getModelResponse(prompt)
-        #     if not answer:
-        #         raise HTTPException(
-        #             status_code=502,
-        #             detail="Empty response from model."
-        #         )
 
         try:
             answer = await get_gemini_response(prompt)

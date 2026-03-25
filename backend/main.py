@@ -6,10 +6,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.user import router as user_router
 from api.user_studymat import router as user_studymat_router
 
-
+from logging_config import setup_logging
 from api.generateFlashCard import router as flashcard_router
 from api.generateSummary import router as summary_router
+
+# initiate logger
+setup_logging()
+
+# create app
 app = FastAPI()
+
 
 # Register endpoints
 app.include_router(generate_router)
