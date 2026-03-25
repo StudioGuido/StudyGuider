@@ -1,16 +1,5 @@
-import os
 import requests
-import asyncio
 import time
-from pathlib import Path
-
-# from dotenv import load_dotenv
-
-# # Load .env from backend dir and project root so test uses same config as backend
-# _backend_dir = Path(__file__).resolve().parent.parent
-# _project_root = _backend_dir.parent
-# load_dotenv(_backend_dir / ".env")
-# load_dotenv(_project_root / ".env")
 
 SUPABASE_URL = "https://bafblcxwhdvikgcpcnds.supabase.co"
 SUPABASE_ANON_KEY = "sb_publishable_EHbCfU3Xd5oku8EZZTLD7g_1bxWBYnC"
@@ -50,17 +39,18 @@ AUTH_HEADERS = {
 
 
 def testUserCreation():
+    """POST /api/createUser — JWT only; persists supabase_uid (no username body)."""
     url = "http://0.0.0.0:8000/api/createUser"
-
-    json = {
-        "username": "pierce",
-    }
 
     response = requests.post(
         url=url,
-        json=json,
+        json={},
         headers={"Content-Type": "application/json", **AUTH_HEADERS},
     )
+
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert body.get("response", {}).get("supabase_uid"), body
 
     print("CREATED USER")
     print(response.json())
@@ -71,68 +61,35 @@ def testUserDeletion():
 
     response = requests.delete(url, headers=AUTH_HEADERS)
 
+    assert response.status_code in (200, 404), response.text
+
     print("DELETED USER")
     print(response.json())
 
 
-def testUserUpdates():
-    url = "http://0.0.0.0:8000/api/updateUser"
-
-    json = {
-        "username": "pierce's cooler username",
-    }
-
-    response = requests.put(url=url, json=json, headers=AUTH_HEADERS)
-
-    print("Updated USER")
-    print(response.json())
-
-
-def testUserGet():
-    url = "http://0.0.0.0:8000/api/users/me"
-
-    response = requests.get(url, headers=AUTH_HEADERS)
-
-    print("USER json:")
-    print(response.json())
-
-
-test_no = 0
+test_no = 2
 
 match test_no:
 
     case 0:
-        testUserGet()
+        print("No Tests Ran")
 
     case 1:
         """
-        Test 1: Basic User creation and viewing of username:
+        Test 1: Basic user creation (supabase_uid only):
         """
         testUserCreation()
-
+        
     case 2:
         """
-        Test 2: Update username and view result:
-        """
-        testUserUpdates()
-        testUserGet()
-
-    case 3:
-        """
-        Test 3: Delete user:
+        Test 2: Delete user:
         """
         testUserDeletion()
 
-    case 4:
+    case 3:
         """
-        Test 4: All tests combined:
+        Test 3: Create then delete:
         """
         testUserCreation()
-        time.sleep(5)  
-        testUserGet()
-        time.sleep(5)
-        testUserUpdates()
-        time.sleep(5)
-        testUserGet()
         time.sleep(5)
         testUserDeletion()
