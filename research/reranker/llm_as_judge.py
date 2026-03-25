@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # use pandas to read CSV
-df = pd.read_csv("llm_responses.csv")
+df = pd.read_csv("data/llm_responses.csv")
 
 # create empty list to store CSV contents
 responses =[]
@@ -29,7 +29,7 @@ for i, row in df.iterrows():
 client = OpenAI()
 
 # csv setup
-output_file = "llm_as_judge.csv"
+output_file = "data/llm_as_judge_100pt.csv"
 file_exist = os.path.isfile(output_file)
 
 # iterate through the llm responses
@@ -72,11 +72,13 @@ with open(output_file, "a", newline="", encoding="utf-8") as f:
         - Does the response rely on outside knowledge not in the context?
 
         Scoring:
-        10 = Perfect retrieval. Context contains all needed info, well chunked, no important info missing.
-        8 = Good retrieval. Minor missing or extra info, but still sufficient.
-        6 = Partial retrieval. Some relevant info, but missing key details.
-        4 = Poor retrieval. Weak relevance or bad chunking makes answering difficult.
-        1 = Failed retrieval. Context does not contain needed information.
+        100 = Perfect retrieval. Context contains all needed info, well chunked, no important info missing.
+        75 = Good retrieval. Minor missing or extra info, but still sufficient.
+        50 = Partial retrieval. Some relevant info, but missing key details.
+        25 = Poor retrieval. Weak relevance or bad chunking makes answering difficult.
+        0 = Failed retrieval. Context does not contain needed information.
+
+        Scores between these benchmarks are allowed and encouraged when the retrieval quality falls between two levels (e.g., 35, 60, 90, etc.).
 
         Return exactly:
         Score: <number>

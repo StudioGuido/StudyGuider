@@ -1,15 +1,17 @@
 import requests
 import pandas as pd
+import os
+import csv
 
 
 """
-1. Look into summary to reunite chuncks - DONE
-2. Ask questions on those chuncks - DONE
+1. Look into summary to reunite chunks - DONE
+2. Ask questions on those chunks - DONE
 3. Make a CSV --> |textbook, chapter, question| - DONE
 4. Write a different script that will read in CSV and reformat data into what you want - DONE
-5. Write a function that will send this to our server
-6. Save what the server writes back on a CSV
-7. Another file read that CSV and set-up LLM as a judge
+5. Write a function that will send this to our server - DONE
+6. Save what the server writes back on a CSV - DONE
+7. Another file read that CSV and set-up LLM as a judge - TODO
 """
 
 # read the questions csv using pandas
@@ -32,12 +34,14 @@ for i, row in df.iterrows():
 
     questions.append(data)
 
+# create an empty list to store the model responses and context
 llm_responses = []
 
+# for every question hit the generate api endpoint and store the question, response and context to a JSON object
+# append that object to the llm_responses list
 for question in questions:
     response = requests.post("http://0.0.0.0:8000/api/generate", json=question)
-    print(response.status_code)
-    print(response.text)
+
     data = response.json()
     answer = data["response"]
     context = data["context"]
@@ -45,39 +49,25 @@ for question in questions:
     llm_responses.append({
         "input": question["prompt"],
         "context": context,
-        "response": response
+        "response": answer
     })
 
-print(llm_responses)
+# csv setup
+output_file = "llm_as_judge.csv"
+file_exist = os.path.isfile(output_file)
 
+with open(output_file, "a", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f)
 
+    # if the file does not exist, add the appropriate headers
+    if not file_exist:
+        writer.writerow(["question", "response", "context"])
 
+    # go through response list and write to csv
+    for llm_response in llm_responses:
+        question = llm_response["input"]
+        context = llm_response["context"]
+        response = llm_response["response"]
+        
+        writer.writerow([question, response, context])
 
-
-
-
-'''
-
-Prompt for LLM as a judge:
-
-You are evaluating retrieval quality.
-
-QUESTION:
-{question}
-
-RETRIEVED CONTEXT:
-{context}
-
-Score how well the context supports answering the question.
-
-Scoring:
-5 = fully sufficient
-4 = mostly sufficient
-3 = partially relevant
-2 = weak relevance
-1 = irrelevant
-
-Return:
-Score: <number>
-Reason: <short explanation>
-'''
