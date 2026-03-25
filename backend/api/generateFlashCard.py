@@ -89,6 +89,7 @@ async def generate_endpoint(request: FlashRequest):
             and not exists (
                 select 1 from seen_cards sc
                 where sc.flashcard_id = master_flashcard.id
+                    
             )
         """, textbook_id, chapter_number)
 
