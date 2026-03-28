@@ -13,11 +13,12 @@ export default function Books() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [token, setToken] = useState(null)
 
   const getJWT = async() => {
     const { data, error } = await supabase.auth.getSession();
     const token = data.session?.access_token;
-    // console.log(token);
+    setToken(token);
   }
   
   useEffect(() => {
@@ -33,18 +34,40 @@ export default function Books() {
       </p>
     );
 
-  function handleUpload(file) {
-    // 1) get presigned url
+async function handleUpload(file) {
+  try {
+    // 1) Get presigned url
+    const res = await fetch("http://localhost:8000/api/getPresignedUrl", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    });
 
-    // 2) upload to S3
+    if (!res.ok) throw new Error("Failed to get upload URL");
+    const { presigned_url } = await res.json();
+    console.log(presigned_url)
 
-    // 3) Notify backend that textbook is completed
+    // 2) Upload the file directly to S3/Supabase
+    const uploadRes = await fetch(presigned_url, {
+      method: "PUT",
+      body: file, // Send the raw file object
+      headers: {
+        "Content-Type": "application/pdf", // Must match the backend 'ContentType'
+      },
+    });
 
-
-    // TODO: send file to backend
-    console.log("Uploading:", file.name);
-    setShowUploadModal(false);
+    if (uploadRes.ok) {
+      console.log("Upload successful!");
+    }
+  } catch (err) {
+    console.error("Upload error:", err);
   }
+
+
+  // 3) notify backend that the textbook is uploaded
+}
 
   return (
     <main className="min-h-screen text-white flex items-center justify-center px-4">
