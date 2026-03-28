@@ -11,7 +11,7 @@ load_dotenv()
 df = pd.read_csv("data/llm_responses.csv")
 
 # create empty list to store CSV contents
-responses =[]
+responses = []
 
 # load data from CSV to list
 for i, row in df.iterrows():
