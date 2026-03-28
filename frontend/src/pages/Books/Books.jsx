@@ -11,6 +11,7 @@ export default function Books() {
   const [selectedBook, setSelectedBook] = useState(null);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const getJWT = async() => {
     const { data, error } = await supabase.auth.getSession();
@@ -23,12 +24,24 @@ export default function Books() {
     console.log(user);
     getJWT();
   }, []);
+  
   if (!books)
     return (
       <p className="min-h-screen flex items-center justify-center text-white">
         Loading…
       </p>
     );
+
+  const handleUploadTextbook = () => {
+    const file = event.target.files[0];
+  
+    // Check if a file was selected and if it's a PDF
+    if (file && file.type === "application/pdf") {
+      setSelectedFile(file);
+    } else {
+      alert("Please select a valid PDF file.");
+    }
+  }
 
 
   return (
@@ -57,7 +70,11 @@ export default function Books() {
               type="button"
               className="w-full p-5 rounded-xl border border-dashed border-gray-700 text-center text-white bg-transparent hover:bg-white/3 transition"
             >
-              <div className="mt-1 font-semibold">Import New Textbook</div>
+              <div className="mt-1 font-semibold">
+                Import New Textbook
+                <input type="file" accept=".pdf" onChange={handleUploadTextbook} />
+                {selectedFile && <p>Selected: {selectedFile.name}</p>}
+              </div>
               <div className="text-3xl">+</div>
             </button>
           </div>
