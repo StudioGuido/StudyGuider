@@ -5,13 +5,14 @@ import { useAuth } from "../../context/AuthContext";
 import { supabase } from '../../services/supabaseClient';
 import BookCard from "../../components/BookCard";
 import BookModal from "../../components/BookModal";
+import UploadModal from "../../components/UploadModal";
 
 export default function Books() {
   const [books, setBooks] = useState(null);
   const [selectedBook, setSelectedBook] = useState(null);
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const getJWT = async() => {
     const { data, error } = await supabase.auth.getSession();
@@ -32,17 +33,18 @@ export default function Books() {
       </p>
     );
 
-  const handleUploadTextbook = () => {
-    const file = event.target.files[0];
-  
-    // Check if a file was selected and if it's a PDF
-    if (file && file.type === "application/pdf") {
-      setSelectedFile(file);
-    } else {
-      alert("Please select a valid PDF file.");
-    }
-  }
+  function handleUpload(file) {
+    // 1) get presigned url
 
+    // 2) upload to S3
+
+    // 3) Notify backend that textbook is completed
+
+
+    // TODO: send file to backend
+    console.log("Uploading:", file.name);
+    setShowUploadModal(false);
+  }
 
   return (
     <main className="min-h-screen text-white flex items-center justify-center px-4">
@@ -68,14 +70,11 @@ export default function Books() {
           <div>
             <button
               type="button"
+              onClick={() => setShowUploadModal(true)}
               className="w-full p-5 rounded-xl border border-dashed border-gray-700 text-center text-white bg-transparent hover:bg-white/3 transition"
             >
-              <div className="mt-1 font-semibold">
-                Import New Textbook
-                <input type="file" accept=".pdf" onChange={handleUploadTextbook} />
-                {selectedFile && <p>Selected: {selectedFile.name}</p>}
-              </div>
               <div className="text-3xl">+</div>
+              <div className="mt-1 font-semibold">Import New Textbook</div>
             </button>
           </div>
         </div>
@@ -83,6 +82,12 @@ export default function Books() {
           <BookModal
             book={selectedBook}
             onClose={() => setSelectedBook(null)}
+          />
+        )}
+        {showUploadModal && (
+          <UploadModal
+            onClose={() => setShowUploadModal(false)}
+            onUpload={handleUpload}
           />
         )}
       </section>
