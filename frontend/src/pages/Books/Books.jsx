@@ -67,6 +67,9 @@ async function handleUpload(file) {
 
 
   // 3) notify backend that the textbook is uploaded
+
+
+  setShowUploadModal(false)
 }
 
   return (
