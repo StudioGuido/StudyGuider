@@ -62,7 +62,6 @@ pypdf==5.4.0
 pytest==8.3.5
 pytest-asyncio==0.26.0
 python-dateutil==2.9.0.post0
-python-dotenv==1.1.0
 python-jose[cryptography]==3.3.0
 pytz==2025.2
 PyYAML==6.0.2
@@ -100,4 +99,3 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
 s3transfer==0.16.0
 six==1.17.0
-urllib3==1.26.20

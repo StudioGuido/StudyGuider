@@ -1,7 +1,7 @@
 import boto3
 import os
 import uuid
-from fastapi import APIRouter, HTTPException, Depends, statu
+from fastapi import APIRouter, HTTPException, Depends, status
 from api.auth import verify_jwt
 
 router = APIRouter()
@@ -91,7 +91,7 @@ in your .env file
 
 # Provides frontend with a presigned url.
 @router.post("/api/getPresignedUrl")
-async def get(user_valid=Depends(verify_jwt)):
+async def get_url(user_valid=Depends(verify_jwt)):
     
     supabase_uid = user_valid.get("sub")
     if not supabase_uid:

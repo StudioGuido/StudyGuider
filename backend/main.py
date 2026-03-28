@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from api.generate import router as generate_router
-from api.textbooks import router as textbooks_router
+from api.s3 import router as textbooks_router
 from api.chapter import router as chapter_router
 from fastapi.middleware.cors import CORSMiddleware
 from api.user import router as user_router
