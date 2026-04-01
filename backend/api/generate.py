@@ -6,7 +6,6 @@ from fastapi.responses import JSONResponse
 import logging
 
 logger = logging.getLogger(__name__)
-
 router = APIRouter()
 
 class PromptRequest(BaseModel):
@@ -35,12 +34,13 @@ async def generate_endpoint(request: PromptRequest):
     textbook = request.textbook
 
     try:
+        logger.debug("Calling generate_Helper")
         modelResponse = await generate_Helper(prompt, chapter, textbook)
+        logger.info(f"Generation Successful with response length: {len(modelResponse)}")
 
         return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"response": modelResponse}
-        )
+        content={"response": modelResponse})
     
     except HTTPException:
         raise

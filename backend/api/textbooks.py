@@ -6,7 +6,6 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 
 router = APIRouter()
-'''allows grouping endpoints'''
 
 @router.get("/api/getTextbooks")
 async def getTextbooks_endpoint():
@@ -17,7 +16,7 @@ async def getTextbooks_endpoint():
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD")
         )
-
+        
         rows = await conn.fetch("SELECT * FROM textbooks;")
 
         if rows == None:

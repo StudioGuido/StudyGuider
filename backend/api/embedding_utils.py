@@ -9,6 +9,7 @@ from .AIHelper import get_gemini_response
 from sentence_transformers import SentenceTransformer
 
 
+# load model to keep it in memory
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Use MPS if available (Macs), otherwise CPU
