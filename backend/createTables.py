@@ -206,6 +206,25 @@ async def init_db():
             );
             """
             await conn.execute(summaryTable)
+            
+            # -- Textbooks table
+            user_textbook_table = """
+            CREATE TABLE user_textbook (
+                textbook_id VARCHAR(255) PRIMARY KEY,
+                user_uid VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE
+            );
+            """
+            await conn.execute(user_textbook_table)
+
+
+            # -- Chapters table
+            textbook_chapter_table = """
+            CREATE TABLE textbook_chapter (
+                chapter_id VARCHAR(255) PRIMARY KEY,
+                textbook_id VARCHAR(255) REFERENCES user_textbook(textbook_id) ON DELETE CASCADE
+            );
+            """
+            await conn.execute(textbook_chapter_table)
 
             await conn.close()
 

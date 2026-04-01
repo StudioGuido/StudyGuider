@@ -4,6 +4,7 @@ import uuid
 from fastapi import APIRouter, HTTPException, Depends, status, BackgroundTasks
 from api.auth import verify_jwt
 from pydantic import BaseModel
+import asyncpg
 
 router = APIRouter()
 
@@ -120,8 +121,34 @@ async def get_url(user_valid=Depends(verify_jwt)):
     if not supabase_uid:
         raise HTTPException(status_code=401, detail="Missing UID")
     
-    file_id = str(uuid.uuid4())
-    key = f"textbooks/{file_id}"
+    textbook_id = str(uuid.uuid4())
+    key = f"textbooks/{textbook_id}"
+    
+    if not supabase_uid:
+        raise HTTPException(status_code=401, detail="Missing UID")
+
+    conn = None
+    try:
+        conn = await asyncpg.connect(
+            host=os.getenv("DATABASE_HOST"),
+            database=os.getenv("DATABASE_NAME"),
+            user=os.getenv("DATABASE_USER"),
+            password=os.getenv("DATABASE_PASSWORD"),
+        )
+
+        await conn.execute(
+            """
+            INSERT INTO user_textbook (textbook_id, user_uid)
+            VALUES ($1, $2)
+            ON CONFLICT (textbook_id, user_uid) DO NOTHING;
+            """,
+            textbook_id,
+            supabase_uid,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn: await conn.close()
     
     url = s3.generate_presigned_url(
         "put_object",
@@ -132,7 +159,7 @@ async def get_url(user_valid=Depends(verify_jwt)):
         },
         ExpiresIn=300
     )
-    return {"presigned_url": url}
+    return {"presigned_url": url, "book_id": textbook_id, "file_key": key}
 
 @router.post("/process-pdf")
 async def trigger_pdf_processing(request: ProcessRequest, background_tasks: BackgroundTasks):
