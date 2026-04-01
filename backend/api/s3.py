@@ -1,8 +1,9 @@
 import boto3
 import os
 import uuid
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, BackgroundTasks
 from api.auth import verify_jwt
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -20,6 +21,10 @@ BUCKET = "sg-textbooks"
 # )
 
 s3 = boto3.client("s3")
+
+class ProcessRequest(BaseModel):
+    book_id: str
+    file_key: str
 
 def upload_file(local_path: str):
     filename = os.path.basename(local_path)
@@ -59,6 +64,24 @@ def download_file(key: str, download_path: str):
         download_path
     )
     print(f"Downloaded to: {download_path}")
+
+
+def split_pdf_worker(book_id: str, file_key: str):
+    """
+    This function runs in the background. It does NOT make the user wait.
+    """
+    print(f"[{book_id}] Starting background worker for {file_key}...")
+    
+    # Step A: Download file from S3 using boto3
+    # Step B: Open PDF with PyMuPDF and find chapters
+    # Step C: Split PDF into new files
+    # Step D: Upload new files to S3 (processed/book_id/...)
+    # Step E: Update database status to "Complete"
+    
+    # Simulating a long 10-second PDF splitting process
+    time.sleep(10) 
+    
+    print(f"[{book_id}] Finished splitting! Uploaded to S3.")
 
 
 # # my personal path to an existing textbook
@@ -110,6 +133,27 @@ async def get_url(user_valid=Depends(verify_jwt)):
         ExpiresIn=300
     )
     return {"presigned_url": url}
+
+@router.post("/process-pdf")
+async def trigger_pdf_processing(request: ProcessRequest, background_tasks: BackgroundTasks):
+    
+    # Add the heavy-lifting function to FastAPI's background queue.
+    # We pass the function name, followed by its arguments.
+    background_tasks.add_task(
+        split_pdf_worker, 
+        book_id=request.book_id, 
+        file_key=request.file_key
+    )
+    
+    # Update your database here to mark this book_id as "Processing"
+    
+    # Instantly return a 202 status to the frontend.
+    # We do NOT wait for the split_pdf_worker to finish!
+    return {
+        "message": "Processing started in the background.",
+        "book_id": request.book_id,
+        "status": "processing"
+    }
 
 # Uploads Chunked Textbook.
 @router.post("/api/uploadTextbookChapters")
