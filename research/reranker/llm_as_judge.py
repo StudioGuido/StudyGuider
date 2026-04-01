@@ -29,7 +29,7 @@ for i, row in df.iterrows():
 client = OpenAI()
 
 # csv setup
-output_file = "data/llm_as_judge_100pt.csv"
+output_file = "data/reranked_llm_as_judge.csv"
 file_exist = os.path.isfile(output_file)
 
 # iterate through the llm responses
@@ -78,7 +78,7 @@ with open(output_file, "a", newline="", encoding="utf-8") as f:
         25 = Poor retrieval. Weak relevance or bad chunking makes answering difficult.
         0 = Failed retrieval. Context does not contain needed information.
 
-        Scores between these benchmarks are allowed and encouraged when the retrieval quality falls between two levels (e.g., 35, 60, 90, etc.).
+        Scores between these benchmarks are allowed and encouraged when the retrieval quality falls between two levels.
 
         Return exactly:
         Score: <number>

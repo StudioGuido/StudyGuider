@@ -7,6 +7,8 @@ import asyncpg
 import asyncio
 from fastapi import HTTPException
 from .AIHelper import get_gemini_response
+from sentence_transformers.cross_encoder import CrossEncoder
+
 
 
 # Load tokenizer and model
@@ -105,7 +107,7 @@ async def generate_Helper(prompt, chapter, textbook):
             FROM chapter_embeddings
             WHERE textbook_id = $2 AND chapter_number = $3
             ORDER BY distance ASC
-            LIMIT 1;
+            LIMIT 5;
         """, embedding, textbook_id, chapter_number)
 
         if not rows:
@@ -114,8 +116,48 @@ async def generate_Helper(prompt, chapter, textbook):
                 detail=f"Empty Table Row")
         
         # combine context and make a prompt
-        context = "\n".join(row[0] for row in rows)
-        prompt = f"Context:\n{context}\n\nQuestion: {prompt}\nAnswer: Provide a concise response\nIf no similiar content then respond with: No Context Applies"
+        context = [row[0] for row in rows]
+
+        #RERANKING PROCESS
+        model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+
+        queried_context = []
+
+        #get list of [query, chunk]
+        for c in context:
+            queried_context.append([prompt, c])
+        
+        scores = model.predict(queried_context)
+        print(scores)
+
+        scored_context = []
+        
+        for i, score in enumerate(scores):
+            data = {
+                "score": score,
+                "context": context[i]
+            }
+            scored_context.append(data)
+
+        print("Scores and Context before sorting", scored_context)
+
+        def get_first_element(x):
+            return x["score"]
+        
+        #sort chunks by their score
+        scored_context = sorted(scored_context, key=get_first_element, reverse=True)
+
+        scored_context = scored_context[:3]
+
+        print("Sorted context", scored_context)
+        context = []
+        for c in scored_context:
+            context.append(c["context"])
+            
+        print(context)
+
+        context_str = "\n".join(context)
+        prompt = f"Context:\n{context_str}\n\nQuestion: {prompt}\nAnswer: Provide a concise response\nIf no similar content then respond with: No Context Applies"
 
         # try:
         #     answer = await getModelResponse(prompt)
@@ -134,7 +176,7 @@ async def generate_Helper(prompt, chapter, textbook):
         except Exception:
             raise HTTPException(status_code=500, detail="Model Generation Error.")
 
-        return answer, context # return both the answer and the context
+        return answer, context_str # return both the answer and the context
     
     except ValueError:
         raise 

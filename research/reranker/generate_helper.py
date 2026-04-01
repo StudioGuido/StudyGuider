@@ -116,7 +116,7 @@ async def generate_Helper(prompt, chapter, textbook):
                 detail=f"Empty Table Row")
         
         # combine context and make a prompt
-        context = "\n".join(row[0] for row in rows)
+        context = [row[0] for row in rows]
 
         #RERANKING PROCESS
         model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
@@ -142,7 +142,7 @@ async def generate_Helper(prompt, chapter, textbook):
         print("Scores and Context before sorting", scored_context)
 
         def get_first_element(x):
-            return x[0]
+            return x["score"]
         
         #sort chunks by their score
         scored_context = sorted(scored_context, key=get_first_element, reverse=True)
@@ -153,7 +153,8 @@ async def generate_Helper(prompt, chapter, textbook):
             
         print(context)
 
-    
+        context = "\n".join(row[0] for row in rows)
+
 
 
 
@@ -176,7 +177,7 @@ async def generate_Helper(prompt, chapter, textbook):
         except Exception:
             raise HTTPException(status_code=500, detail="Model Generation Error.")
 
-        return answer, context # return both the answer and the context
+        return answer, context_str # return both the answer and the context
     
     except ValueError:
         raise 

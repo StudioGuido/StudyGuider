@@ -15,7 +15,7 @@ import csv
 """
 
 # read the questions csv using pandas
-df = pd.read_csv("generated_questions.csv")
+df = pd.read_csv("data/generated_questions.csv")
 
 # create an empty list to store the questions
 questions = []
@@ -53,7 +53,7 @@ for question in questions:
     })
 
 # csv setup
-output_file = "llm_as_judge.csv"
+output_file = "data/llm_responses.csv"
 file_exist = os.path.isfile(output_file)
 
 with open(output_file, "a", newline="", encoding="utf-8") as f:

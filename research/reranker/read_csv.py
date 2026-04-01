@@ -1,8 +1,8 @@
 import pandas as pd
 import os
 
-csv_file_path = "../../backend/bookAdders/csv/thinkpython2.csv"
-excel_path = "data/book_csv"
+csv_file_path = "data/reranked_llm_as_judge.csv"
+excel_path = "data/reranked_llm_as_judge.xlsx"
 
 df = pd.read_csv(csv_file_path)
 

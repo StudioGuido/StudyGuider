@@ -1,4 +1,4 @@
-question,response,context
+question,response,context,score,reason
 "What are the basic types of instructions that appear in nearly every computer program, and what does each one do?","According to the text, the basic instructions found in nearly every programming language are:
 
 *   **Input:** Getting data from sources like the keyboard, files, or a network.
@@ -47,7 +47,7 @@ operator: A special symbol that represents a simple computation like addition, m
 cation, or string concatenation.
 value: One of the basic units of data, like a number or string, that a program manipulates.
 type: A category of values. The types we have seen so far are integers (type int), ﬂoating-
-point numbers (type float), and strings (type str)."
+point numbers (type float), and strings (type str).",100,"The retrieved context explicitly lists the basic types of instructions found in nearly every program—input, output, math, conditional execution, and repetition—and clearly explains what each one does. There is no missing or extraneous information that would hinder answering the question, and the response could be generated solely from the provided context."
 How does Python 3’s print function differ syntactically from the print statement in Python 2?,"In Python 3, `print` is a function and requires the use of parentheses, whereas in Python 2, `print` is a statement that does not use parentheses.","you type a line of code and hit Enter, the interpreter displays the result:
 >>> 1 + 1
 2
@@ -108,7 +108,7 @@ In some other languages, ^ is used for exponentiation, but in Python it is a bit
 called XOR. If you are not familiar with bitwise operators, the result will surprise you:
 >>> 6 ^ 2
 4
-I won’t cover bitwise operators in this book, but you can read about them athttp://wiki."
+I won’t cover bitwise operators in this book, but you can read about them athttp://wiki.",100,"The retrieved context explicitly explains the syntactic difference between Python 2 and Python 3 print usage, noting that in Python 3 print is a function requiring parentheses, while in Python 2 it is a statement that does not use parentheses. The relevant information is clearly present and sufficient to produce the given response, with no important details missing. Although there is some additional unrelated content, it does not detract from the clarity or sufficiency of the relevant information."
 "Explain the difference between a value and a type in Python, and give examples of three different types discussed in the chapter.","A **value** is a basic unit of data that a program manipulates, while a **type** is the category that a value belongs to. 
 
 Examples of the three types discussed are:
@@ -169,7 +169,7 @@ operator: A special symbol that represents a simple computation like addition, m
 cation, or string concatenation.
 value: One of the basic units of data, like a number or string, that a program manipulates.
 type: A category of values. The types we have seen so far are integers (type int), ﬂoating-
-point numbers (type float), and strings (type str)."
+point numbers (type float), and strings (type str).",100,"The retrieved context fully explains the difference between a value and a type in Python and provides clear examples of three types (int, float, str) as requested. All necessary information is present, well organized, and no irrelevant or distracting content impedes understanding. The response could be generated solely from this context without relying on outside knowledge."
 "What are some key differences between formal languages and natural languages, especially in terms of ambiguity and syntax?","The key differences between formal and natural languages are:
 
 *   **Ambiguity:** Natural languages are highly ambiguous and rely on context for meaning, whereas formal languages are designed to be unambiguous, with each statement having only one specific meaning.
@@ -218,7 +218,7 @@ bug: An error in a program.
 debugging: The process of ﬁnding and correcting bugs.
 1.9 Exercises
 Exercise 1.1. It is a good idea to read this book in front of a computer so you can try out the
-examples as you go."
+examples as you go.",100,"The retrieved context fully covers the key differences asked for—ambiguity, syntax, redundancy, and literalness—providing clear definitions and examples for both formal and natural languages. The information is well structured and sufficient to generate the given response without relying on outside knowledge. There is no irrelevant or distracting content impairing the retrieval quality."
 "What is debugging, and why is it considered an important skill for programmers beyond just fixing code errors?","Debugging is the process of tracking down programming errors (bugs). It is considered a valuable skill beyond fixing code because it fosters problem-solving abilities—such as formulating problems, thinking creatively about solutions, and expressing them accurately—that are useful for many activities outside of programming.","preting the structure. Finally, the details matter. Small errors in spelling and punctuation,
 which you can get away with in natural languages, can make a big difference in a formal
 language.
@@ -258,7 +258,7 @@ The single most important skill for a computer scientist is problem solving. Pro
 ing means the ability to formulate problems, think creatively about solutions, and express
 a solution clearly and accurately. As it turns out, the process of learning to program is an
 excellent opportunity to practice problem-solving skills. That’s why this chapter is called,
-“The way of the program”."
+“The way of the program”.",75,"The retrieved context includes a clear definition of debugging as tracking down bugs and highlights why debugging is important beyond fixing code errors—specifically its role in developing problem-solving skills useful in many areas. However, some supporting details are somewhat scattered and mixed with less relevant information about emotional responses and managing the computer as an ""employee."" While not critical, this extra text slightly reduces focus. Overall, the necessary information to generate the given response is present and sufficient."
 "What are the rules and conventions for naming variables in Python, and why can't certain names like `class` be used as variable names?","**Rules and Conventions for Variable Names:**
 
 *   **Rules:**
@@ -335,7 +335,7 @@ to its value. This kind of ﬁgure is called a state diagram because it shows wh
 of the variables is in (think of it as the variable’s state of mind). Figure 2.1 shows the result
 of the previous example.
 2.2 Variable names
-Programmers generally choose names for their variables that are meaningful—they docu-"
+Programmers generally choose names for their variables that are meaningful—they docu-",100,"The retrieved context comprehensively covers the rules and conventions for Python variable names, including illegal characters, starting characters, use of underscores, letter casing, and meaningful naming. It explicitly lists Python keywords and explains why keywords like `class` cannot be used as variable names, citing their role in syntax recognition and interpreter parsing. The context contains all necessary information to produce the given response without relying on outside knowledge and includes no significant irrelevant or distracting text."
 "Explain the difference between an expression and a statement in Python, and provide an example of each.","In Python, an **expression** is a combination of variables, operators, and values that is evaluated to produce a single result. A **statement** is a unit of code that performs a specific action or command, such as assigning a value to a variable or printing data. Unlike expressions, statements do not return a value.
 
 *   **Expression example:** `n + 25` (This evaluates to a resulting value).
@@ -395,7 +395,7 @@ by transforming each expression into a print statement and then run it again.
 When an expression contains more than one operator, the order of evaluation depends
 on the order of operations . For mathematical operators, Python follows mathematical
 convention. The acronym PEMDAS is a useful way to remember the rules:
-12 Chapter 2. Variables, expressions and statements"
+12 Chapter 2. Variables, expressions and statements",100,"The retrieved context clearly defines both expressions and statements in Python, including their differences and examples. It explains that expressions combine variables, operators, and values to produce a single result, while statements perform actions without returning values. The context also provides concrete examples (`n + 25` as an expression and `n = 17` as a statement) that directly support the response. Although the snippet includes some extra text, it does not distract from the key information. All necessary details to generate the given answer are present in the retrieved context."
 How does Python handle the order of operations in a complex expression like `2 + 3 * 4 ** 2`? Use PEMDAS rules to justify your answer.,"Python follows the PEMDAS convention to evaluate `2 + 3 * 4 ** 2` as follows:
 
 1.  **Exponentiation (**):** `4 ** 2` is evaluated first, resulting in 16. The expression becomes `2 + 3 * 16`.
@@ -448,7 +448,7 @@ So 2*3-1 is 5, not 4, and 6+4/2 is 8, not 5.
 tiation). So in the expression degrees / 2 * pi, the division happens ﬁrst and the
 result is multiplied by pi. To divide by 2π, you can use parentheses or writedegrees
 / 2 / pi.
-I don’t work very hard to remember the precedence of operators. If I can’t tell by looking"
+I don’t work very hard to remember the precedence of operators. If I can’t tell by looking",75,"The retrieved context includes a clear explanation of Python's order of operations following PEMDAS, covering parentheses, exponentiation, multiplication/division, and addition/subtraction precedence. It also explains left-to-right evaluation for operators of the same precedence and gives relevant examples close to the question. However, the context is somewhat fragmented and mixed with unrelated text, reducing clarity. Despite minor missing explicit step-by-step application to the exact expression `2 + 3 * 4 ** 2`, the necessary rules are present to generate the correct response without outside knowledge."
 Describe how the `+` and `*` operators behave differently when applied to strings compared to when they are applied to numbers.,"For strings, `+` performs concatenation (joining strings end-to-end) and `*` performs repetition (repeating a string a specific number of times). Unlike numbers, where these operators perform mathematical addition and multiplication, strings cannot be used with other mathematical operators like `-` or `/`.","I don’t work very hard to remember the precedence of operators. If I can’t tell by looking
 at the expression, I use parentheses to make it obvious.
 2.6 String operations
@@ -497,7 +497,7 @@ So 2*3-1 is 5, not 4, and 6+4/2 is 8, not 5.
 tiation). So in the expression degrees / 2 * pi, the division happens ﬁrst and the
 result is multiplied by pi. To divide by 2π, you can use parentheses or writedegrees
 / 2 / pi.
-I don’t work very hard to remember the precedence of operators. If I can’t tell by looking"
+I don’t work very hard to remember the precedence of operators. If I can’t tell by looking",100,"The retrieved context fully explains how `+` and `*` behave differently for strings versus numbers, including string concatenation and repetition, with examples and relevant restrictions. It also clarifies that other mathematical operators do not apply to strings. The response could be generated solely from this context without relying on external knowledge."
 "What are the three types of errors that can occur in a Python program, and how do they differ from one another?","The three types of errors in a Python program are:
 
 1.  **Syntax error:** An error in the program's structure or grammar that makes it impossible to parse or run.
@@ -547,7 +547,7 @@ you should try it out in interactive mode and make errors on purpose to see what
 • How about x = y = 1?
 • In some languages every statement ends with a semi-colon, ;. What happens if you put a
 semi-colon at the end of a Python statement?
-• What if you put a period at the end of a statement?"
+• What if you put a period at the end of a statement?",100,"The retrieved context fully covers all three error types—syntax, runtime, and semantic errors—with clear definitions and explanations that directly support the given response. The information is complete and well-organized, containing no irrelevant distractions that would impair understanding. The response could be generated solely from this context without requiring outside knowledge."
 What is the difference between a parameter and an argument in the context of function calls?,"An **argument** is the actual value provided to a function when it is called, while a **parameter** is the name used inside the function to refer to that value. Essentially, the argument is the input passed by the caller, which is then assigned to the corresponding parameter within the function.","Functions
 In the context of programming, afunction is a named sequence of statements that performs
 a computation. When you deﬁne a function, you specify the name and the sequence of
@@ -607,7 +607,7 @@ an example that uses it:
 >>> line1 = 'Bing tiddle '
 >>> line2 = 'tiddle bang.'
 >>> cat_twice(line1, line2)
-Bing tiddle tiddle bang."
+Bing tiddle tiddle bang.",100,"The retrieved context explicitly defines both ""parameter"" and ""argument"" with clear distinctions matching the question and response. It includes relevant examples and explanations, allowing the response to be generated solely from the provided information without relying on outside knowledge. There is no significant irrelevant or distracting content."
 Explain the flow of execution when a function is called within another function. How does Python keep track of where to return after a function completes?,"When a function is called within another, the program pauses the execution of the calling function to run the new function. This process can repeat, creating a chain of nested calls. Python manages this using a **stack** of **frames**—a data structure where each frame stores the variables and state of a specific function. By arranging these frames in a stack, Python keeps track of the ""call hierarchy,"" allowing it to know exactly which function to return to and where to resume execution once the current function completes.","back to pick up where it left off.
 That sounds simple enough, until you remember that one function can call another. While
 in the middle of one function, the program might have to run the statements in another
@@ -656,7 +656,7 @@ cat.
 If an error occurs during a function call, Python prints the name of the function, the name
 of the function that called it, and the name of the function that called that, all the way back
 to __main__.
-For example, if you try to access cat from within print_twice, you get a NameError:"
+For example, if you try to access cat from within print_twice, you get a NameError:",75,"The retrieved context includes key concepts such as the stack of frames, how each function call creates a frame with variables and parameters, and how Python keeps track of where to return after a function completes by managing these frames in a stack. It also mentions nested function calls and returning to the calling function, which supports the explanation in the response. However, the context is somewhat fragmented and includes some irrelevant or incomplete passages, and it does not explicitly describe the ""stack"" data structure in a clear, concise way or fully detail the control flow. Despite this, the response could be generated primarily from the retrieved content without relying heavily on outside knowledge."
 What is a void function and how does its return value differ from that of a fruitful function? What special value does a void function return if assigned to a variable?,"A void function performs an action but does not return a value. In contrast, a fruitful function returns a value that can be assigned to a variable or used in an expression. If you assign the result of a void function to a variable, it returns the special value `None`.","value is the value of the expression.
 fruitful function: A function that returns a value.
 void function: A function that always returns None.
@@ -718,7 +718,7 @@ make a change, you only have to make it in one place.
 and then assemble them into a working whole.
 • Well-designed functions are often useful for many programs. Once you write and
 debug one, you can reuse it.
-3.12 Debugging"
+3.12 Debugging",100,"The retrieved context fully explains the difference between void and fruitful functions, clearly states that void functions return None, and even provides examples showing the special None value when assigning a void function's result to a variable. The context is comprehensive and well-chunked for answering the question without requiring outside knowledge."
 How does Python handle variable scope inside functions? What happens if you try to access a local variable outside its function?,"Python handles variable scope by treating variables created inside a function as **local**, meaning they exist only within that specific function's scope. If you attempt to access a local variable from outside its function, Python will raise a `NameError` because the variable is not defined in the calling scope (such as `__main__`).","Each function is represented by a frame. A frame is a box with the name of a function
 beside it and the parameters and variables of the function inside it. The stack diagram for
 the previous example is shown in Figure 3.1.
@@ -771,7 +771,7 @@ local variable: A variable deﬁned inside a function. A local variable can only
 inside its function.
 return value: The result of a function. If a function call is used as an expression, the return
 value is the value of the expression.
-fruitful function: A function that returns a value."
+fruitful function: A function that returns a value.",75,"The retrieved context clearly explains that variables created inside functions are local and exist only within that function, and that accessing such a variable outside its function results in a NameError. However, the context is somewhat cluttered with extra information about frames, parameters, and function calls that is not directly relevant. Also, the explanation is somewhat implicit rather than explicitly stating the variable scope rules in a concise way. Despite this, the key information needed to generate the response is present and sufficient."
 Describe the purpose of modules and how you use dot notation to access functions within a module.,"Modules are files containing collections of related functions and definitions. To use them, you first import the module using an `import` statement, which creates a module object. You then access functions within that module using dot notation, which consists of the module name followed by a dot and the function name.","value is the value of the expression.
 fruitful function: A function that returns a value.
 void function: A function that always returns None.
@@ -837,7 +837,7 @@ takes any value and converts it to an integer, if it can, or complains otherwise
 ValueError: invalid literal for int(): Hello
 int can convert ﬂoating-point values to integers, but it doesn’t round off; it chops off the
 fraction part:
->>> int(3.99999)"
+>>> int(3.99999)",100,"The retrieved context fully explains the purpose of modules as files containing related functions and definitions, describes the import statement creating a module object, and clearly defines dot notation as using the module name followed by a dot and function name to access functions. All necessary information to produce the response is present and well-organized without irrelevant distractions."
 "What is encapsulation in the context of writing turtle graphics functions, and why is it beneficial?","Encapsulation is the process of wrapping a sequence of statements inside a function definition. It is beneficial because it attaches a descriptive name to the code, serving as documentation, and allows for code reuse, which is more concise than copying and pasting the same lines multiple times.","bob.lt(90). In that case, why not call the parameter bob? The idea is that t can be any
 turtle, not justbob, so you could create a second turtle and pass it as an argument tosquare:
 alice = turtle.Turtle()
@@ -891,7 +891,7 @@ To check whether you have the turtle module, open the Python interpreter and typ
 >>> import turtle
 >>> bob = turtle.Turtle()
 When you run this code, it should create a new window with small arrow that represents
-the turtle. Close the window."
+the turtle. Close the window.",100,"The retrieved context clearly defines encapsulation in the context of turtle graphics functions as wrapping code inside a function, explains its benefits (attaching a name for documentation and enabling concise reuse), and provides relevant examples. There is no missing key information, and the response could be generated solely from this context without outside knowledge."
 How does generalization improve the design of functions like `square` and `polygon` in turtle graphics programming?,"Generalization improves design by replacing hard-coded values with parameters, allowing a single function to handle a wider variety of tasks. Instead of creating separate functions for every specific size or shape, a generalized function can produce different outputs (such as varying side lengths or polygon types) based on the arguments provided, making the code more flexible, reusable, and concise.","bob.lt(90). In that case, why not call the parameter bob? The idea is that t can be any
 turtle, not justbob, so you could create a second turtle and pass it as an argument tosquare:
 alice = turtle.Turtle()
@@ -941,7 +941,7 @@ The innermost statements, fd and lt are indented twice to show that they are ins
 for loop, which is inside the function deﬁnition. The next line, square(bob), is ﬂush with
 the left margin, which indicates the end of both the for loop and the function deﬁnition.
 Inside the function, t refers to the same turtle bob, so t.lt(90) has the same effect as
-bob.lt(90). In that case, why not call the parameter bob? The idea is that t can be any"
+bob.lt(90). In that case, why not call the parameter bob? The idea is that t can be any",100,"The retrieved context thoroughly explains the concept of generalization as applied to turtle graphics functions like `square` and `polygon`. It details how adding parameters (e.g., length and number of sides) generalizes the functions, making them flexible and reusable for various sizes and shapes. The context includes code examples and reasoning that directly support the answer, with no significant missing information or irrelevant distractions. The response could be generated fully from this context."
 "Explain the difference between preconditions and postconditions in function interface design, and why are they important for debugging?","**Preconditions** are the requirements (such as parameter types or constraints) that must be true before a function executes; they are the caller's responsibility. **Postconditions** are the expected outcomes or side effects that should occur after the function finishes.
 
 This distinction is vital for **debugging** because it localizes the source of an error:
@@ -995,7 +995,7 @@ Writing this kind of documentation is an important part of interface design. A w
 designed interface should be simple to explain; if you have a hard time explaining one
 of your functions, maybe the interface could be improved.
 4.10 Debugging
-An interface is like a contract between a function and a caller. The caller agrees to provide"
+An interface is like a contract between a function and a caller. The caller agrees to provide",100,"The retrieved context explicitly defines preconditions and postconditions, their roles in function interface design, and their importance for debugging, matching the answer's key points. It includes the caller's responsibility for preconditions and how failing pre- or postconditions helps isolate bugs. While some unrelated material is present, the core relevant information is complete and sufficient to generate the response without outside knowledge."
 "How does the `arc` function differ from the `polygon` function, and how does refactoring help in designing these functions?","The `polygon` function draws a closed shape with equal-length sides and equal angles, while the `arc` function calculates a specific path length and turn angle based on the radius and degrees provided. 
 
 **Refactoring** helps in this design process by identifying common logic (the loop that moves and turns the turtle) and “factoring it out” into a more general function, `polyline`. This allows both `polygon` and `arc` to share the same underlying code, improving reusability and simplifying the interface.","4.8. A development plan 35
@@ -1064,7 +1064,7 @@ One alternative is to start with a copy of polygon and transform it into arc. Th
 might look like this:
 def arc(t, r, angle):
 arc_length = 2 * math.pi * r * angle / 360
-n = int(arc_length / 3) + 1"
+n = int(arc_length / 3) + 1",100,"The retrieved context fully contains the necessary information explaining how `arc` and `polygon` differ and how refactoring into `polyline` improves design by factoring out common code. It includes code snippets, rationale for refactoring, and the progression from polygon and arc to polyline, enabling a complete and accurate answer without requiring outside knowledge. The chunking is coherent and focused, with minimal irrelevant text."
 "What is the purpose of a docstring in a function, and what key information should it include to improve interface design?","The purpose of a docstring is to provide essential documentation for a function, acting as a concise explanation of its interface. To improve interface design, it should include:
 
 *   **A clear summary** of what the function does (without detailing the implementation).
@@ -1118,7 +1118,7 @@ segments) and any side effects (like moving the Turtle or making other changes).
 Preconditions are the responsibility of the caller. If the caller violates a (properly docu-
 mented!) precondition and the function doesn’t work correctly, the bug is in the caller, not
 the function.
-If the preconditions are satisﬁed and the postconditions are not, the bug is in the function."
+If the preconditions are satisﬁed and the postconditions are not, the bug is in the function.",100,"The retrieved context thoroughly explains the purpose of a docstring, including that it documents the function interface, provides a concise summary of what the function does, details parameter roles and types, and clarifies preconditions. The information is clearly presented and sufficient to generate the LLM response without relying on outside knowledge. Although the context includes some extraneous text, the key details are intact and well chunked."
 "What is the difference between the division operator `/` and the floor division operator `//` in Python, and when would you use each?","In Python, the **division operator (`/`)** performs floating-point division, returning the exact quotient (including decimals), while the **floor division operator (`//`)** divides two numbers and rounds the result down to the nearest integer.
 
 *   **Use `/`** when you need precise results (e.g., `105 / 60 = 1.75`).
@@ -1187,7 +1187,7 @@ not.
 conditional statement: A statement that controls the ﬂow of execution depending on some
 condition.
 condition: The boolean expression in a conditional statement that determines which
-branch runs."
+branch runs.",100,"The retrieved context clearly explains the difference between `/` and `//` in Python, including examples and definitions of floor division and floating-point division. It also provides practical use cases (e.g., converting minutes to hours) that directly support the response. Although there is some additional unrelated text, the key information is complete and well chunked, allowing the response to be generated solely from the provided context."
 "How does the modulus operator `%` work, and how can it be used to determine if a number is divisible by another?","The modulus operator (`%`) returns the remainder when one integer is divided by another. It can be used to determine if a number is divisible by another by checking if the result of `x % y` is zero; if it is, `x` is divisible by `y`.","the remainder.
 >>> remainder = minutes % 60
 >>> remainder
@@ -1245,7 +1245,7 @@ ability. The simplest form is the if statement:
 if x > 0:
 print('x is positive')
 The boolean expression after if is called the condition. If it is true, the indented statement
-runs. If not, nothing happens."
+runs. If not, nothing happens.",100,"The retrieved context clearly explains how the modulus operator `%` returns the remainder of division, explicitly states that if `x % y` is zero then `x` is divisible by `y`, and provides examples illustrating its use. Although there is some additional unrelated material, the key information needed to answer the question and generate the given response is fully present and well chunked."
 "Explain the difference between the relational operators `=` and `==` in Python, and why using a single `=` in a conditional expression is an error.","The difference is that `=` is an **assignment operator**, used to assign a value to a variable, while `==` is a **relational operator**, used to compare two values for equality. 
 
 Using a single `=` in a conditional expression is an error because the program will attempt to perform an assignment rather than evaluate a condition, which violates the syntax required by an `if` statement to determine whether to execute the indented code.",">>> type(True)
@@ -1303,7 +1303,7 @@ not.
 conditional statement: A statement that controls the ﬂow of execution depending on some
 condition.
 condition: The boolean expression in a conditional statement that determines which
-branch runs."
+branch runs.",75,"The retrieved context clearly explains that `=` is an assignment operator and `==` is a relational operator used for equality comparison, and it explicitly mentions that using a single `=` in a conditional expression is a common error. However, the explanation about why using `=` in a condition is an error is only implicit (it ""violates the syntax required by an if statement"") rather than fully elaborated. The context also contains some distracting or unrelated information about logical operators and other Python concepts, but the key distinctions needed to answer the question are present. The response could be generated solely from this context without requiring outside knowledge."
 Describe how an `if-elif-else` chain works in Python. What happens if multiple conditions in the chain are true?,"In an `if-elif-else` chain, Python evaluates conditions in order from top to bottom. As soon as it encounters a true condition, it executes the corresponding branch and skips all remaining conditions and branches. If multiple conditions in the chain are true, only the first one encountered will run; the others are ignored. If none of the conditions are true, the `else` block (if provided) executes.","displays an appropriate message. If the condition is false, the second set of statements
 runs. Since the condition must be true or false, exactly one of the alternatives will run. The
 alternatives are called branches, because they are branches in the ﬂow of execution.
@@ -1364,7 +1364,7 @@ Those two branches are both simple statements, although they could have been con
 statements as well.
 Although the indentation of the statements makes the structure apparent, nested condi-
 tionals become difﬁcult to read very quickly. It is a good idea to avoid them when you
-can."
+can.",100,"The retrieved context clearly explains how an if-elif-else chain works in Python, including that conditions are checked in order, only the first true branch executes, and subsequent true conditions are ignored. It also covers that the else branch runs if no conditions are true. The information is complete, well-organized, and sufficient for generating the response without relying on outside knowledge."
 What is recursion in programming? Explain what a base case is and why it is important in a recursive function.,"**Recursion** is the process of a function calling itself during its execution.
 
 A **base case** is a conditional branch within a recursive function that does not trigger a recursive call. It is essential because it provides an exit condition, ensuring that the recursion terminates. Without a base case, or if the base case is never reached, the program will enter ""infinite recursion"" and eventually crash with a `RuntimeError` once the maximum recursion depth is exceeded.",".
@@ -1423,7 +1423,7 @@ recursion: The process of calling the function that is currently executing.
 base case: A conditional branch in a recursive function that does not make a recursive call.
 inﬁnite recursion: A recursion that doesn’t have a base case, or never reaches it. Eventu-
 ally, an inﬁnite recursion causes a runtime error.
-5.14 Exercises"
+5.14 Exercises",100,"The retrieved context explicitly defines recursion, base case, and infinite recursion, including their roles and consequences. It contains all necessary information to answer the question fully and supports the response given without requiring outside knowledge. Although some extraneous text is present, it does not detract from the relevant content."
 "What is the difference between a void function and a fruitful function in Python, and how does the `return` statement work in a fruitful function?","In Python, the difference between void and fruitful functions is as follows:
 
 *   **Void functions** perform an action (like printing or moving an object) but do not produce a result; they implicitly return `None`.
@@ -1486,7 +1486,7 @@ As an exercise, write a compare function that takes two values, x and y, and ret
 > y, 0 if x == y, and -1 if x < y.
 6.2 Incremental development
 As you write larger functions, you might ﬁnd yourself spending more time debugging.
-To deal with increasingly complex programs, you might want to try a process called in-"
+To deal with increasingly complex programs, you might want to try a process called in-",100,"The retrieved context comprehensively covers the difference between void and fruitful functions, explains that void functions return None implicitly, and details how the return statement works in fruitful functions—including immediate termination, returning an expression value, multiple returns in conditionals, the need to cover all code paths, and dead code. There is no important information missing, and the response could be generated solely from this context without outside knowledge."
 Explain the process of incremental development and how it helps in debugging complex functions with an example.,"Incremental development is a programming strategy designed to avoid long, difficult debugging sessions by adding and testing only small portions of code at a time.
 
 **The process involves three main steps:**
@@ -1559,7 +1559,7 @@ tion.
 dead code: Part of a program that can never run, often because it appears after a return
 statement.
 incremental development: A program development plan intended to avoid debugging by
-adding and testing only a small amount of code at a time."
+adding and testing only a small amount of code at a time.",100,"The retrieved context fully covers the concept of incremental development, its purpose, key steps, and a clear example involving the distance function. It includes explanations of scaffolding, the rationale for small incremental code additions, use of intermediate variables, and debugging benefits—all directly supporting the question and the LLM response. There is some extra unrelated text, but it does not detract from the relevant content. The response could be generated entirely from this context without requiring outside knowledge."
 How can you use composition to build more complex functions from simpler ones? Illustrate with the example of calculating the area of a circle given two points.,"To build complex functions using composition, you call simpler, modular functions from within a new function, passing the output of one as the input for the next. This allows you to break a multi-step problem into manageable, reusable parts.
 
 **Example: Calculating the area of a circle from two points**
@@ -1635,7 +1635,7 @@ which returns the area of a circle with the given radius:
 def area(radius):
 a = math.pi * radius**2
 return a
-We have seen the return statement before, but in a fruitful function the return statement"
+We have seen the return statement before, but in a fruitful function the return statement",100,"The retrieved context fully contains the explanation of function composition including the example of calculating a circle's area from two points. It includes the step-by-step breakdown, the helper functions `distance` and `area`, and the final composed function `circle_area`. Although there is some minor irrelevant text, it does not detract from the overall completeness. The response can be generated entirely from the provided context without outside knowledge."
 What are boolean functions and how can you simplify a function like `is_divisible` by directly returning a boolean expression?,"Boolean functions are functions that return a `True` or `False` value, typically used to answer yes/no questions about data.
 
 You can simplify a function like `is_divisible` by returning the result of the comparison operator directly, rather than using an `if-else` statement. Since the comparison expression (e.g., `x % y == 0`) evaluates to a boolean value on its own, you can return that expression directly:
@@ -1702,7 +1702,7 @@ wrote a function called is_divisible that determines whether one number is divis
 another. Once we have convinced ourselves that this function is correct—by examining the
 code and testing—we can use the function without looking at the body again.
 The same is true of recursive programs. When you get to the recursive call, instead of
-following the ﬂow of execution, you should assume that the recursive call works (returns"
+following the ﬂow of execution, you should assume that the recursive call works (returns",100,"The retrieved context explicitly defines boolean functions, shows the original verbose form of `is_divisible`, and explains how to simplify it by returning the boolean expression directly. It also includes example code and clarifies that the comparison operator `==` returns a boolean, which can be returned directly without an if-else. Although there is some unrelated text, the relevant portions are complete and sufficient to generate the given response without external knowledge."
 "Describe how recursion works in the factorial function, including the role of base cases and the concept of the “leap of faith” when reading recursive functions.","In the factorial function, recursion works by having the function call itself with a decremented value ($n-1$) until it reaches a **base case** ($n=0$), at which point the recursion stops and returns a value. These returned values are then passed back up the stack, multiplied by the preceding $n$ values, to calculate the final result.
 
 The **""leap of faith""** is a strategy for reading recursive code: instead of mentally tracing every step of the execution—which becomes overwhelming—you simply assume the recursive call works correctly and focus on how the function combines that result to produce its own output. Base cases are critical because they ensure the recursion eventually terminates; without them, or if input types are not validated (like using a float), the function can enter an infinite loop and crash the program.","If you try to follow the ﬂow of execution here, even for fairly small values of n, your head
@@ -1777,7 +1777,7 @@ Factorial is not defined for negative integers.
 None
 6.9. Debugging 59
 If we get past both checks, we know that n is a non-negative integer, so we can prove that
-the recursion terminates."
+the recursion terminates.",75,"The retrieved context includes key elements about how recursion works in the factorial function, the importance of base cases (n == 0), and the concept of the ""leap of faith"" for reading recursive calls. It also explains issues with invalid inputs and the need for input validation, which aligns with the response's mention of potential infinite recursion without proper base cases or type checks. However, the context is somewhat fragmented and contains distracting unrelated content (like type checking details and error handling) that could have been better focused. Some explanation about the passing back of return values and multiplication along the recursive stack is present but somewhat implicit and scattered. Overall, the context is sufficient to produce the response but not perfectly streamlined or complete in a concise manner."
 "What is the difference between variable assignment and mathematical equality, and why is the statement `7 = a` invalid in Python?","The difference lies in symmetry and temporal stability:
 
 *   **Symmetry:** Mathematical equality is symmetric (if $a = b$, then $b = a$), whereas assignment is directional—it assigns the value on the right to the variable on the left.
@@ -1841,7 +1841,7 @@ ment:
 Updating a variable by adding 1 is called anincrement; subtracting 1 is called adecrement.
 7.3 The while statement
 Computers are often used to automate repetitive tasks. Repeating identical or similar tasks
-without making errors is something that computers do well and people do poorly. In a"
+without making errors is something that computers do well and people do poorly. In a",75,"The retrieved context clearly explains the difference between assignment and mathematical equality, including symmetry and temporal stability aspects. It also explicitly notes why `7 = a` is invalid in Python because the left side must be a variable. However, the context is somewhat fragmented and contains distracting unrelated text about iteration and updating variables, which slightly reduces clarity. Despite this, the key information needed to produce the response is present and sufficient."
 "Explain how the `while` statement controls the flow of execution in a loop, including what must happen inside the loop body to avoid an infinite loop.","The `while` statement controls execution by first evaluating a condition; if true, it runs the loop body and returns to the start of the condition. If false, the loop terminates. To avoid an infinite loop, the body must modify one or more variables so that the condition eventually becomes false, allowing the loop to terminate.","2. If false, exit the while statement and continue execution at the next statement.
 3. If the condition is true, run the body and then go back to step 1.
 This type of ﬂow is called a loop because the third step loops back around to the top.
@@ -1907,7 +1907,7 @@ print('Done!')
 The loop condition is True, which is always true, so the loop runs until it hits the break
 statement.
 Each time through, it prompts the user with an angle bracket. If the user types done, the
-break statement exits the loop. Otherwise the program echoes whatever the user types and"
+break statement exits the loop. Otherwise the program echoes whatever the user types and",100,"The retrieved context thoroughly explains how the `while` loop controls execution flow, including the loop condition evaluation, looping back when true, and exiting when false. It explicitly states that the loop body must modify variables to eventually make the condition false to avoid infinite loops. The context also provides relevant examples and additional details about breaks and loop termination. There is no important information missing, and the response could be fully generated using only this context."
 Describe the purpose of the `break` statement in a `while` loop and give an example scenario where it would be useful.,"The `break` statement is used to immediately exit a `while` loop, regardless of whether the loop's condition is still true. It is useful in scenarios where you need to check a condition mid-loop, such as waiting for a specific user input (e.g., typing ""done"") before stopping the execution.","break statement exits the loop. Otherwise the program echoes whatever the user types and
 goes back to the top of the loop. Here’s a sample run:
 > not done
@@ -1973,7 +1973,7 @@ print(n)
 if n % 2 == 0: # n is even
 n = n / 2
 else: # n is odd
-n = n*3 + 1"
+n = n*3 + 1",100,"The retrieved context clearly explains the purpose of the `break` statement in a `while` loop, including an example scenario where user input ""done"" triggers the break to exit an infinite loop. It covers why `break` is useful for stopping loops mid-body and contrasts it with loop conditions checked only at the top. Although there is some extra unrelated text, the key explanation and example needed to produce the response are fully present and well chunked."
 "Why is it generally unsafe to test floating-point numbers for exact equality in iterative computations like Newton’s method for square roots, and how can this be addressed?","It is unsafe to test floating-point numbers for exact equality because most rational and irrational numbers cannot be represented exactly in binary floating-point format, leading to inherent approximation errors. 
 
 To address this, instead of checking for exact equality (`y == x`), you should check if the absolute difference between two values is less than a predefined small threshold, or ""epsilon"" (e.g., `abs(y - x) < epsilon`), which defines an acceptable margin of error.","Floating-point values are only approximately right: most rational numbers, like 1/3, and
@@ -2058,7 +2058,7 @@ For example, if a is 4 and x is 3:
 2.16666666667
 7.6. Algorithms 67
 The result is closer to the correct answer (
-√"
+√",100,"The retrieved context thoroughly explains why exact equality tests on floating-point numbers are unsafe due to their approximate nature, specifically mentioning rational and irrational numbers not being exactly representable. It clearly shows the iterative process in Newton’s method and demonstrates the practical use of an epsilon-based absolute difference check (`abs(y - x) < epsilon`) to decide when to stop. Although some unrelated text is present, the key information needed to answer the question and produce the response is fully contained and well chunked."
 "What is an algorithm, and how does Newton’s method for computing square roots illustrate the characteristics of an algorithm?","An algorithm is a mechanical process or a set of simple rules used to solve a category of problems that can be executed without requiring intelligence.
 
 Newton’s method illustrates this by providing a general, repeatable formula—$y = (x + a/x) / 2$—that iteratively refines an estimate toward the square root of a number. Because it is a mechanical process where each step follows logically from the last until a specific condition (the desired precision) is met, it functions as an algorithm rather than a memorized, case-specific solution.","Floating-point values are only approximately right: most rational numbers, like 1/3, and
@@ -2116,7 +2116,7 @@ each step follows from the last according to a simple set of rules.
 Executing algorithms is boring, but designing them is interesting, intellectually challeng-
 ing, and a central part of computer science.
 Some of the things that people do naturally, without difﬁculty or conscious thought, are
-the hardest to express algorithmically. Understanding natural language is a good example."
+the hardest to express algorithmically. Understanding natural language is a good example.",75,"The retrieved context contains key information defining an algorithm as a mechanical process with simple steps, and it explains Newton’s method for square roots as an iterative, formula-based algorithm. However, the context is somewhat fragmented, with some irrelevant parts (e.g., about loops, floating-point precision, and unrelated programming constructs) and lacks a concise, explicit statement tying Newton’s method characteristics fully back to the definition of an algorithm. The response could be generated from this context, but it relies on synthesizing scattered details rather than a clear, focused explanation."
 "How does Python index characters in a string, and what is the index of the first and last characters in the string 'banana'?","Python uses zero-based indexing to access characters in a string, where the index represents the offset from the beginning of the string. For the string 'banana':
 
 *   **First character ('b'):** Index 0.
@@ -2188,7 +2188,7 @@ print(letter)
 index = index + 1
 This loop traverses the string and displays each letter on a line by itself. The loop condition
 is index < len(fruit), so when index is equal to the length of the string, the condition is
-false, and the body of the loop doesn’t run. The last character accessed is the one with the"
+false, and the body of the loop doesn’t run. The last character accessed is the one with the",100,"The retrieved context contains all necessary information to answer the question fully. It clearly explains zero-based indexing in Python strings, provides examples with the string 'banana', states the index of the first character as 0, and explains why the last character index is length minus one (5). The context also includes details about negative indexing and traversal, which, while extra, do not detract from the relevance. The response could be generated solely from the retrieved context without outside knowledge."
 What is the difference between using a positive index and a negative index to access characters in a string? Give an example.,"No Context Provided: The provided text explains that indices are offsets from the beginning of a string starting at zero, but it does not contain information regarding the use of negative indices.","Strings
 Strings are not like integers, ﬂoats, and booleans. A string is a sequence, which means it is
 an ordered collection of other values. In this chapter you’ll see how to access the characters
@@ -2249,7 +2249,7 @@ changing a character in a string. For example:
 TypeError: 'str' object does not support item assignment
 The “object” in this case is the string and the “item” is the character you tried to assign.
 For now, an object is the same thing as a value, but we will reﬁne that deﬁnition later
-(Section 10.10)."
+(Section 10.10).",50,"The retrieved context explains positive indexing (starting at zero from the beginning of the string) well and gives examples, but it completely omits any mention of negative indices or their behavior. Since the question specifically asks about the difference between positive and negative indices with examples, the lack of any information about negative indexing is a key omission, preventing a full answer from this context alone."
 Explain why strings are immutable in Python and demonstrate how you would create a new string with a modified first character.,"Strings are immutable in Python because they are objects whose contents cannot be altered after they have been created. Attempting to assign a new value to a specific index (e.g., `greeting[0] = 'J'`) results in a `TypeError` because the existing memory associated with the string cannot be modified.
 
 To modify the first character, you must create a new string by concatenating the desired character with a slice of the original string:
@@ -2322,7 +2322,7 @@ changing a character in a string. For example:
 TypeError: 'str' object does not support item assignment
 The “object” in this case is the string and the “item” is the character you tried to assign.
 For now, an object is the same thing as a value, but we will reﬁne that deﬁnition later
-(Section 10.10)."
+(Section 10.10).",100,"The retrieved context directly explains why strings are immutable in Python, includes an explicit example of the attempted assignment causing a TypeError, and demonstrates how to create a new string with a modified first character by concatenation and slicing. There is no missing or extraneous information that would hinder producing the given response solely based on this context."
 "How does the slice operator [n:m] work on strings, and what happens if the first index is omitted or if the first index is greater than or equal to the second?","The slice operator `[n:m]` returns the segment of a string starting at index `n` and ending at index `m-1` (including the first index but excluding the last). 
 
 *   **If the first index is omitted:** The slice starts from the beginning of the string (index 0).
@@ -2402,7 +2402,7 @@ third, etc.
 >>> fruit = 'banana'
 >>> fruit[0:5:2]
 'bnn'
-A step size of -1 goes through the word backwards, so the slice [::-1] generates a reversed string."
+A step size of -1 goes through the word backwards, so the slice [::-1] generates a reversed string.",75,"The retrieved context contains a clear explanation of how the slice operator [n:m] works on strings, including examples showing that the first index is inclusive and the second exclusive. It also explicitly states that omitting the first index starts the slice from the beginning of the string. However, the context does not directly address what happens if the first index is greater than or equal to the second, though this can be inferred from the examples and explanation. There is some distracting unrelated information about other string operations, but the core slicing info is present and sufficient to support the given response without relying on outside knowledge."
 "Describe how the find method works on strings, including its optional parameters, and how it differs from the function find(word, letter) presented in the chapter.","The `find` method is a built-in string method invoked using dot notation (`word.find(sub)`). Unlike a standalone function, it is part of the string object itself.
 
 **How it works:**
@@ -2478,7 +2478,7 @@ count = count + 1
 print(count)
 This program demonstrates another pattern of computation called a counter. The variable
 count is initialized to 0 and then incremented each time ana is found. When the loop exits,
-count contains the result—the total number of a’s."
+count contains the result—the total number of a’s.",100,"The retrieved context thoroughly explains how the string `find` method works, including its optional second and third parameters, and contrasts it with a manual `find(word, letter)` function. It provides examples and details on substring search capability, the return value when not found, and the method invocation syntax. Although some surrounding text is extraneous, all essential information to answer the question and produce the given response is present and well chunked."
 How does the search pattern used in functions like `has_no_e` and `avoids` help in efficiently determining whether a word contains certain letters?,"The search pattern is efficient because it uses an **early return**: it stops processing the word the moment it finds a forbidden letter, avoiding unnecessary iterations through the remaining characters. If the loop completes without finding a forbidden letter, it confirms the condition is met.","9.3. Search 85
 9.3 Search
 All of the exercises in the previous section have something in common; they can be solved
@@ -2526,7 +2526,7 @@ there that use all the vowels aeiou? How about aeiouy?
 Exercise 9.6. Write a function called is_abecedarian that returns True if the letters in a word
 appear in alphabetical order (double letters are ok). How many abecedarian words are there?
 9.3. Search 85
-9.3 Search"
+9.3 Search",100,"The retrieved context directly explains the search pattern used in functions like `has_no_e` and `avoids`, including the early return mechanism that makes the search efficient. It contains the code examples, the logic behind returning False immediately upon finding a forbidden letter, and returning True if none are found. No important information is missing, and no irrelevant text distracts from the explanation. The response could be fully generated using only this context without relying on outside knowledge."
 Explain the difference between the functions `uses_only` and `uses_all` in terms of their inputs and how they check the letters of a word.,"The difference lies in which string acts as the ""source"" and which acts as the ""constraint"":
 
 *   **`uses_only(word, available)`**: Iterates through each letter of the **word**. It returns `False` if it finds a letter in the word that is **not present** in the `available` string. It ensures every letter in the word is allowed.
@@ -2592,7 +2592,7 @@ there that use all the vowels aeiou? How about aeiouy?
 Exercise 9.6. Write a function called is_abecedarian that returns True if the letters in a word
 appear in alphabetical order (double letters are ok). How many abecedarian words are there?
 9.3. Search 85
-9.3 Search"
+9.3 Search",100,"The retrieved context fully contains the definitions and explanations of both `uses_only` and `uses_all`, including the roles of their inputs and how each function checks letters in the word. The response directly reflects the information present in the context, which is sufficient and complete without requiring outside knowledge. The extra surrounding text is minimal and not distracting."
 Describe at least two different ways to implement the function `is_abecedarian` and discuss the advantages or disadvantages of each approach.,"Based on the provided text, here are two ways to implement `is_abecedarian`:
 
 **1. Using a `for` loop with a tracking variable:**
@@ -2662,7 +2662,7 @@ there that use all the vowels aeiou? How about aeiouy?
 Exercise 9.6. Write a function called is_abecedarian that returns True if the letters in a word
 appear in alphabetical order (double letters are ok). How many abecedarian words are there?
 9.3. Search 85
-9.3 Search"
+9.3 Search",75,"The retrieved context contains two clear implementations of `is_abecedarian` (using a `for` loop with a tracking variable and using a `while` loop with indices) along with explanations of their mechanics and some advantages/disadvantages. It also briefly mentions a recursive approach. However, the context is somewhat cluttered with unrelated material (e.g., other exercises and unrelated functions), which could distract from focused retrieval. Additionally, some details—such as explicit pros and cons of recursion—are only hinted at, not fully elaborated. Still, the information present is sufficient to generate the given response without relying on outside knowledge, making the retrieval good but not perfect."
 "What is meant by ""reduction to a previously solved problem,"" and how is it applied in the implementation of the function `uses_all`?","""Reduction to a previously solved problem"" is a development plan where you recognize a new problem as an instance of a problem that has already been solved and then apply the existing solution.
 
 In the case of `uses_all`, the function is implemented by calling `uses_only(required, word)`. This applies the technique by treating the requirement ""does the word use all required letters?"" as a variation of the already solved problem ""does the word use only these allowed letters?"" (by swapping the arguments).","legendary computer scientist:
@@ -2724,7 +2724,7 @@ lists available on the Web, but the one most suitable for our purpose is one of 
 collected and contributed to the public domain by Grady Ward as part of the Moby lexi-
 con project (see http://wikipedia.org/wiki/Moby_Project). It is a list of 113,809 ofﬁcial
 crosswords; that is, words that are considered valid in crossword puzzles and other word
-games. In the Moby collection, the ﬁlename is 113809of.fic; you can download a copy,"
+games. In the Moby collection, the ﬁlename is 113809of.fic; you can download a copy,",75,"The retrieved context clearly defines ""reduction to a previously solved problem"" and gives the exact implementation of `uses_all` as calling `uses_only` with swapped arguments, illustrating the concept. However, the explanation is somewhat brief and scattered within other unrelated text, which might require some effort to extract. Still, all necessary information to answer the question and produce the given response is present, with no critical details missing."
 "Why is it important to consider special cases, such as the empty string, when testing functions that operate on words?","Special cases, such as the empty string, are important because they are atypical and non-obvious, making them more likely to expose hidden logic errors or bugs that standard test cases might overlook.","trouble coming up with one of each.
 Within each case, there are some less obvious subcases. Among the words that have an
 “e”, you should test words with an “e” at the beginning, the end, and somewhere in the
@@ -2768,7 +2768,7 @@ there that use all the vowels aeiou? How about aeiouy?
 Exercise 9.6. Write a function called is_abecedarian that returns True if the letters in a word
 appear in alphabetical order (double letters are ok). How many abecedarian words are there?
 9.3. Search 85
-9.3 Search"
+9.3 Search",100,"The retrieved context explicitly discusses special cases like the empty string as atypical, non-obvious cases where errors often lurk, which directly supports the answer given. It provides definitions and examples emphasizing why such cases are important to test. Although the context includes some additional unrelated text, the key information needed to answer the question and produce the response is fully present and clearly stated, enabling the response to be generated solely from the retrieved content."
 "What is the difference between a list and a string in Python, and how are list elements accessed and modified?","While both are sequences, a string contains only characters, whereas a list can contain elements of any type, including other lists (nested lists). 
 
 **Accessing:** List elements are accessed using indices, which function identically to string indices (including support for negative indexing). 
@@ -2832,7 +2832,7 @@ False
 The most common way to traverse the elements of a list is with a for loop. The syntax is
 the same as for strings:
 for cheese in cheeses:
-print(cheese)"
+print(cheese)",75,"The retrieved context includes key information about the difference between lists and strings (lists can hold any type, including nested lists; strings contain only characters), that list elements can be accessed by indices similarly to strings (including negative indices), and that lists are mutable and can be modified (e.g., via `del t[0]`). However, it does not explicitly state that strings are immutable, only implying it through contrast, which is a minor omission. Some parts of the context are somewhat verbose or tangential (e.g., aliasing details), but overall the relevant information is present and sufficient to generate the given response without relying on outside knowledge."
 Explain the concepts of aliasing and mutability in lists. What happens if two variables reference the same list and one of them modifies it?,"**Aliasing** occurs when two or more variables refer to the same object in memory. **Mutability** refers to the ability of an object to have its contents changed after creation.
 
 In Python, lists are mutable. If two variables reference the same list, they act as aliases for that object. Because they point to the exact same location in memory, any modification made to the list through one variable will be reflected when accessing the list through the other variable. For example, if you change an element in `b` (where `b = a`), that change is immediately visible in `a`.","to say that an object has a value. If you evaluate [1, 2, 3], you get a list object whose
@@ -2906,7 +2906,7 @@ Exercise 10.1. Write a function called nested_sum that takes a list of lists of 
 the elements from all of the nested lists. For example:
 >>> t = [[1, 2], [3], [4, 5, 6]]
 >>> nested_sum(t)
-21"
+21",100,"The retrieved context explicitly explains aliasing as multiple variables referencing the same object and clarifies mutability with lists being mutable objects. It provides the exact behavior when one alias modifies the list, showing changes reflected across aliases. The response could be fully generated using only this context, with no important information missing or irrelevant distractions."
 "Describe how list slicing works, including how to use slices to copy a list or update multiple elements at once.","List slicing allows you to extract or modify specific portions of a list using the syntax `t[start:stop]`. 
 
 *   **Slicing basics:** If you omit the start index, the slice begins at the start of the list; if you omit the stop index, it goes to the end.
@@ -2999,7 +2999,7 @@ accumulator: A variable used in a loop to add up or accumulate a result.
 augmented assignment: A statement that updates the value of a variable using an opera-
 tor like +=.
 reduce: A processing pattern that traverses a sequence and accumulates the elements into
-a single result."
+a single result.",100,"The retrieved context contains all necessary information to answer the question about list slicing, including how to extract slices, copy a list using `[:]`, and update multiple elements via slice assignment (e.g., `t[1:3] = ['x', 'y']`). The examples and explanations are clear and sufficient, with no important details missing. Although there is some extra unrelated text about list methods and other topics, it does not detract from the relevant content. The response could be generated fully from this context without relying on outside knowledge."
 "What are the differences between the list methods `append`, `extend`, and the list concatenation operator `+`? How do they affect the original list?","Based on the provided text, the differences are as follows:
 
 *   **`append`**: Modifies the original list by adding a single element to the end. It returns `None`.
@@ -3092,7 +3092,7 @@ Sometimes you want to traverse one list while building another. For example, the
 function takes a list of strings and returns a new list that contains capitalized strings:
 def capitalize_all(t):
 res = []
-for s in t:"
+for s in t:",50,"The context clearly explains the difference between `append` and the `+` operator, including how `append` modifies the original list and returns None, while `+` creates a new list without changing the original. However, the explanation for `extend` is completely missing, which is a key part of the question. There is also some irrelevant text about slicing, sum, and other list operations that do not contribute to answering the question, indicating some noise in retrieval. Overall, the context partially supports answering the question but lacks full coverage of all three methods."
 "How do map, filter, and reduce patterns apply to lists? Give an example of each from the chapter.","Based on the provided text, these patterns describe ways to process a sequence:
 
 *   **Map:** Traverses a sequence and performs an operation on each element.
@@ -3163,7 +3163,7 @@ integer, and (lo!) another list:
 ['spam', 2.0, 5, [10, 20]]
 A list within another list is nested.
 A list that contains no elements is called an empty list; you can create one with empty
-brackets, []."
+brackets, [].",50,"The retrieved context includes definitions of map, filter, and reduce patterns from the glossary, which is sufficient to answer the conceptual part of the question. However, it lacks any concrete examples from the chapter text for these patterns, and the only related example referenced is the nested_sum function mentioned in the exercises, which is not fully detailed. The retrieval also contains much unrelated information about lists and copying lists, which is distracting but not harmful. Overall, the context supports a partial answer but is missing key example details needed to fully satisfy the question."
 What is the difference between a list and a dictionary in Python in terms of how elements are accessed?,"In a list, elements are accessed using integer indices, whereas in a dictionary, elements are accessed using keys, which can be almost any immutable type.","Dictionaries
 This chapter presents another built-in type called a dictionary. Dictionaries are one of
 Python’s best features; they are the building blocks of many efﬁcient and elegant algo-
@@ -3211,7 +3211,7 @@ the keys have to be hashable.
 A hash is a function that takes a value (of any kind) and returns an integer. Dictionaries
 use these integers, called hash values, to store and look up key-value pairs.
 This system works ﬁne if the keys are immutable. But if the keys are mutable, like lists,
-bad things happen. For example, when you create a key-value pair, Python hashes the key"
+bad things happen. For example, when you create a key-value pair, Python hashes the key",100,"The retrieved context clearly explains that list elements are accessed by integer indices, while dictionary elements are accessed by keys of (almost) any immutable type. It includes details about keys, values, and indexing differences, all sufficient to generate the response without needing external knowledge. There is some extra text, but it does not detract from the relevant information."
 How does the `get` method of a dictionary simplify counting occurrences of items compared to using an `if` statement?,The `get` method simplifies counting by allowing you to retrieve a value (or a default value of 0 if the key is missing) and increment it in a single line. This replaces the need for an `if-else` block to check if the key already exists in the dictionary before initializing or updating its count.,"The order of the key-value pairs might not be the same. If you type the same example
 on your computer, you might get a different result. In general, the order of items in a
 dictionary is unpredictable.
@@ -3264,7 +3264,7 @@ and the bisection search.
 Exercise 11.2. Read the documentation of the dictionary method setdefault and use it to write a
 more concise version of invert_dict. Solution: https: // thinkpython. com/ code/ invert_
 dict. py.
-Exercise 11.3. Memoize the Ackermann function from Exercise 6.2 and see if memoization"
+Exercise 11.3. Memoize the Ackermann function from Exercise 6.2 and see if memoization",25,"The retrieved context discusses dictionary basics, key lookup, exceptions, and dictionary performance, but it does not explicitly explain how the `get` method simplifies counting by providing a default value to avoid an explicit `if` check. The mention of counting letters is present but lacks the specific code or explanation about `get` vs. `if` statements. Much of the context is irrelevant or incomplete for the question, so the response relies on outside knowledge not contained in the retrieved text."
 "Why must dictionary keys be hashable, and why can't mutable types like lists be used as keys?","Dictionary keys must be hashable because Python uses a ""hashtable"" to store and look up data. A hash function converts a key into an integer (a hash value) to determine where that key is stored in memory.
 
 Mutable types like lists cannot be used as keys because if a key were modified after it was stored, its hash value would change. This would cause the key to point to a different location, making it impossible to retrieve the original entry or resulting in duplicate entries for the same key, which would break the dictionary's functionality.","bad things happen. For example, when you create a key-value pair, Python hashes the key
@@ -3328,7 +3328,7 @@ call graph: A diagram that shows every frame created during the execution of a p
 with an arrow from each caller to each callee.
 memo: A computed value stored to avoid unnecessary future computation.
 global variable: A variable deﬁned outside a function. Global variables can be accessed
-from any function."
+from any function.",100,"The retrieved context thoroughly explains why dictionary keys must be hashable, detailing the role of hashing in dictionary implementation and the problems caused by mutable keys like lists. It includes the concept of hash functions, the consequences of modifying keys after insertion, and even a concrete example of the TypeError raised when using a list as a key. The response could be fully generated from this context without needing outside information."
 How does memoization using a dictionary improve the performance of recursive functions like Fibonacci?,"Memoization improves performance by storing previously computed results in a dictionary (the memo). Whenever the function is called, it checks if the value for the given argument already exists in the dictionary; if so, it returns the stored result immediately instead of re-calculating it, which prevents redundant, time-consuming recursive calls.","bad things happen. For example, when you create a key-value pair, Python hashes the key
 and stores it in the corresponding location. If you modify the key and then hash it again, it
 would go to a different location. In that case you might have two entries for the same key,
@@ -3395,7 +3395,7 @@ if n in known:
 return known[n]
 res = fibonacci(n-1) + fibonacci(n-2)
 known[n] = res
-return res"
+return res",100,"The retrieved context thoroughly explains how memoization using a dictionary stores already computed Fibonacci numbers, allowing the function to return cached results immediately and thus avoid redundant recursive calls. It includes the key details about the dictionary as a memo, the inefficiency of the naive recursive approach, and the performance improvement gained by memoization. Although some unrelated text is present, the relevant information is clearly included and sufficient to generate the given response without needing outside knowledge."
 Explain how you can invert a dictionary that maps keys to values when multiple keys might share the same value.,"To invert a dictionary where multiple keys share the same value, you create a new dictionary where the original values become the keys. Since multiple original keys may map to the same value, the new dictionary's values should be **lists** that store all corresponding original keys. 
 
 You can implement this by iterating through the original dictionary and, for each key-value pair, checking if the value already exists in the new dictionary: if it does, append the key to its associated list; if not, create a new list containing that key.","When you raise an exception, you can provide a detailed error message as an optional
@@ -3452,7 +3452,7 @@ called a key-value pair or sometimes an item.
 In mathematical language, a dictionary represents a mapping from keys to values, so you
 can also say that each key “maps to” a value. As an example, we’ll build a dictionary that
 maps from English to Spanish words, so the keys and the values are all strings.
-The function dict creates a new dictionary with no items. Because dict is the name of a"
+The function dict creates a new dictionary with no items. Because dict is the name of a",75,"The retrieved context includes the key idea that when inverting a dictionary where multiple keys share the same value, the inverted dictionary's values should be lists of keys. It also shows a partial code snippet and explains the approach clearly. However, the context is cluttered with unrelated text about exceptions, dictionary creation, and general dictionary usage, which is distracting. Additionally, the code snippet is incomplete and somewhat fragmented, and the explanation of the inversion function is not fully contained in one coherent segment. Despite these minor gaps and irrelevant parts, the essential information needed to produce the response is present."
 "What is the main difference between tuples and lists in Python, and how does this difference affect how you use tuples?","The main difference is that tuples are **immutable**, whereas lists are mutable. 
 
 This affects their usage in several ways:
@@ -3513,7 +3513,7 @@ Although it is not necessary, it is common to enclose tuples in parentheses:
 To create a tuple with a single element, you have to include a ﬁnal comma:
 >>> t1 = 'a',
 >>> type(t1)
-<class 'tuple'>"
+<class 'tuple'>",75,"The retrieved context clearly explains the main difference that tuples are immutable while lists are mutable, and it provides several usage implications such as tuples being usable as dictionary keys, preventing aliasing issues, and simpler syntax in returns. However, some relevant details are fragmented or embedded in distracting unrelated text, and the explanation of syntax and immutability could be more focused. Overall, the context contains the core information needed for the response, but minor gaps and noise slightly reduce retrieval quality."
 "How can you create a tuple with a single element, and why is the syntax different from creating a tuple with multiple elements?","To create a tuple with a single element, you must include a trailing comma after the value (e.g., `t = 'a',`). 
 
 The syntax is different because, without the comma, Python interprets parentheses solely as grouping syntax for an expression, causing `('a')` to be evaluated as a string rather than a tuple. The trailing comma is the unique syntactic marker that tells Python to treat the object as a tuple.",">>> t1 = 'a',
@@ -3580,7 +3580,7 @@ like a tuple or string.
 potential for unexpected behavior due to aliasing.
 Because tuples are immutable, they don’t provide methods like sort and reverse, which
 modify existing lists. But Python provides the built-in function sorted, which takes any
-sequence and returns a new list with the same elements in sorted order, and reversed,"
+sequence and returns a new list with the same elements in sorted order, and reversed,",100,"The retrieved context clearly explains how to create a single-element tuple using a trailing comma, shows examples distinguishing `('a')` (a string) from `('a',)` (a tuple), and explains why the comma is necessary (parentheses alone are not enough). It includes relevant examples and the underlying syntax reasoning, enabling the given response to be fully supported without outside knowledge."
 Explain how tuple assignment works and provide an example of swapping the values of two variables using tuple assignment.,"Tuple assignment allows you to assign multiple values to variables in a single line. The right side is evaluated as a tuple, and its elements are then assigned to the corresponding variables on the left.
 
 **Example of swapping variables:**
@@ -3650,7 +3650,7 @@ data structure: A collection of related values, often organized in lists, dictio
 etc.
 shape error: An error caused because a value has the wrong shape; that is, the wrong type
 or size.
-12.10 Exercises"
+12.10 Exercises",100,"The retrieved context clearly explains tuple assignment, including how the right side is evaluated as a tuple and assigned to variables on the left. It explicitly gives the example of swapping variables using `a, b = b, a`, exactly matching the question and response. The context also includes additional relevant information about tuple unpacking and related tuple operations, with no distracting or irrelevant content that would impede understanding. The response could be generated solely from this context without needing outside knowledge."
 "What are the gather and scatter operators in Python functions, and how do they facilitate working with variable-length argument lists?","In Python, the **gather** and **scatter** operators both use the asterisk (`*`) symbol to manage variable-length arguments:
 
 *   **Gather:** Used in function definitions (e.g., `*args`), it collects multiple arguments passed to a function and packs them into a single tuple. This allows a function to accept an arbitrary number of arguments.
@@ -3718,7 +3718,7 @@ data structure: A collection of related values, often organized in lists, dictio
 etc.
 shape error: An error caused because a value has the wrong shape; that is, the wrong type
 or size.
-12.10 Exercises"
+12.10 Exercises",100,"The retrieved context explicitly defines both gather and scatter operators, illustrating their use in function definitions and calls with examples. It clearly explains that gather collects multiple arguments into a tuple, while scatter unpacks a sequence into individual arguments. All necessary information to produce the given response is present, well-organized, and there is no irrelevant or missing critical data."
 "Describe how the built-in functions `zip` and `enumerate` work with sequences, and give an example of how each can be used in a loop with tuple assignment.","The `zip` function takes two or more sequences and interleaves them, producing an iterator of tuples containing corresponding elements. If sequences are of unequal length, it stops at the end of the shortest one. 
 
 The provided text does not define `enumerate`; however, in Python, `enumerate` adds a counter to an iterable, returning pairs of `(index, element)`.
@@ -3801,7 +3801,7 @@ def has_match(t1, t2):
 for x, y in zip(t1, t2):
 if x == y:
 return True
-return False"
+return False",75,"The context explains how `zip` works in detail, including its behavior with sequences, the output as an iterator of tuples, and example usage with tuple assignment in loops. However, it lacks any direct explanation or example of `enumerate`, only mentioning it in the question but not in the retrieved text. The response’s explanation of `enumerate` relies on outside knowledge not found in the context. Thus, while the retrieval sufficiently supports the `zip` portion, it is incomplete for fully answering the question about both built-ins."
 What are the advantages and disadvantages of using a list versus a dictionary (histogram) to represent the collection of suffixes in Markov analysis?,"Based on the provided text, the advantages and disadvantages are:
 
 **List:**
@@ -3851,7 +3851,7 @@ program with preﬁx length two, but you should write the program in a way that 
 to try other lengths.
 2. Add a function to the previous program to generate random text based on the Markov analysis.
 Here is an example from Emma with preﬁx length 2:
-He was very clever, be it sweetness or be angry, ashamed or only amused, at such"
+He was very clever, be it sweetness or be angry, ashamed or only amused, at such",75,"The context contains the key points needed to answer the question, including the ease of implementation and random selection from a list, and the efficiency benefits of dictionaries for frequency representation. It also notes the difficulty of selecting a random suffix from a histogram. However, the context lacks a clear, explicit comparison of all advantages and disadvantages in a concise form, and some explanations are implicit or scattered. There is some irrelevant text (e.g., about preﬁxes and exercises), but overall the retrieved context is sufficient to generate the given response without outside knowledge."
 How does the `process_line` function handle punctuation and case when building a word frequency histogram from a text file?,"The `process_line` function handles punctuation and case by:
 
 *   **Punctuation:** Using the `strip()` method with `string.punctuation` and `string.whitespace` to remove those characters from the beginning and end of each word.
@@ -3922,7 +3922,7 @@ def process_file(filename):
 hist = dict()
 fp = open(filename)
 for line in fp:
-process_line(line, hist)"
+process_line(line, hist)",100,"The retrieved context fully includes the relevant code and explanation for how `process_line` handles punctuation (using `strip(string.punctuation + string.whitespace)`) and case (using `lower()`). The essential details about replacing hyphens with spaces, splitting lines into words, stripping punctuation, and converting to lowercase are all present, enabling a complete and accurate answer without needing outside information."
 "Explain how the algorithm for choosing a random word from a histogram using cumulative sums and bisection search works, and why it is more efficient than the naive approach.","The algorithm for choosing a random word using cumulative sums works as follows:
 
 1.  **Preparation:** You create a list of the unique words and a corresponding list of cumulative frequencies (where each element is the sum of all frequencies up to that point).
@@ -3973,7 +3973,7 @@ the in operator is faster for dictionaries than for lists, at least when the num
 is large.
 But often you don’t know ahead of time which implementation will be faster. One option is
 to implement both of them and see which is better. This approach is calledbenchmarking.
-A practical alternative is to choose the data structure that is easiest to implement, and then"
+A practical alternative is to choose the data structure that is easiest to implement, and then",100,"The retrieved context fully explains the naive approach and the cumulative sums with bisection search algorithm, including why the naive method is inefficient and how the cumulative sum method works step-by-step. It also highlights the efficiency gain via building the list once and using binary search, which matches the response perfectly. There is some extra text but nothing distracting, and no critical information is missing. The response could be generated entirely from this context."
 "What is set subtraction in the context of comparing word lists, and how can it be used to find words in a book that do not appear in a given word list?","In this context, set subtraction is the process of identifying elements present in one set (the unique words in a book) that are absent from another set (a provided word list). 
 
 It is used to find words in a book not found in the word list by iterating through the book's word collection (typically stored as keys in a dictionary or a `set` object) and filtering out any words that also exist in the word list. This allows the user to isolate and analyze unique, misspelled, or missing vocabulary from the book.","Finding the words from the book that are not in the word list fromwords.txt is a problem
@@ -4027,7 +4027,7 @@ the same calculation to yield the same result. For some applications, though, we
 computer to be unpredictable. Games are an obvious example, but there are more.
 Making a program truly nondeterministic turns out to be difﬁcult, but there are ways to
 make it at least seem nondeterministic. One of them is to use algorithms that generate
-pseudorandom numbers. Pseudorandom numbers are not truly random because they are"
+pseudorandom numbers. Pseudorandom numbers are not truly random because they are",100,"The retrieved context fully explains set subtraction in the context of comparing word lists, including example code and application to finding words in a book not in a given word list. It contains all necessary details to produce the response without needing any outside information. The presence of the subtract function, explanation, and usage example makes the retrieval complete and well-chunked."
 "How does Zipf’s law relate word frequency to rank, and how can plotting log frequency versus log rank help verify this relationship?","Zipf’s law relates word frequency ($f$) to rank ($r$) using the formula $f = cr^{-s}$, where $c$ and $s$ are language-dependent constants.
 
 Plotting the log of frequency versus the log of rank ($\log f = \log c - s \log r$) transforms this power-law relationship into a linear equation. If the data follows Zipf’s law, the resulting plot will be a straight line, where the slope of the line corresponds to $-s$.","f , of the word with rank r is:
@@ -4089,7 +4089,7 @@ This code can be simpliﬁed using the key parameter of the sort function. If yo
 ous, you can read about it at https://wiki.python.org/moin/HowTo/Sorting.
 13.5. Optional parameters 129
 13.5 Optional parameters
-We have seen built-in functions and methods that take optional arguments. It is possible"
+We have seen built-in functions and methods that take optional arguments. It is possible",100,"The retrieved context fully contains the key formula relating word frequency to rank via Zipf’s law, the logarithmic transformation into a linear form, and the explanation that plotting log frequency versus log rank yields a straight line whose slope corresponds to the negative exponent. It also includes relevant code snippets and examples supporting the explanation, with no distracting or missing critical information. The response could be generated solely from this context."
 What is the difference between a transient program and a persistent program in terms of data storage?,"A transient program’s data disappears when it ends, starting with a clean slate upon each restart. A persistent program keeps at least some of its data in permanent storage, allowing it to pick up where it left off after shutting down and restarting.","Files
 This chapter introduces the idea of “persistent” programs that keep data in permanent stor-
 age, and shows how to use different kinds of permanent storage, like ﬁles and databases.
@@ -4136,7 +4136,7 @@ To write a ﬁle, you have to open it with mode 'w' as a second parameter:
 If the ﬁle already exists, opening it in write mode clears out the old data and starts fresh,
 so be careful! If the ﬁle doesn’t exist, a new one is created.
 open returns a ﬁle object that provides methods for working with the ﬁle. The write
-method puts data into the ﬁle."
+method puts data into the ﬁle.",100,"The retrieved context clearly and directly explains the difference between transient and persistent programs in terms of data storage, including that transient programs lose their data upon termination while persistent programs store data permanently and can resume state after restart. The context includes precise definitions and relevant examples, with no important information missing or irrelevant distractions, enabling the response to be generated solely from this context."
 "How do you open a file for writing in Python, and what happens if the file already exists?","To open a file for writing, you use the `open()` function with `'w'` as the second parameter (e.g., `fout = open('output.txt', 'w')`). If the file already exists, opening it in write mode clears out the old data and starts fresh.","And if you try to open a directory for reading, you get
 >>> fin = open('/home')
 IsADirectoryError: [Errno 21] Is a directory: '/home'
@@ -4193,7 +4193,7 @@ count += 1
 return count
 print(linecount('wc.py'))
 If you run this program, it reads itself and prints the number of lines in the ﬁle, which is 7.
-You can also import it like this:"
+You can also import it like this:",100,"The retrieved context explicitly explains how to open a file for writing in Python using `open()` with mode `'w'`, and clearly states what happens if the file already exists (it is cleared and starts fresh). The relevant example and explanation are present and sufficient to produce the given response without requiring outside knowledge. Although there is some extra unrelated text, it does not detract from the core information needed."
 Explain how the format operator (%) works in Python when writing data to a file. What happens if the number or types of arguments do not match the format sequences?,"The format operator (`%`) creates a formatted string by replacing format sequences (like `%d`, `%g`, or `%s`) in a string with values from a provided argument or tuple. Since the `write` method only accepts strings, you use the format operator to convert and embed data into a string before passing it to the file.
 
 **Handling Mismatches:**
@@ -4253,7 +4253,7 @@ The following example uses'%d' to format an integer,'%g' to format a ﬂoating-p
 ber, and '%s' to format a string:
 >>> 'In %d years I have spotted %g %s.' % (3, 0.1, 'camels')
 'In 3 years I have spotted 0.1 camels.'
-14.4. Filenames and paths 139"
+14.4. Filenames and paths 139",100,"The retrieved context thoroughly explains how the format operator (%) works in Python strings, including examples of formatting integers, floats, and strings. It clearly describes what happens when the number or types of arguments do not match the format sequences, providing exact error messages and examples. Although there is some minor unrelated text about file writing and directories, the relevant information is complete and sufficient to generate the given response without needing external knowledge."
 "What functions does the `os.path` module provide to check whether a path exists, and whether it is a file or a directory?","The `os.path` module provides the following functions:
 
 *   **`os.path.exists(path)`**: Checks whether a file or directory exists.
@@ -4316,7 +4316,7 @@ If you don’t have permission to access a ﬁle:
 >>> fout = open('/etc/passwd', 'w')
 PermissionError: [Errno 13] Permission denied: '/etc/passwd'
 And if you try to open a directory for reading, you get
->>> fin = open('/home')"
+>>> fin = open('/home')",100,"The retrieved context explicitly includes the functions `os.path.exists`, `os.path.isdir`, and `os.path.isfile` with examples demonstrating their use for checking whether a path exists, is a directory, or is a file. The information is complete, well chunked, and directly answers the question without missing or irrelevant details. The response could be generated solely from this context."
 How does the `pickle` module help overcome the limitations of the `dbm` database module when storing data?,"The `pickle` module overcomes `dbm`'s limitation (which only accepts strings or bytes) by translating almost any Python object into a string representation that can be stored in a database, and then reconstituting that string back into its original object type when retrieved.",">>> db.close()
 142 Chapter 14. Files
 14.7 Pickling
@@ -4374,7 +4374,7 @@ Opening a database is similar to opening other ﬁles:
 >>> import dbm
 >>> db = dbm.open('captions', 'c')
 The mode 'c' means that the database should be created if it doesn’t already exist. The
-result is a database object that can be used (for most operations) like a dictionary."
+result is a database object that can be used (for most operations) like a dictionary.",100,"The retrieved context fully explains the limitation of `dbm` (accepting only strings or bytes), how `pickle` overcomes this by serializing almost any object into a storable string format, and how it can deserialize back to the original object. The examples and explanation are present, and no important information is missing. Although some unrelated text is included, the relevant parts are clearly demarcated and sufficient for generating the given response without outside knowledge."
 "What is the difference between a class and an instance in Python, and how do you create an instance of a class?","A **class** is a programmer-defined type that acts as a blueprint or factory for creating objects. An **instance** is the specific object created from that class.
 
 You create an instance of a class by calling the class name as if it were a function (e.g., `blank = Point()`).","Deﬁning a class named Point creates a class object.
@@ -4435,7 +4435,7 @@ an example, we will create a type called Point that represents a point in two-di
 space.
 In mathematical notation, points are often written in parentheses with a comma separating
 the coordinates. For example, (0, 0) represents the origin, and (x, y) represents the point x
-units to the right and y units up from the origin."
+units to the right and y units up from the origin.",100,"The retrieved context thoroughly explains the difference between a class and an instance, including that a class is a programmer-defined type (a blueprint/factory) and that an instance is a specific object created from that class. It explicitly shows how to create an instance by calling the class name like a function (e.g., `blank = Point()`), provides examples, and discusses relevant concepts like instantiation and object identity. There is no missing critical information, and the response could be fully generated from this context alone."
 How do you assign and access attributes of an object using dot notation? Provide an example with a Point object.,"To assign a value to an attribute, use the dot operator followed by the attribute name and an assignment operator. To access an attribute, use the dot operator followed by the attribute name.
 
 **Example:**
@@ -4508,7 +4508,7 @@ deﬁned type.
 15.2 Attributes
 You can assign values to an instance using dot notation:
 >>> blank.x = 3.0
->>> blank.y = 4.0"
+>>> blank.y = 4.0",100,"The retrieved context fully explains how to assign and access attributes using dot notation on a Point object, provides clear examples of both assignment and access, and includes relevant details about the object and attributes. The response can be generated entirely from this context without needing outside knowledge."
 Explain the difference between a shallow copy and a deep copy of an object. Why might you need to use a deep copy?,"**Answer:**
 
 A **shallow copy** creates a new object but does not duplicate the objects referenced within it; instead, it copies the references, meaning both the original and the copy share the same embedded objects. A **deep copy** creates a new object and recursively duplicates all objects referenced within the original, ensuring that the copy and the original are completely independent.
@@ -4577,7 +4577,7 @@ function hasattr:
 >>> hasattr(p, 'x')
 True
 >>> hasattr(p, 'z')
-False"
+False",100,"The retrieved context clearly defines both shallow and deep copies, explains the difference between copying references versus embedded objects, and gives a concrete example involving Rectangle and Point objects illustrating why shallow copies can lead to shared mutable state and errors. It also explicitly states when deep copies are needed and how they ensure complete independence between original and copied objects. Although the context includes some extraneous text (exercises, debugging notes), all necessary information to answer the question and produce the given response is present and well chunked."
 How can you write a function that modifies an attribute of an object passed as an argument? Illustrate this with the example of the `grow_rectangle` function.,"To modify an attribute of an object passed as an argument, you access the object's attribute using dot notation within the function and assign a new value to it. Since objects are mutable, changes made to the object inside the function persist outside of it.
 
 For example, the `grow_rectangle` function modifies the `width` and `height` attributes of a `Rectangle` object directly:
@@ -4658,7 +4658,7 @@ rect.width += dwidth
 rect.height += dheight
 Here is an example that demonstrates the effect:
 >>> box.width, box.height
-(150.0, 300.0)"
+(150.0, 300.0)",100,The retrieved context explicitly includes the explanation that objects are mutable and can be modified via their attributes inside a function using dot notation. It also provides the exact `grow_rectangle` function definition and an example of modifying `width` and `height` attributes of a `Rectangle` object passed as an argument. All necessary information is present and clearly chunked without irrelevant distractions. The response could be fully generated using only this context.
 What happens if you try to access an attribute that does not exist in an object? How can you safely check for the presence of an attribute before accessing it?,"If you try to access an attribute that does not exist, Python raises an `AttributeError`. 
 
 To safely check for the presence of an attribute before accessing it, you can use the built-in `hasattr(object, 'attribute_name')` function or a `try/except` block to catch the `AttributeError`.",">>> box3 = copy.deepcopy(box)
@@ -4732,7 +4732,7 @@ You can read the value of an attribute using the same syntax:
 >>> x = blank.x
 >>> x
 3.0
-The expression blank.x means, “Go to the objectblank refers to and get the value ofx.” In"
+The expression blank.x means, “Go to the objectblank refers to and get the value ofx.” In",100,"The retrieved context explicitly explains that accessing a nonexistent attribute raises an AttributeError, shows example code demonstrating this, presents the use of hasattr() to check for attribute presence, and also shows the try/except approach to safely access attributes. All necessary information to produce the given response is clearly present and well chunked without irrelevant distractions."
 "What is the difference between a pure function and a modifier function in the context of the Time class, and what are the advantages of using pure functions?","In the context of the `Time` class, the difference is:
 
 *   **Pure function:** Does not modify the `Time` objects it receives as arguments; instead, it typically creates and returns a new `Time` object.
@@ -4795,7 +4795,7 @@ ment plan I’ll callprototype and patch, which is a way of tackling a complex p
 starting with a simple prototype and incrementally dealing with the complications.
 Here is a simple prototype of add_time:
 def add_time(t1, t2):
-sum = Time()"
+sum = Time()",75,"The context provides a clear explanation of pure functions and modifiers in the `Time` class context, including definitions and advantages such as faster development and fewer errors. It also mentions the functional programming style and the recommendation to prefer pure functions when reasonable. However, the retrieved text is somewhat fragmented and contains extraneous material (e.g., development plans, glossary terms, exercises) that is not directly relevant. Additionally, the explanation of the difference between pure and modifier functions is implicit rather than explicitly contrasted in one place. Despite these minor drawbacks, the context contains essentially all the needed information to produce the response without requiring outside knowledge."
 "How does the “prototype and patch” development plan work, and what are its potential drawbacks compared to designed development?","The “prototype and patch” development plan works by writing a rough draft (prototype) of a program to perform basic calculations, then testing it and fixing (patching) errors as they are discovered.
 
 The potential drawback, compared to **designed development**, is that it lacks the high-level insight and thorough upfront planning required for more complex or structured problem-solving.","16.6 Glossary
@@ -4852,7 +4852,7 @@ ment plan I’ll callprototype and patch, which is a way of tackling a complex p
 starting with a simple prototype and incrementally dealing with the complications.
 Here is a simple prototype of add_time:
 def add_time(t1, t2):
-sum = Time()"
+sum = Time()",75,"The retrieved context includes a clear definition of the ""prototype and patch"" development plan and contrasts it with ""designed development,"" providing enough information to generate the given response. However, the context lacks an explicit discussion of the potential drawbacks of prototype and patch beyond the absence of high-level insight and planning, which is only implied rather than detailed. Some irrelevant text about functions and exercises is present but does not significantly hinder understanding. Overall, the retrieval is good but could be improved with more direct explanation of drawbacks."
 Explain how the functions `time_to_int` and `int_to_time` work together to simplify operations on Time objects.,"`time_to_int` and `int_to_time` simplify operations by treating time as a single scalar integer (base 60) rather than a complex object with three separate attributes. By converting objects into integers, you can perform arithmetic (like addition or subtraction) using standard, reliable integer math, and then convert the result back into a `Time` object. This eliminates the need to manually handle complex ""carrying"" logic—such as wrapping minutes or seconds over 60—within every individual time function, making the code shorter, more readable, and easier to debug.","This observation suggests another approach to the whole problem—we can convert Time
 objects to integers and take advantage of the fact that the computer knows how to do
 integer arithmetic.
@@ -4910,7 +4910,7 @@ add_time ﬁgures out when the movie will be done.
 >>> duration.minute = 35
 >>> duration.second = 0
 >>> done = add_time(start, duration)
->>> print_time(done)"
+>>> print_time(done)",100,"The retrieved context fully contains detailed explanations and code for both functions, including how they convert between Time objects and integers, the rationale behind this approach, and examples of how it simplifies arithmetic on Time objects. It also covers testing and benefits such as code simplicity and reliability, all directly supporting the answer without missing key information or irrelevant distractions."
 "Why are invariants important in programming with Time objects, and how can assert statements be used to enforce them?","Invariants are important because they define the ""well-formed"" state of a `Time` object (e.g., minutes and seconds must be between 0 and 60). Ensuring these conditions are always true helps detect errors early and makes the code more reliable. 
 
 `assert` statements enforce these invariants by acting as a programmatic check; they verify that the conditions hold true before proceeding with a function's logic. If an invariant is violated, the `assert` statement raises an exception, effectively isolating error-checking code from the main logic and preventing the program from running with invalid data.","violates an invariant:
@@ -4967,7 +4967,7 @@ tions are pure.
 invariant: A condition that should always be true during the execution of a program.
 assert statement: A statement that checks a condition and raises an exception if it fails.
 16.7 Exercises
-Code examples from this chapter are available from https://thinkpython.com/code/"
+Code examples from this chapter are available from https://thinkpython.com/code/",100,"The retrieved context clearly explains why invariants are important for Time objects, defines what invariants are, provides a valid_time function example, and shows how assert statements can be used to enforce these invariants by raising exceptions if violated. Although somewhat interspersed with other text, all essential information needed to answer the question and produce the response is present and coherent within the retrieved snippet."
 "Describe how carrying works when adding two Time objects and why simply adding the hour, minute, and second attributes might produce incorrect results.","Adding the attributes directly produces incorrect results because it ignores the base-60 structure of time. When the sum of seconds or minutes reaches 60 or more, it creates an invalid state (e.g., 10:80:00). Carrying works by subtracting 60 from the current unit (seconds or minutes) and incrementing the next higher unit by 1, effectively ""rolling over"" the excess value to maintain the correct base-60 representation.",">>> duration.second = 0
 >>> done = add_time(start, duration)
 >>> print_time(done)
@@ -5021,7 +5021,7 @@ second attribute is the “ones column”, theminute attribute is the “sixties
 hour attribute is the “thirty-six hundreds column”.
 When we wrote add_time and increment, we were effectively doing addition in base 60,
 which is why we had to carry from one column to the next.
-This observation suggests another approach to the whole problem—we can convert Time"
+This observation suggests another approach to the whole problem—we can convert Time",100,"The retrieved context thoroughly explains why simply adding the hour, minute, and second attributes can produce incorrect results (e.g., 10:80:00) due to ignoring the base-60 structure of time. It clearly describes the need for carrying by subtracting 60 from seconds or minutes and incrementing the next higher unit. The context also provides a code example demonstrating this carrying process and discusses the conceptual basis (sexagesimal system) behind it, fully supporting the given response without missing key details or including irrelevant information."
 "What are the two main syntactic differences between methods and functions in Python, and why is the first parameter of a method conventionally named `self`?","The two main syntactic differences between methods and functions are:
 * **Definition location:** Methods are defined inside a class definition to explicitly link them to that class.
 * **Invocation syntax:** Methods are called using dot notation (e.g., `object.method()`) rather than passing the object as an argument to a function (e.g., `Class.function(object)`).
@@ -5073,7 +5073,7 @@ to write print_time like this:
 class Time:
 def print_time(self):
 print('%.2d:%.2d:%.2d' % (self.hour, self.minute, self.second))
-The reason for this convention is an implicit metaphor:"
+The reason for this convention is an implicit metaphor:",100,The retrieved context explicitly states the two main syntactic differences between methods and functions—definition inside a class and different invocation syntax—and also explains why the first parameter is conventionally named `self` as it represents the subject (the object itself) of the method. There is no missing or extraneous information that would hinder generating the response from this context alone.
 How does defining the special method `__init__` improve the process of creating and initializing objects in a class?,"The `__init__` method improves object creation by allowing for automatic, controlled initialization of attributes immediately upon instantiation. By using optional parameters with default values, it provides a flexible way to set an object's initial state, ensuring that objects are created in a consistent and valid format without requiring separate manual assignment steps.","17.5 The init method
 The init method (short for “initialization”) is a special method that gets invoked when an
 object is instantiated. Its full name is __init__ (two underscore characters, followed by
@@ -5136,7 +5136,7 @@ is_after, easier to write, but it makes other methods harder.
 After you deploy a new class, you might discover a better implementation. If other parts
 of the program are using your class, it might be time-consuming and error-prone to change
 the interface.
-But if you designed the interface carefully, you can change the implementation without"
+But if you designed the interface carefully, you can change the implementation without",100,"The retrieved context fully explains the role of the `__init__` method in object creation and initialization, including default parameters, attribute assignment, and flexibility in instantiation. It provides concrete examples and details needed to produce the response without requiring outside knowledge. The extra information about `__str__` and operator overloading is not distracting but reinforces understanding of special methods."
 "Explain how operator overloading works in Python with an example, and describe the purpose of the `__radd__` method.","Operator overloading in Python allows you to define custom behavior for built-in operators (like `+`, `-`, `*`) when they are used with user-defined objects. This is achieved by implementing specific ""special methods"" (often called dunder methods) within a class. When Python encounters an operator, it automatically invokes the corresponding method defined in the class.
 
 **Example:**
@@ -5218,7 +5218,7 @@ Point with the result.
 17.9 Polymorphism
 Type-based dispatch is useful when it is necessary, but (fortunately) it is not always neces-
 sary. Often you can avoid it by writing functions that work correctly for arguments with
-different types."
+different types.",100,"The retrieved context fully explains operator overloading in Python, including the use of `__add__` with a clear example. It also explicitly defines the purpose and usage of the `__radd__` method with code and explanation, matching the details in the response. There is no missing or irrelevant information that would hinder answering the question, and the response could be generated using only this context."
 "What is type-based dispatch, and how can it be used within a method like `__add__` to handle different operand types?","Type-based dispatch is a technique where a method determines which internal logic to execute based on the data type of its arguments. 
 
 Within an `__add__` method, this is implemented using `isinstance()` to check the type of the `other` operand. If the type matches a specific class (e.g., `Time`), the method calls a specialized function for that type; if it does not match, the method assumes a different type (e.g., `int`) and calls a fallback or alternative operation.","If other is a Time object, __add__ invokes add_time. Otherwise it assumes that the param-
@@ -5282,7 +5282,7 @@ Point with the result.
 17.9 Polymorphism
 Type-based dispatch is useful when it is necessary, but (fortunately) it is not always neces-
 sary. Often you can avoid it by writing functions that work correctly for arguments with
-different types."
+different types.",100,"The retrieved context thoroughly explains type-based dispatch and its use in an `__add__` method, including example code that checks operand type with `isinstance()` to call different methods accordingly. It also covers the related `__radd__` method and its role, providing complete and relevant information without missing key details. The response could be generated entirely from this context without outside knowledge."
 "Why is it important to keep the interface of a class separate from its implementation, and how does this principle help maintain and modify code?","Keeping the interface separate from the implementation is important because it allows you to change the internal logic or data representation of a class without breaking the parts of the program that use it. This design principle improves maintainability by shielding other parts of the system from internal changes, making the code easier to modify, refactor, or optimize as requirements evolve.","returns a dictionary that maps from attribute names (as strings) to their values:
 >>> p = Point(3, 4)
 >>> vars(p)
@@ -5331,7 +5331,7 @@ is_after, easier to write, but it makes other methods harder.
 After you deploy a new class, you might discover a better implementation. If other parts
 of the program are using your class, it might be time-consuming and error-prone to change
 the interface.
-But if you designed the interface carefully, you can change the implementation without"
+But if you designed the interface carefully, you can change the implementation without",75,"The retrieved context includes relevant explanations about the importance of separating interface from implementation, including how it helps maintain and modify code by allowing changes to the implementation without affecting the interface or other parts of the program. However, the context is somewhat fragmented and includes unrelated or distracting text (e.g., examples about attribute dictionaries and glossary terms). While the key ideas are present, the retrieval could be better focused and more concise to fully support the response without requiring outside knowledge."
 "What is the difference between a class attribute and an instance attribute in the context of the `Card` class, and how are they accessed?","In the `Card` class:
 
 *   **Class attributes** (e.g., `suit_names`, `rank_names`) are defined inside the class but outside any method; they are associated with the class itself, and only one copy exists for all instances.
@@ -5392,7 +5392,7 @@ one wins. In bridge, we might compute a score for a hand in order to make a bid.
 This relationship between classes—similar, but different—lends itself to inheritance. To
 deﬁne a new class that inherits from an existing class, you put the name of the existing
 class in parentheses:
-class Hand(Deck):"
+class Hand(Deck):",100,"The retrieved context fully explains the difference between class and instance attributes in the `Card` class, including how each is defined, their association with the class or instances, and how both are accessed using dot notation. It provides concrete examples (`Card.rank_names` vs. `self.rank`) and clarifies the concepts with sufficient detail. Although there is some extra text on inheritance and other topics, it does not distract from the relevant information. The response could be generated solely from this context without relying on outside knowledge."
 Explain how the `__lt__` method is used to compare two `Card` objects and why the ordering of suit versus rank matters.,"The `__lt__` (less than) method allows Python to use the `<` operator on `Card` objects by defining the logic for comparison. It compares two `Card` instances by first evaluating their suits and then their ranks.
 
 The ordering matters because card comparison is not inherently strictly defined (a ""higher"" rank vs. ""higher"" suit conflict). By establishing a hierarchy—in this case, prioritizing suit over rank—you create a consistent, unambiguous rule that allows the program to rank any two cards relative to one another. Using tuple comparison `(self.suit, self.rank) < (other.suit, other.rank)` simplifies this by letting Python compare the suit first and, if they are equal, proceed to compare the rank.","or the 2 of Diamonds? One has a higher rank, but the other has a higher suit. In order to
@@ -5455,7 +5455,7 @@ __lt__, which stands for “less than”.
 __lt__ takes two parameters, self and other, and returns True if self is strictly less than
 other.
 The correct ordering for cards is not obvious. For example, which is better, the 3 of Clubs
-or the 2 of Diamonds? One has a higher rank, but the other has a higher suit. In order to"
+or the 2 of Diamonds? One has a higher rank, but the other has a higher suit. In order to",100,"The retrieved context fully covers how the `__lt__` method is implemented for `Card` objects, including code examples and the rationale behind prioritizing suit over rank in comparisons. It explains the ambiguity in ordering cards and justifies the chosen convention, which directly supports the response. No essential information is missing, and the response could be generated solely from this context."
 "How does inheritance work in the relationship between the `Deck` and `Hand` classes, and what happens when the `Hand` class overrides the `__init__` method?","In this relationship, `Hand` inherits from `Deck`, meaning it automatically gains access to `Deck`’s methods like `pop_card` and `add_card`. 
 
 When `Hand` overrides the `__init__` method, it replaces the `Deck` class's initialization logic with its own. Instead of the `Deck` method (which populates a list with 52 cards), Python executes the `Hand` method, which initializes the hand as an empty list and sets a custom label.","class in parentheses:
@@ -5512,7 +5512,7 @@ one wins. In bridge, we might compute a score for a hand in order to make a bid.
 This relationship between classes—similar, but different—lends itself to inheritance. To
 deﬁne a new class that inherits from an existing class, you put the name of the existing
 class in parentheses:
-class Hand(Deck):"
+class Hand(Deck):",100,"The retrieved context fully explains the inheritance relationship between `Deck` and `Hand`, including that `Hand` inherits methods like `pop_card` and `add_card` from `Deck`. It clearly describes how overriding the `__init__` method in `Hand` changes its initialization behavior—initializing an empty list instead of a full deck—and provides concrete code and examples. The context contains all necessary information to produce the response without relying on outside knowledge, with no significant irrelevant or missing details."
 "What are the main types of relationships shown in a class diagram, and how are the IS-A and HAS-A relationships represented?","The main types of relationships in a class diagram are **IS-A**, **HAS-A**, and **dependency**.
 
 *   **IS-A relationship:** Represented by an arrow with a hollow triangle head.
@@ -5565,7 +5565,7 @@ multiplicity: A notation in a class diagram that shows, for a HAS-A relationship
 many references there are to instances of another class.
 data encapsulation: A program development plan that involves a prototype using global
 variables and a ﬁnal version that makes the global variables into instance attributes.
-18.12 Exercises"
+18.12 Exercises",100,"The retrieved context thoroughly covers the main types of relationships in class diagrams (IS-A, HAS-A, dependency), explicitly explains how IS-A and HAS-A are represented graphically (hollow triangle arrowhead for IS-A, standard arrowhead with multiplicity for HAS-A), and provides clear definitions and examples. There is no missing critical information, and the response could be generated fully from the given context without outside knowledge."
 Describe the process of data encapsulation as a development plan and how it applies to transforming a program that uses global variables into one that uses classes and instance attributes.,"Data encapsulation serves as an object-oriented design strategy used to manage program state when the necessary objects are not immediately obvious. The process involves two primary steps:
 
 1.  **Encapsulation of State:** Identify global variables used by multiple functions and group them as attributes within a new class. By moving these variables into the `__init__` method of a class, you create instances that maintain their own independent state, allowing multiple, separate analyses to run simultaneously without interference.
@@ -5617,7 +5617,7 @@ design”. We identiﬁed objects we needed—like Point, Rectangle and Time—a
 classes to represent them. In each case there is an obvious correspondence between the
 object and some entity in the real world (or at least a mathematical world).
 But sometimes it is less obvious what objects you need and how they should interact. In
-that case you need a different development plan. In the same way that we discovered"
+that case you need a different development plan. In the same way that we discovered",75,"The retrieved context contains the key ideas about data encapsulation as a development plan: identifying global variables and encapsulating them as instance attributes within a class, then converting functions into methods accessing that state via self. It includes a concrete example (Markov analysis) illustrating the transformation from global variables to instance attributes and methods. However, the context is somewhat fragmented and includes extraneous text (glossary entries, unrelated principles) that may distract. Also, the explanation of the process is somewhat implicit rather than explicitly laid out step-by-step, requiring some inference. Despite these minor issues, the context is sufficient to fully generate the given response without outside knowledge."
 How can you rewrite a simple if-else statement that assigns a value to a variable using a conditional expression? Provide an example.,"You can rewrite an if-else statement as a conditional expression when both branches assign a value to the same variable. The format follows: `variable = value_if_true if condition else value_if_false`.
 
 **Example:**
@@ -5696,7 +5696,7 @@ else:
 y = float('nan')
 This statement checks whether x is positive. If so, it computes math.log. If not, math.log
 would raise a ValueError. To avoid stopping the program, we generate a “NaN”, which is
-a special ﬂoating-point value that represents “Not a Number”."
+a special ﬂoating-point value that represents “Not a Number”.",100,"The retrieved context explicitly explains how to rewrite an if-else statement as a conditional expression, provides the exact syntax, and includes the same example used in the response. The context includes the necessary explanation and example to generate the response without relying on outside knowledge. Although there is some additional unrelated text, it does not detract from the clarity or completeness of the relevant information."
 "What are list comprehensions, and how do they differ from equivalent for loops in terms of readability and performance?","List comprehensions are a concise syntax for creating new lists by applying an expression to each item in a sequence (optionally with filtering). 
 
 Compared to equivalent `for` loops:
@@ -5765,7 +5765,7 @@ def capitalize_all(t):
 return [s.capitalize() for s in t]
 The bracket operators indicate that we are constructing a new list. The expression inside
 the brackets speciﬁes the elements of the list, and the for clause indicates what sequence
-we are traversing."
+we are traversing.",100,"The retrieved context thoroughly covers what list comprehensions are, including syntax, readability advantages, filtering capability, and performance benefits over equivalent for loops. It also mentions debugging difficulties with list comprehensions, directly supporting the response. Although some irrelevant text is present, it does not hinder extracting the necessary information. The response could be generated solely from this context without relying on outside knowledge."
 "Explain the difference between list comprehensions and generator expressions, and give an example of when you might prefer to use a generator expression.","The primary difference between list comprehensions and generator expressions is how they handle memory and computation:
 
 *   **List Comprehensions** (using `[]`) compute and store **all** values in memory at once as a new list.
@@ -5836,7 +5836,7 @@ factory: A function, usually passed as a parameter, used to create objects.
 192 Chapter 19. The Goodies
 19.11 Exercises
 Exercise 19.1. The following is a function that computes the binomial coefﬁcient recursively.
-def binomial_coeff(n, k):"
+def binomial_coeff(n, k):",75,"The retrieved context explains the difference between list comprehensions and generator expressions, including syntax differences, lazy evaluation of generators, and iteration behavior. It also hints at when to use each and mentions memory efficiency indirectly. However, it lacks an explicit, clear statement about preferring generators for large data or memory efficiency, and the example in the response (iterating millions of rows) is not directly present in the context. There is some distracting unrelated text, but overall the core concepts needed to answer the question are present."
 "How do the built-in functions `any` and `all` work with generator expressions, and why are they efficient for certain types of checks?","`any` and `all` check sequences of boolean values, returning `True` if at least one element is `True` (for `any`) or if all elements are `True` (for `all`).
 
 They are efficient when used with generator expressions because they employ **lazy evaluation**. They process elements one by one and ""short-circuit""—stopping immediately as soon as the result is determined—without needing to compute or store the entire sequence in memory.","4
@@ -5905,7 +5905,7 @@ factory: A function, usually passed as a parameter, used to create objects.
 192 Chapter 19. The Goodies
 19.11 Exercises
 Exercise 19.1. The following is a function that computes the binomial coefﬁcient recursively.
-def binomial_coeff(n, k):"
+def binomial_coeff(n, k):",75,"The retrieved context explains that `any` works on sequences of booleans and is often used with generator expressions, showing examples and mentioning its short-circuit behavior implicitly (""returns True if any values are True""). It also describes generator expressions as lazy iterators yielding values on demand. However, the explanation of `all` is missing, and the explicit mention of short-circuit evaluation and why this makes `any` and `all` efficient with generators is only partially implied rather than clearly stated. Some irrelevant text is present, but overall the chunk includes enough information to produce a good response, though it relies somewhat on outside knowledge for completeness."
 "What are `Counter` and `defaultdict` from the `collections` module, and how can they simplify common programming tasks compared to using regular dictionaries?","`Counter` and `defaultdict` are specialized dictionary subclasses in the `collections` module designed to simplify common data management tasks:
 
 *   **`defaultdict`**: Automatically initializes a default value (like an empty list or integer) when you access a missing key. This eliminates the need for manual ""if key exists"" checks or `dict.setdefault()` calls when building grouped structures, such as dictionaries of lists.
@@ -5968,4 +5968,4 @@ can initialize a Counter with a string, list, or anything else that supports ite
 >>> count
 Counter({'r': 2, 't': 1, 'o': 1, 'p': 1, 'a': 1})
 Counters behave like dictionaries in many ways; they map from each key to the number of
-times it appears. As in dictionaries, the keys have to be hashable."
+times it appears. As in dictionaries, the keys have to be hashable.",100,"The retrieved context fully explains what `Counter` and `defaultdict` are, including key behaviors such as automatic value creation in `defaultdict` and zero-return for missing keys in `Counter`. It also covers how these simplify common tasks (e.g., grouping with `defaultdict`, counting with `Counter`), contains usage examples, and mentions important methods like `most_common()`. There is no missing or irrelevant information that would prevent generating the given response solely from this context."
