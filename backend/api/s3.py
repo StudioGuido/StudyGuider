@@ -5,6 +5,9 @@ from fastapi import APIRouter, HTTPException, Depends, status, BackgroundTasks
 from api.auth import verify_jwt
 from pydantic import BaseModel
 import asyncpg
+import pymupdf 
+import time
+import re
 
 router = APIRouter()
 
@@ -67,6 +70,21 @@ def download_file(key: str, download_path: str):
     print(f"Downloaded to: {download_path}")
 
 
+
+def split_into_chapters(pdf_document, chapter_start):
+    for i in range(len(chapter_start)):
+        start = chapter_start[i]
+        if i+1 < len(chapter_start):
+            end = chapter_start[i+1]
+        else:
+            end = len(pdf_document)
+        
+        new_pdf = pymupdf.open()
+        new_pdf.insert_pdf(pdf_document, from_page=start, to_page=end - 1)
+        new_pdf.save(f"backend/bookAdders/textbookPDFs/chapter{i+1}.pdf")
+        new_pdf.close()
+
+
 def split_pdf_worker(book_id: str, file_key: str):
     """
     This function runs in the background. It does NOT make the user wait.
@@ -74,6 +92,24 @@ def split_pdf_worker(book_id: str, file_key: str):
     print(f"[{book_id}] Starting background worker for {file_key}...")
     
     # Step A: Download file from S3 using boto3
+    download_file(file_key, "backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
+
+
+    pdf_document = pymupdf.open("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
+
+    #Find the start of each chapter
+    chapter_start = []
+    for i in range(len(pdf_document)):
+        page = pdf_document[i]
+        text = page.get_text()
+        if re.search(r"Chapter\s+\d+", text):
+            chapter_start.append(i)
+        
+        if not chapter_start:
+            raise HTTPException(status_code=400, detail="No chapter numbers found in the textbook")
+
+    split_into_chapters(pdf_document, chapter_start)
+    
     # Step B: Open PDF with PyMuPDF and find chapters
     # Step C: Split PDF into new files
     # Step D: Upload new files to S3 (processed/book_id/...)
@@ -184,8 +220,20 @@ async def trigger_pdf_processing(request: ProcessRequest, background_tasks: Back
 
 # Uploads Chunked Textbook.
 @router.post("/api/uploadTextbookChapters")
-async def get(file_id: str, user_valid=Depends(verify_jwt)):
+async def upload(string_path: str = "/api/bookAdders/textBookPDFs/chunks_example.pdf", user_valid=Depends(verify_jwt)):
+
+    print(string_path)
     
     supabase_uid = user_valid.get("sub")
     if not supabase_uid:
         raise HTTPException(status_code=401, detail="Missing UID")
+
+    file_name = Path(string_path)
+
+    s3.upload_file(
+        string_path,
+        BUCKET,
+        f"textbooks/{file_name}"
+    )
+
+    return {"message": "File uploaded successfully"}
