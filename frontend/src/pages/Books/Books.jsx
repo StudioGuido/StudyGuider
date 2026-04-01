@@ -67,6 +67,18 @@ async function handleUpload(file) {
 
 
   // 3) notify backend that the textbook is uploaded
+  console.log("Telling backend to start processing...");
+    const processResponse = await fetch('http://localhost:8000/process-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        book_id: book_id, 
+        file_key: file_key 
+      })
+    });
+
+    const processData = await processResponse.json();
+    console.log(processData.message); // "Processing started in the background"
 
 
   setShowUploadModal(false)
