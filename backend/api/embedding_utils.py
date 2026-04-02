@@ -73,16 +73,12 @@ async def generate_Helper(prompt, chapter, textbook):
     embedding = str(np.array(embedding).astype("float32").tolist())
 
     try:
-        logger.info(f"[{request_id}] Connecting to database")
-
         conn = await asyncpg.connect(
         host=os.getenv("DATABASE_HOST"),
         database=os.getenv("DATABASE_NAME"),
         user=os.getenv("DATABASE_USER"),
         password=os.getenv("DATABASE_PASSWORD")
         )
-
-        logger.info(f"[{request_id}] Retrieving chapter from textbook")
 
         res = await conn.fetchrow("""
             SELECT c.textbook_id, c.chapter_number
@@ -93,8 +89,6 @@ async def generate_Helper(prompt, chapter, textbook):
 
         
         if not res:
-            logger.warning(f"[{request_id}] Chapter or textbook not found")
-
             raise HTTPException(
                 status_code=404,
                 detail=f"Chapter {chapter} not found or textbook {textbook} not found.")
@@ -103,27 +97,62 @@ async def generate_Helper(prompt, chapter, textbook):
         textbook_id = res["textbook_id"]
         chapter_number = res["chapter_number"]
 
-        logger.info(f"[{request_id}] Fetching chunks")
-
         rows = await conn.fetch("""
             SELECT chunk_text, embedding <-> $1 AS distance
             FROM chapter_embeddings
             WHERE textbook_id = $2 AND chapter_number = $3
             ORDER BY distance ASC
-            LIMIT 1;
+            LIMIT 5;
         """, embedding, textbook_id, chapter_number)
 
         if not rows:
-            logger.warning(f"[{request_id}] No chunks found")
-
             raise HTTPException(
                 status_code=404,
                 detail=f"Empty Table Row")
         
         # combine context and make a prompt
-        context = "\n".join(row[0] for row in rows)
-        prompt = f"Context:\n{context}\n\nQuestion: {prompt}\nAnswer: Provide a concise response\nIf no similiar content then respond with: No Context Applies"
+        context = [row[0] for row in rows]
 
+        #RERANKING PROCESS
+        model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+
+        queried_context = []
+
+        #get list of [query, chunk]
+        for c in context:
+            queried_context.append([prompt, c])
+        
+        scores = model.predict(queried_context)
+        print(scores)
+
+        scored_context = []
+
+        for i, score in enumerate(scores):
+            data = {
+                "score": score,
+                "context": context[i]
+            }
+            scored_context.append(data)
+
+        print("Scores and Context before sorting", scored_context)
+
+        def get_first_element(x):
+            return x["score"]
+        
+        #sort chunks by their score
+        scored_context = sorted(scored_context, key=get_first_element, reverse=True)
+
+        scored_context = scored_context[:3]
+
+        print("Sorted context", scored_context)
+        context = []
+        for c in scored_context:
+            context.append(c["context"])
+            
+        print(context)
+
+        context_str = "\n".join(context)
+        prompt = f"Context:\n{context_str}\n\nQuestion: {prompt}\nAnswer: Provide a concise response\nIf no similar content then respond with: No Context Applies"
 
         try:
             logger.info(f"[{request_id}] Sending prompt to LLM")
