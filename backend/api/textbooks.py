@@ -30,7 +30,7 @@ async def getTextbooks_endpoint():
         rows = await conn.fetch("SELECT * FROM textbooks;")
 
         if rows == None:
-            logger.warning(f"[{request_id}] Textbook not found")
+            logger.warning(f"[{request_id}] No textbooks found")
             raise HTTPException(status_code=404, detail="Titles from textbooks not found")
 
         textbooks = [
