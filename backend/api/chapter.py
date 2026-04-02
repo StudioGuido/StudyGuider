@@ -5,6 +5,7 @@ import asyncpg
 from fastapi.responses import JSONResponse
 from fastapi import status
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -20,7 +21,9 @@ async def getChapters_endpoint(textbook: str):
     This api is used to retrieve every chapter within a textbook given
     a existing textbook title
     '''
-    logger.info("Fetching chapters for textbook=%s", textbook)
+    request_id = str(uuid.uuid4())
+
+    logger.info(f"[{request_id}] Fetching chapters for textbook=%s", textbook)
     try:
         conn = await asyncpg.connect(
         host=os.getenv("DATABASE_HOST"),
@@ -35,10 +38,10 @@ async def getChapters_endpoint(textbook: str):
 
 
         if textbook_id is None:
-            logger.warning("Textbook not found: %s", textbook)
+            logger.warning(f"[{request_id}] Textbook not found: %s", textbook)
             raise HTTPException(status_code=404, detail="Textbook not found")
 
-        logger.debug("Successfully found textbook with id: {textbook_id}")
+        logger.debug(f"[{request_id}] Successfully found textbook with id: {textbook_id}")
 
         rows = await conn.fetch(
             "SELECT chapter_title FROM chapters WHERE textbook_id = $1;",
@@ -46,10 +49,10 @@ async def getChapters_endpoint(textbook: str):
         )
 
         if not rows:
-            logger.warning("No chapters found for textbook_id=%s", textbook_id)
+            logger.warning(f"[{request_id}] No chapters found for textbook_id=%s", textbook_id)
             raise HTTPException(status_code=404, detail="Chater Titles not found")
 
-        logger.debug("Successfully found retrieved all chapters")
+        logger.debug(f"[{request_id}] Successfully retrieved all chapters")
 
         # select only chapter_titles from row
         chapters = [row["chapter_title"] for row in rows]
@@ -62,7 +65,7 @@ async def getChapters_endpoint(textbook: str):
         raise
 
     except Exception as e:
-        logger.error("Database error occured")
+        logger.error(f"[{request_id}] Database error occured")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
     finally:

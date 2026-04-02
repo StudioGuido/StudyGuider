@@ -7,7 +7,10 @@ import asyncio
 from fastapi import HTTPException
 from .AIHelper import get_gemini_response
 from sentence_transformers import SentenceTransformer
+import logging
+import uuid
 
+logger = logging.getLogger(__name__)
 
 # load model to keep it in memory
 model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -29,6 +32,8 @@ def _generate_embeddings_blocking(texts):
     This is a blocking function that will generate embeddings for any given text
     using the all-MiniLM-L6-v2 model
     '''
+    request_id = str(uuid.uuid4())
+
     try:
         # Check input type
         if not isinstance(texts, (str, list)):
@@ -37,7 +42,8 @@ def _generate_embeddings_blocking(texts):
         return model.encode(texts)
     
     except Exception as e:
-        raise RuntimeError(f"Error generating embeddings: {e}")
+        logger.exception(f"[{request_id}] Error generating embeddings")
+        raise RuntimeError(f"Error generating embeddings: {e}") from e
 
 async def generate_Helper(prompt, chapter, textbook):
     '''
@@ -45,13 +51,14 @@ async def generate_Helper(prompt, chapter, textbook):
     run similairity search on a chapters vector embeddings based
     on its textbook 
     '''
+    request_id = str(uuid.uuid4())
 
     # checking for the prompt to be less than or equal to 50 words
     try:
         if len(prompt.split()) > 50:
             raise ValueError("Prompt too long: keep it below 50 words")
     except ValueError as e:
-
+        logger.warning(f"[{request_id}] Invalid request: {e}")
         raise HTTPException(
             status_code=400,
             detail=str(e)
@@ -66,12 +73,16 @@ async def generate_Helper(prompt, chapter, textbook):
     embedding = str(np.array(embedding).astype("float32").tolist())
 
     try:
+        logger.info(f"[{request_id}] Connecting to database")
+
         conn = await asyncpg.connect(
         host=os.getenv("DATABASE_HOST"),
         database=os.getenv("DATABASE_NAME"),
         user=os.getenv("DATABASE_USER"),
         password=os.getenv("DATABASE_PASSWORD")
         )
+
+        logger.info(f"[{request_id}] Retrieving chapter from textbook")
 
         res = await conn.fetchrow("""
             SELECT c.textbook_id, c.chapter_number
@@ -82,6 +93,8 @@ async def generate_Helper(prompt, chapter, textbook):
 
         
         if not res:
+            logger.warning(f"[{request_id}] Chapter or textbook not found")
+
             raise HTTPException(
                 status_code=404,
                 detail=f"Chapter {chapter} not found or textbook {textbook} not found.")
@@ -89,6 +102,8 @@ async def generate_Helper(prompt, chapter, textbook):
 
         textbook_id = res["textbook_id"]
         chapter_number = res["chapter_number"]
+
+        logger.info(f"[{request_id}] Fetching chunks")
 
         rows = await conn.fetch("""
             SELECT chunk_text, embedding <-> $1 AS distance
@@ -99,6 +114,8 @@ async def generate_Helper(prompt, chapter, textbook):
         """, embedding, textbook_id, chapter_number)
 
         if not rows:
+            logger.warning(f"[{request_id}] No chunks found")
+
             raise HTTPException(
                 status_code=404,
                 detail=f"Empty Table Row")
@@ -109,12 +126,14 @@ async def generate_Helper(prompt, chapter, textbook):
 
 
         try:
+            logger.info(f"[{request_id}] Sending prompt to LLM")
             answer = await get_gemini_response(prompt)
 
         except HTTPException:
             raise
 
         except Exception:
+            logger.exception(f"[{request_id}] Model Generation Error")
             raise HTTPException(status_code=500, detail="Model Generation Error.")
 
         return answer
@@ -124,6 +143,7 @@ async def generate_Helper(prompt, chapter, textbook):
     except HTTPException:
         raise
     except Exception as e:
+        logger.exception(f"[{request_id}] Database error")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
         await conn.close()
