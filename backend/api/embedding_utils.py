@@ -1,4 +1,5 @@
 import numpy as np
+from transformers import AutoTokenizer, AutoModel
 import torch
 import os
 import httpx
@@ -6,14 +7,17 @@ import asyncpg
 import asyncio
 from fastapi import HTTPException
 from .AIHelper import get_gemini_response
-from sentence_transformers import SentenceTransformer
+from sentence_transformers.cross_encoder import CrossEncoder
 import logging
 import uuid
 
+
 logger = logging.getLogger(__name__)
 
-# load model to keep it in memory
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# Load tokenizer and model
+model_id = "sentence-transformers/all-MiniLM-L6-v2"
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModel.from_pretrained(model_id)
 
 # Use MPS if available (Macs), otherwise CPU
 device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
@@ -35,15 +39,22 @@ def _generate_embeddings_blocking(texts):
     request_id = str(uuid.uuid4())
 
     try:
+        logger.info(f"[{request_id}] Generating embeddings...")
         # Check input type
         if not isinstance(texts, (str, list)):
             raise ValueError("Input must be a string or list of strings.")
-
-        return model.encode(texts)
+        
+        inputs = tokenizer(texts, padding=True, truncation=True, return_tensors='pt').to(device)
+        with torch.no_grad():
+            outputs = model(**inputs)
+        embeddings = outputs.last_hidden_state.mean(dim=1)
+        return embeddings.cpu().numpy().tolist()
     
     except Exception as e:
-        logger.exception(f"[{request_id}] Error generating embeddings")
-        raise RuntimeError(f"Error generating embeddings: {e}") from e
+        logger.exception(f"[{request_id}] Error generating embeddings: {e}")
+        raise RuntimeError(f"Error generating embeddings: {e}")
+
+    
 
 async def generate_Helper(prompt, chapter, textbook):
     '''
@@ -58,21 +69,24 @@ async def generate_Helper(prompt, chapter, textbook):
         if len(prompt.split()) > 50:
             raise ValueError("Prompt too long: keep it below 50 words")
     except ValueError as e:
-        logger.warning(f"[{request_id}] Invalid request: {e}")
+
         raise HTTPException(
             status_code=400,
             detail=str(e)
         )
+
     try:
         embedding = await generate_embeddings(prompt)
     except Exception as e:
         raise
 
-
+    
     # set embedding to string of float32 values
-    embedding = str(np.array(embedding).astype("float32").tolist())
+    embedding = str(np.array(embedding).astype("float32")[0].tolist())
 
     try:
+        logger.info(f"[{request_id}] Connecting to database....")
+
         conn = await asyncpg.connect(
         host=os.getenv("DATABASE_HOST"),
         database=os.getenv("DATABASE_NAME"),
@@ -86,9 +100,9 @@ async def generate_Helper(prompt, chapter, textbook):
             JOIN textbooks t ON c.textbook_id = t.id
             WHERE t.title = $1 AND c.chapter_title = $2;
         """, textbook, chapter)
-
         
         if not res:
+            logger.warning(f"[{request_id}] Chapter or textbook not found")
             raise HTTPException(
                 status_code=404,
                 detail=f"Chapter {chapter} not found or textbook {textbook} not found.")
@@ -96,6 +110,8 @@ async def generate_Helper(prompt, chapter, textbook):
 
         textbook_id = res["textbook_id"]
         chapter_number = res["chapter_number"]
+
+        logger.info(f"[{request_id}] Getting 5 chunks using cosine similarity search")
 
         rows = await conn.fetch("""
             SELECT chunk_text, embedding <-> $1 AS distance
@@ -113,6 +129,7 @@ async def generate_Helper(prompt, chapter, textbook):
         # combine context and make a prompt
         context = [row[0] for row in rows]
 
+        logger.info(f"[{request_id}] Calling BERT...")
         #RERANKING PROCESS
         model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
 
@@ -123,18 +140,16 @@ async def generate_Helper(prompt, chapter, textbook):
             queried_context.append([prompt, c])
         
         scores = model.predict(queried_context)
-        print(scores)
+        logger.info(f"[{request_id}] All chunk scores: {scores}")
 
         scored_context = []
-
+        
         for i, score in enumerate(scores):
             data = {
                 "score": score,
                 "context": context[i]
             }
             scored_context.append(data)
-
-        print("Scores and Context before sorting", scored_context)
 
         def get_first_element(x):
             return x["score"]
@@ -144,18 +159,15 @@ async def generate_Helper(prompt, chapter, textbook):
 
         scored_context = scored_context[:3]
 
-        print("Sorted context", scored_context)
         context = []
         for c in scored_context:
             context.append(c["context"])
-            
-        print(context)
-
+        
         context_str = "\n".join(context)
         prompt = f"Context:\n{context_str}\n\nQuestion: {prompt}\nAnswer: Provide a concise response\nIf no similar content then respond with: No Context Applies"
 
         try:
-            logger.info(f"[{request_id}] Sending prompt to LLM")
+            logging.info(f"[{request_id}] Getting gemini response...")
             answer = await get_gemini_response(prompt)
 
         except HTTPException:
@@ -165,14 +177,14 @@ async def generate_Helper(prompt, chapter, textbook):
             logger.exception(f"[{request_id}] Model Generation Error")
             raise HTTPException(status_code=500, detail="Model Generation Error.")
 
-        return answer
+        return answer, context_str # return both the answer and the context
     
     except ValueError:
         raise 
     except HTTPException:
         raise
     except Exception as e:
-        logger.exception(f"[{request_id}] Database error")
+        logger.warning(f"[{request_id}] Database error")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
         await conn.close()
