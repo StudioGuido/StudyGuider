@@ -178,7 +178,7 @@ async def generate_Helper(prompt, chapter, textbook):
             logger.exception(f"[{request_id}] Model Generation Error")
             raise HTTPException(status_code=500, detail="Model Generation Error.")
 
-        return answer, context_str # return both the answer and the context
+        return answer # return both the answer and the context
     
     except ValueError:
         raise 
