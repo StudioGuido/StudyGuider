@@ -7,7 +7,8 @@ import asyncpg
 import asyncio
 from fastapi import HTTPException
 from .AIHelper import get_gemini_response
-from sentence_transformers.cross_encoder import CrossEncoder
+from sentence_transformers import SentenceTransformer
+from sentence_transformers import CrossEncoder
 import logging
 import uuid
 
