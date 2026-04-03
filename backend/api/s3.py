@@ -8,8 +8,11 @@ import asyncpg
 import pymupdf 
 import time
 import re
+import redis
+import threading
 
 router = APIRouter()
+jobs = {}  # {job_id: {"status": "..."}}
 
 # specific bucket
 BUCKET = "sg-textbooks"
@@ -237,3 +240,16 @@ async def upload(string_path: str = "/api/bookAdders/textBookPDFs/chunks_example
     )
 
     return {"message": "File uploaded successfully"}
+
+
+# Status endpoint to be polled
+@router.get("/status/{textbook_id}")
+def textbook_upload_status(textbook_id: str):
+    data = r.hgetall(f"job:{textbook_id}")
+
+    if not data:
+        return {"error": "No upload found"}
+
+    return {
+        "status": data.get("status")
+    }
