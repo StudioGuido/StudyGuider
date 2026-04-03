@@ -8,8 +8,7 @@ import asyncpg
 import pymupdf 
 import time
 import re
-import redis
-import threading
+import backend.api._retrieveChapters as rc
 
 router = APIRouter()
 jobs = {}  # {job_id: {"status": "..."}}
