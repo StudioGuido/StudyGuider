@@ -42,16 +42,14 @@ export default function Auth() {
 
     if (error) {
       alert(error.message);
-    } else {
-      console.log("Signed up user:", data.user);
+      return;
     }
 
-    createUserBackend();
+    console.log("Signed up user:", data.user);
+    await createUserBackend(data.session?.access_token);
   };
 
-  const createUserBackend = async () => {
-    const { data, error } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
+  const createUserBackend = async (token) => {
 
     if (!token) {
       console.error("No session found. Please log in.");
