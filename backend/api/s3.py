@@ -8,6 +8,7 @@ import asyncpg
 import pymupdf 
 import time
 import re
+import fitz
 import backend.api._retrieveChapters as rc
 
 router = APIRouter()
@@ -128,26 +129,23 @@ def split_pdf_worker(book_id: str, file_key: str):
 #     # Step A: Download file from S3 using boto3
 #     download_file(file_key, "backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
 
-
-#     pdf_document = pymupdf.open("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
-
-#     #Find the start of each chapter
-#     chapter_start = []
-#     for i in range(len(pdf_document)):
-#         page = pdf_document[i]
-#         text = page.get_text()
-#         if re.search(r"Chapter\s+\d+", text):
-#             chapter_start.append(i)
-        
-#         if not chapter_start:
-#             raise HTTPException(status_code=400, detail="No chapter numbers found in the textbook")
-
-#     split_into_chapters(pdf_document, chapter_start)
+    # Step B: Extract chapters using the improved function from _retrieveChapters.py
+    mapOfChapters = rc.extract_chapters_from_pdf_Updated_Better_Version("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
     
-#     # Step B: Open PDF with PyMuPDF and find chapters
-#     # Step C: Split PDF into new files
-#     # Step D: Upload new files to S3 (processed/book_id/...)
-#     # Step E: Update database status to "Complete"
+    # Step C: Split PDF into new files
+    reader = fitz.open("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
+    for i, (_, page_range) in enumerate(mapOfChapters):
+        writer = fitz.open()
+        writer.insert_pdf(reader, from_page=page_range[0], to_page=page_range[1])
+        writer.save(f"chapter{i + 1}.pdf")
+        writer.close()
+        
+    reader.close()
+
+
+
+    # Step D: Upload new files to S3 (processed/book_id/...)
+    # Step E: Update database status to "Complete"
     
 #     # Simulating a long 10-second PDF splitting process
 #     time.sleep(10) 
