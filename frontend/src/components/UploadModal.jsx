@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { X, Upload } from "lucide-react";
 
-export default function UploadModal({ onClose, onUpload }) {
+export default function UploadModal({ onClose, onUpload, error }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
@@ -87,6 +87,10 @@ export default function UploadModal({ onClose, onUpload }) {
               className="hidden"
             />
           </div>
+
+          {error && (
+            <p className="mt-4 text-center text-red-400 text-sm">{error}</p>
+          )}
 
           <div className="flex justify-center mt-8">
             <button

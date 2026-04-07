@@ -13,18 +13,12 @@ export default function Books() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [token, setToken] = useState(null)
+  const [uploadError, setUploadError] = useState(null);
+  const [status, setStatus] = useState("");
 
-  const getJWT = async() => {
-    const { data, error } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
-    setToken(token);
-  }
-  
   useEffect(() => {
     fakeApi.getBooks().then(setBooks);
     console.log(user);
-    getJWT();
   }, []);
   
   if (!books)
@@ -36,52 +30,70 @@ export default function Books() {
 
 async function handleUpload(file) {
   try {
-    // 1) Get presigned url
+    // 1) Get a fresh token directly — don't rely on state which may be null
+    const { data: sessionData } = await supabase.auth.getSession();
+    const currentToken = sessionData.session?.access_token;
+    if (!currentToken) throw new Error("Not authenticated");
+
+    // 2) Get presigned URL
     const res = await fetch("http://localhost:8000/api/getPresignedUrl", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
+        "Authorization": `Bearer ${currentToken}`,
       },
     });
-
     if (!res.ok) throw new Error("Failed to get upload URL");
-    const { presigned_url } = await res.json();
-    console.log(presigned_url)
+    const { presigned_url, book_id, file_key } = await res.json();
 
-    // 2) Upload the file directly to S3/Supabase
+    // 3) Upload file directly to S3
     const uploadRes = await fetch(presigned_url, {
       method: "PUT",
-      body: file, // Send the raw file object
-      headers: {
-        "Content-Type": "application/pdf", // Must match the backend 'ContentType'
-      },
+      body: file,
+      headers: { "Content-Type": "application/pdf" },
     });
+    if (!uploadRes.ok) throw new Error("S3 upload failed");
 
-    if (uploadRes.ok) {
-      console.log("Upload successful!");
-    }
+    // 4) Notify backend to start processing
+    const processResponse = await fetch("http://localhost:8000/process-pdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ book_id, file_key }),
+    });
+    if (!processResponse.ok) throw new Error("Failed to start processing");
+    const processData = await processResponse.json();
+    console.log(processData.message);
+
+    // 5) Poll until complete
+    await pollStatus(book_id, currentToken);
+
+    setShowUploadModal(false);
   } catch (err) {
     console.error("Upload error:", err);
+    const message = err.message === "Failed to fetch"
+      ? "Could not connect to the server. Please try again later."
+      : err.message;
+    setUploadError(message);
   }
+}
 
-
-  // 3) notify backend that the textbook is uploaded
-  console.log("Telling backend to start processing...");
-    const processResponse = await fetch('http://localhost:8000/process-pdf', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        book_id: book_id, 
-        file_key: file_key 
-      })
+async function pollStatus(textbookId, currentToken) {
+  const MAX_ATTEMPTS = 60; // 3 min at 3s intervals
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const res = await fetch(`/api/textbooks/${textbookId}/status`, {
+      headers: { Authorization: `Bearer ${currentToken}` },
     });
+    if (!res.ok) throw new Error("Failed to fetch status");
 
-    const processData = await processResponse.json();
-    console.log(processData.message); // "Processing started in the background"
+    const data = await res.json();
+    setStatus(data.status);
 
+    if (data.status === "complete") return;
+    if (data.status === "failed") throw new Error("Processing failed");
 
-  setShowUploadModal(false)
+    await new Promise((r) => setTimeout(r, 3000));
+  }
+  throw new Error("Processing timed out");
 }
 
   return (
@@ -108,7 +120,7 @@ async function handleUpload(file) {
           <div>
             <button
               type="button"
-              onClick={() => setShowUploadModal(true)}
+              onClick={() => { setUploadError(null); setShowUploadModal(true); }}
               className="w-full p-5 rounded-xl border border-dashed border-gray-700 text-center text-white bg-transparent hover:bg-white/3 transition"
             >
               <div className="text-3xl">+</div>
@@ -126,6 +138,7 @@ async function handleUpload(file) {
           <UploadModal
             onClose={() => setShowUploadModal(false)}
             onUpload={handleUpload}
+            error={uploadError}
           />
         )}
       </section>
