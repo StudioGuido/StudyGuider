@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends, status, BackgroundTasks
 from api.auth import verify_jwt
 from pydantic import BaseModel
 import asyncpg
-import pymupdf 
+# import pymupdf 
 import time
 import re
 
@@ -71,18 +71,18 @@ def download_file(key: str, download_path: str):
 
 
 
-def split_into_chapters(pdf_document, chapter_start):
-    for i in range(len(chapter_start)):
-        start = chapter_start[i]
-        if i+1 < len(chapter_start):
-            end = chapter_start[i+1]
-        else:
-            end = len(pdf_document)
+# def split_into_chapters(pdf_document, chapter_start):
+#     for i in range(len(chapter_start)):
+#         start = chapter_start[i]
+#         if i+1 < len(chapter_start):
+#             end = chapter_start[i+1]
+#         else:
+#             end = len(pdf_document)
         
-        new_pdf = pymupdf.open()
-        new_pdf.insert_pdf(pdf_document, from_page=start, to_page=end - 1)
-        new_pdf.save(f"backend/bookAdders/textbookPDFs/chapter{i+1}.pdf")
-        new_pdf.close()
+#         new_pdf = pymupdf.open()
+#         new_pdf.insert_pdf(pdf_document, from_page=start, to_page=end - 1)
+#         new_pdf.save(f"backend/bookAdders/textbookPDFs/chapter{i+1}.pdf")
+#         new_pdf.close()
 
 
 def split_pdf_worker(book_id: str, file_key: str):
