@@ -211,12 +211,38 @@ async def trigger_pdf_processing(request: ProcessRequest):
         print(f"[{request.book_id}] Processing started...")
 
         # Splits up textbook
-        download_file(request.file_key, "downloaded_textbook.pdf")
-        chapter_map = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf")
-        print(chapter_map)
+        # download_file(request.file_key, "downloaded_textbook.pdf")
+        # chapter_map = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf")
+        # print(chapter_map)
+        
+        # simulate work
+        time.sleep(10)
         
 
         print(f"[{request.book_id}] Processing complete.")
+        
+        conn = None
+        try:
+            conn = await asyncpg.connect(
+                host=os.getenv("DATABASE_HOST"),
+                database=os.getenv("DATABASE_NAME"),
+                user=os.getenv("DATABASE_USER"),
+                password=os.getenv("DATABASE_PASSWORD"),
+            )
+            await conn.execute(
+                result = await conn.execute(
+                    """
+                    UPDATE user_textbook
+                    SET status = 'complete'
+                    WHERE textbook_id = $1
+                    """,
+                    request.book_id,
+                )
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+        finally:
+            if conn: await conn.close()
 
         # mark job as done
         jobs[request.book_id] = "complete"
@@ -256,10 +282,33 @@ async def upload(string_path: str = "/api/bookAdders/textBookPDFs/chunks_example
 
 
 @router.get("/api/textbooks/{textbook_id}/status")
-def get_job_status(textbook_id: str):
-    status = jobs.get(textbook_id)
+async def get_job_status(textbook_id: str):
+    conn = None
+    try:
+        conn = await asyncpg.connect(
+            host=os.getenv("DATABASE_HOST"),
+            database=os.getenv("DATABASE_NAME"),
+            user=os.getenv("DATABASE_USER"),
+            password=os.getenv("DATABASE_PASSWORD"),
+        )
+        status="complete"
+        row = await conn.fetchrow(
+            """
+            SELECT status
+            FROM user_textbook
+            WHERE textbook_id = $1
+            """,
+            textbook_id,
+        )
 
-    if not status:
-        return {"status": "not_found"}
+        if row:
+            status = row["status"]
+            return {"status": status}
+        else:
+            status = None  # or handle "not found"
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn: await conn.close()
 
-    return {"status": status}
+    return {"status": "failed"}
