@@ -211,7 +211,8 @@ async def init_db():
             user_textbook_table = """
             CREATE TABLE user_textbook (
                 textbook_id VARCHAR(255) PRIMARY KEY,
-                user_uid VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE
+                user_uid VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
+                status VARCHAR(255) NOT NULL
             );
             """
             await conn.execute(user_textbook_table)

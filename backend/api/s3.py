@@ -11,7 +11,7 @@ import re
 import backend.api._retrieveChapters as rc
 
 router = APIRouter()
-jobs = {}  # {job_id: {"status": "..."}}
+jobs = {}  # {textbook_id: "processing" | "done"}
 
 # specific bucket
 BUCKET = "sg-textbooks"
@@ -73,54 +73,54 @@ def download_file(key: str, download_path: str):
 
 
 
-def split_into_chapters(pdf_document, chapter_start):
-    for i in range(len(chapter_start)):
-        start = chapter_start[i]
-        if i+1 < len(chapter_start):
-            end = chapter_start[i+1]
-        else:
-            end = len(pdf_document)
+# def split_into_chapters(pdf_document, chapter_start):
+#     for i in range(len(chapter_start)):
+#         start = chapter_start[i]
+#         if i+1 < len(chapter_start):
+#             end = chapter_start[i+1]
+#         else:
+#             end = len(pdf_document)
         
-        new_pdf = pymupdf.open()
-        new_pdf.insert_pdf(pdf_document, from_page=start, to_page=end - 1)
-        new_pdf.save(f"backend/bookAdders/textbookPDFs/chapter{i+1}.pdf")
-        new_pdf.close()
+#         new_pdf = pymupdf.open()
+#         new_pdf.insert_pdf(pdf_document, from_page=start, to_page=end - 1)
+#         new_pdf.save(f"backend/bookAdders/textbookPDFs/chapter{i+1}.pdf")
+#         new_pdf.close()
 
 
-def split_pdf_worker(book_id: str, file_key: str):
-    """
-    This function runs in the background. It does NOT make the user wait.
-    """
-    print(f"[{book_id}] Starting background worker for {file_key}...")
+# def split_pdf_worker(book_id: str, file_key: str):
+#     """
+#     This function runs in the background. It does NOT make the user wait.
+#     """
+#     print(f"[{book_id}] Starting background worker for {file_key}...")
     
-    # Step A: Download file from S3 using boto3
-    download_file(file_key, "backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
+#     # Step A: Download file from S3 using boto3
+#     download_file(file_key, "backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
 
 
-    pdf_document = pymupdf.open("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
+#     pdf_document = pymupdf.open("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
 
-    #Find the start of each chapter
-    chapter_start = []
-    for i in range(len(pdf_document)):
-        page = pdf_document[i]
-        text = page.get_text()
-        if re.search(r"Chapter\s+\d+", text):
-            chapter_start.append(i)
+#     #Find the start of each chapter
+#     chapter_start = []
+#     for i in range(len(pdf_document)):
+#         page = pdf_document[i]
+#         text = page.get_text()
+#         if re.search(r"Chapter\s+\d+", text):
+#             chapter_start.append(i)
         
-        if not chapter_start:
-            raise HTTPException(status_code=400, detail="No chapter numbers found in the textbook")
+#         if not chapter_start:
+#             raise HTTPException(status_code=400, detail="No chapter numbers found in the textbook")
 
-    split_into_chapters(pdf_document, chapter_start)
+#     split_into_chapters(pdf_document, chapter_start)
     
-    # Step B: Open PDF with PyMuPDF and find chapters
-    # Step C: Split PDF into new files
-    # Step D: Upload new files to S3 (processed/book_id/...)
-    # Step E: Update database status to "Complete"
+#     # Step B: Open PDF with PyMuPDF and find chapters
+#     # Step C: Split PDF into new files
+#     # Step D: Upload new files to S3 (processed/book_id/...)
+#     # Step E: Update database status to "Complete"
     
-    # Simulating a long 10-second PDF splitting process
-    time.sleep(10) 
+#     # Simulating a long 10-second PDF splitting process
+#     time.sleep(10) 
     
-    print(f"[{book_id}] Finished splitting! Uploaded to S3.")
+#     print(f"[{book_id}] Finished splitting! Uploaded to S3.")
 
 
 # # my personal path to an existing textbook
@@ -173,15 +173,16 @@ async def get_url(user_valid=Depends(verify_jwt)):
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD"),
         )
-
+        status="processing"
         await conn.execute(
             """
-            INSERT INTO user_textbook (textbook_id, user_uid)
-            VALUES ($1, $2)
+            INSERT INTO user_textbook (textbook_id, user_uid, status)
+            VALUES ($1, $2, $3)
             ON CONFLICT (textbook_id, user_uid) DO NOTHING;
             """,
             textbook_id,
             supabase_uid,
+            status,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -199,26 +200,39 @@ async def get_url(user_valid=Depends(verify_jwt)):
     )
     return {"presigned_url": url, "book_id": textbook_id, "file_key": key}
 
+
 @router.post("/process-pdf")
-async def trigger_pdf_processing(request: ProcessRequest, background_tasks: BackgroundTasks):
+async def trigger_pdf_processing(request: ProcessRequest):
     
-    # Add the heavy-lifting function to FastAPI's background queue.
-    # We pass the function name, followed by its arguments.
-    background_tasks.add_task(
-        split_pdf_worker, 
-        book_id=request.book_id, 
-        file_key=request.file_key
-    )
-    
-    # Update your database here to mark this book_id as "Processing"
-    
-    # Instantly return a 202 status to the frontend.
-    # We do NOT wait for the split_pdf_worker to finish!
-    return {
-        "message": "Processing started in the background.",
-        "book_id": request.book_id,
-        "status": "processing"
-    }
+    # mark job as processing
+    jobs[request.book_id] = "processing"
+
+    try:
+        print(f"[{request.book_id}] Processing started...")
+
+        # Splits up textbook
+        download_file(request.file_key, "downloaded_textbook.pdf")
+        chapter_map = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf")
+        print(chapter_map)
+        
+
+        print(f"[{request.book_id}] Processing complete.")
+
+        # mark job as done
+        jobs[request.book_id] = "complete"
+
+        return {
+            "message": "Processing completed.",
+            "book_id": request.book_id,
+            "status": "complete"
+        }
+
+    except Exception as e:
+        print(f"Error: {e}")
+        jobs[request.book_id] = "complete"
+
+        raise HTTPException(status_code=500, detail="Processing failed")
+
 
 # Uploads Chunked Textbook.
 @router.post("/api/uploadTextbookChapters")
@@ -241,14 +255,11 @@ async def upload(string_path: str = "/api/bookAdders/textBookPDFs/chunks_example
     return {"message": "File uploaded successfully"}
 
 
-# Status endpoint to be polled
-@router.get("/status/{textbook_id}")
-def textbook_upload_status(textbook_id: str):
-    data = r.hgetall(f"job:{textbook_id}")
+@router.get("/api/textbooks/{textbook_id}/status")
+def get_job_status(textbook_id: str):
+    status = jobs.get(textbook_id)
 
-    if not data:
-        return {"error": "No upload found"}
+    if not status:
+        return {"status": "not_found"}
 
-    return {
-        "status": data.get("status")
-    }
+    return {"status": status}
