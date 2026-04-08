@@ -50,7 +50,7 @@ async function handleUpload(file) {
     const uploadRes = await fetch(presigned_url, {
       method: "PUT",
       body: file,
-      headers: { "Content-Type": "application/pdf" },
+      headers: { "Content-Type":  "application/pdf" },
     });
     if (!uploadRes.ok) throw new Error("S3 upload failed");
 

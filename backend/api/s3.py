@@ -4,11 +4,10 @@ import uuid
 from fastapi import APIRouter, HTTPException, Depends, status, BackgroundTasks
 from api.auth import verify_jwt
 from pydantic import BaseModel
-import asyncpg
-import pymupdf 
+import asyncpg 
 import time
 import re
-import backend.api._retrieveChapters as rc
+# import backend.api._retrieveChapters as rc
 
 router = APIRouter()
 jobs = {}  # {textbook_id: "processing" | "done"}
@@ -18,15 +17,14 @@ BUCKET = "sg-textbooks"
 
 
 # create S3 client
-# s3 = boto3.client(
-#     "s3",
-#     aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-#     aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-#     aws_session_token=os.getenv("AWS_SESSION_TOKEN"),
-#     region_name=os.getenv("AWS_DEFAULT_REGION")
-# )
+s3 = boto3.client(
+    "s3",
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    region_name=os.getenv("AWS_DEFAULT_REGION")
+)
 
-s3 = boto3.client("s3")
+# s3 = boto3.client("s3")
 
 class ProcessRequest(BaseModel):
     book_id: str
@@ -178,7 +176,7 @@ async def get_url(user_valid=Depends(verify_jwt)):
             """
             INSERT INTO user_textbook (textbook_id, user_uid, status)
             VALUES ($1, $2, $3)
-            ON CONFLICT (textbook_id, user_uid) DO NOTHING;
+            ON CONFLICT (textbook_id) DO NOTHING;
             """,
             textbook_id,
             supabase_uid,
@@ -196,7 +194,7 @@ async def get_url(user_valid=Depends(verify_jwt)):
             "Key": key,
             "ContentType": "application/pdf"
         },
-        ExpiresIn=300
+        ExpiresIn=300000
     )
     return {"presigned_url": url, "book_id": textbook_id, "file_key": key}
 
