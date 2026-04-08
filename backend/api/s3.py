@@ -259,18 +259,11 @@ async def upload(path_arr: list[str] = Body(...), user_valid=Depends(verify_jwt)
         except Exception as e:
             failed.append(path)
             print(f"Error: {e}")
-
-        if failed:
-            return {
-                "message": "Some files failed to upload",
-                "uploaded": uploaded,
-                "failed": failed
-            }
-        else:
-            return {
-                "message": "All files uploaded successfully",
-                "uploaded": uploaded
-            }
+    return {
+        "message": "All files uploaded successfully",
+        "uploaded": uploaded,
+        "failed": failed
+    }
 
 
 @router.get("/api/textbooks/{textbook_id}/status")
