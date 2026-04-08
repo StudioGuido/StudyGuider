@@ -46,6 +46,8 @@ async function handleUpload(file) {
     if (!res.ok) throw new Error("Failed to get upload URL");
     const { presigned_url, book_id, file_key } = await res.json();
 
+    console.log(presigned_url)
+
     // 3) Upload file directly to S3
     const uploadRes = await fetch(presigned_url, {
       method: "PUT",
@@ -54,6 +56,7 @@ async function handleUpload(file) {
     });
     if (!uploadRes.ok) throw new Error("S3 upload failed");
 
+    console.log("Upload good!")
     // 4) Notify backend to start processing
     const processResponse = await fetch("http://localhost:8000/process-pdf", {
       method: "POST",
