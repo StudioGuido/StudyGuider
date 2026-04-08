@@ -7,6 +7,7 @@ from pydantic import BaseModel
 import asyncpg 
 import time
 import re
+import fitz
 # import backend.api._retrieveChapters as rc
 
 router = APIRouter()
@@ -70,55 +71,37 @@ def download_file(key: str, download_path: str):
     print(f"Downloaded to: {download_path}")
 
 
-
-# def split_into_chapters(pdf_document, chapter_start):
-#     for i in range(len(chapter_start)):
-#         start = chapter_start[i]
-#         if i+1 < len(chapter_start):
-#             end = chapter_start[i+1]
-#         else:
-#             end = len(pdf_document)
-        
-#         new_pdf = pymupdf.open()
-#         new_pdf.insert_pdf(pdf_document, from_page=start, to_page=end - 1)
-#         new_pdf.save(f"backend/bookAdders/textbookPDFs/chapter{i+1}.pdf")
-#         new_pdf.close()
-
-
-# def split_pdf_worker(book_id: str, file_key: str):
-#     """
-#     This function runs in the background. It does NOT make the user wait.
-#     """
-#     print(f"[{book_id}] Starting background worker for {file_key}...")
+def split_pdf_worker(book_id: str, file_key: str):
+    """
+    This function runs in the background. It does NOT make the user wait.
+    """
+    print(f"[{book_id}] Starting background worker for {file_key}...")
     
 #     # Step A: Download file from S3 using boto3
 #     download_file(file_key, "backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
 
-
-#     pdf_document = pymupdf.open("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
-
-#     #Find the start of each chapter
-#     chapter_start = []
-#     for i in range(len(pdf_document)):
-#         page = pdf_document[i]
-#         text = page.get_text()
-#         if re.search(r"Chapter\s+\d+", text):
-#             chapter_start.append(i)
+    # Step B: Extract chapters using the improved function from _retrieveChapters.py
+    mapOfChapters = rc.extract_chapters_from_pdf_Updated_Better_Version("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
+    
+    # Step C: Split PDF into new files
+    reader = fitz.open("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
+    for i, (_, page_range) in enumerate(mapOfChapters):
+        writer = fitz.open()
+        writer.insert_pdf(reader, from_page=page_range[0], to_page=page_range[1])
+        writer.save(f"chapter{i + 1}.pdf")
+        writer.close()
         
-#         if not chapter_start:
-#             raise HTTPException(status_code=400, detail="No chapter numbers found in the textbook")
+    reader.close()
 
-#     split_into_chapters(pdf_document, chapter_start)
+
+
+    # Step D: Upload new files to S3 (processed/book_id/...)
+    # Step E: Update database status to "Complete"
     
-#     # Step B: Open PDF with PyMuPDF and find chapters
-#     # Step C: Split PDF into new files
-#     # Step D: Upload new files to S3 (processed/book_id/...)
-#     # Step E: Update database status to "Complete"
+     # Simulating a long 10-second PDF splitting process
+    time.sleep(10) 
     
-#     # Simulating a long 10-second PDF splitting process
-#     time.sleep(10) 
-    
-#     print(f"[{book_id}] Finished splitting! Uploaded to S3.")
+    print(f"[{book_id}] Finished splitting! Uploaded to S3.")
 
 
 # # my personal path to an existing textbook
