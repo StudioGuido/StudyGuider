@@ -240,23 +240,37 @@ async def trigger_pdf_processing(request: ProcessRequest):
 
 # Uploads Chunked Textbook.
 @router.post("/api/uploadTextbookChapters")
-async def upload(string_path: str = "/api/bookAdders/textBookPDFs/chunks_example.pdf", user_valid=Depends(verify_jwt)):
+async def upload(path_arr: list[str] = Body(...), user_valid=Depends(verify_jwt)):
 
-    print(string_path)
-    
+    uploaded = []
+    failed = []
+
     supabase_uid = user_valid.get("sub")
     if not supabase_uid:
         raise HTTPException(status_code=401, detail="Missing UID")
 
-    file_name = Path(string_path)
 
-    s3.upload_file(
-        string_path,
-        BUCKET,
-        f"textbooks/{file_name}"
-    )
+    for path in path_arr:
+        try:
+            file_name = Path(path).name
+            s3_key = f"textbooks/{file_name}"
+            s3.upload_file(path, BUCKET, s3_key)
+            uploaded.append(s3_key)
+        except Exception as e:
+            failed.append(path)
+            print(f"Error: {e}")
 
-    return {"message": "File uploaded successfully"}
+        if failed:
+            return {
+                "message": "Some files failed to upload",
+                "uploaded": uploaded,
+                "failed": failed
+            }
+        else:
+            return {
+                "message": "All files uploaded successfully",
+                "uploaded": uploaded
+            }
 
 
 @router.get("/api/textbooks/{textbook_id}/status")
