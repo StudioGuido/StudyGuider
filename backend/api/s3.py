@@ -1,7 +1,9 @@
 import boto3
 import os
 import uuid
-from fastapi import APIRouter, HTTPException, Depends, status, BackgroundTasks
+from pathlib import Path
+
+from fastapi import APIRouter, HTTPException, Depends, status, BackgroundTasks, Body
 from api.auth import verify_jwt
 from pydantic import BaseModel
 import asyncpg 
@@ -31,17 +33,18 @@ class ProcessRequest(BaseModel):
     book_id: str
     file_key: str
 
-def upload_file(local_path: str):
-    filename = os.path.basename(local_path)
+def upload_file(local_path: str, *, key_prefix: str = "textbooks/uploads") -> str:
+    """Upload a local file; key is unique via UUID. key_prefix groups objects (e.g. per textbook)."""
+    filename = os.path.basename(local_path) or "file.pdf"
     file_id = str(uuid.uuid4())
-    key = f"textbooks/chapter1/{file_id}-{filename}"
+    prefix = key_prefix.strip("/")
+    key = f"{prefix}/{file_id}-{filename}"
 
-    # upload file to S3
     s3.upload_file(
         local_path,
         BUCKET,
         key,
-        ExtraArgs={"ContentType": "application/pdf"}
+        ExtraArgs={"ContentType": "application/pdf"},
     )
 
     # this is the url that will backend needs to send to frontend with a key
@@ -136,12 +139,9 @@ async def get_url(user_valid=Depends(verify_jwt)):
     supabase_uid = user_valid.get("sub")
     if not supabase_uid:
         raise HTTPException(status_code=401, detail="Missing UID")
-    
+
     textbook_id = str(uuid.uuid4())
     key = f"textbooks/{textbook_id}"
-    
-    if not supabase_uid:
-        raise HTTPException(status_code=401, detail="Missing UID")
 
     conn = None
     try:
@@ -174,7 +174,7 @@ async def get_url(user_valid=Depends(verify_jwt)):
             "Key": key,
             "ContentType": "application/pdf"
         },
-        ExpiresIn=300000
+        ExpiresIn=3600,
     )
     return {"presigned_url": url, "book_id": textbook_id, "file_key": key}
 
@@ -208,14 +208,12 @@ async def trigger_pdf_processing(request: ProcessRequest):
                 password=os.getenv("DATABASE_PASSWORD"),
             )
             await conn.execute(
-                result = await conn.execute(
-                    """
-                    UPDATE user_textbook
-                    SET status = 'complete'
-                    WHERE textbook_id = $1
-                    """,
-                    request.book_id,
-                )
+                """
+                UPDATE user_textbook
+                SET status = 'complete'
+                WHERE textbook_id = $1
+                """,
+                request.book_id,
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
@@ -238,7 +236,7 @@ async def trigger_pdf_processing(request: ProcessRequest):
         raise HTTPException(status_code=500, detail="Processing failed")
 
 
-# Uploads Chunked Textbook.
+# Uploads chunked chapter PDFs (one batch id per request avoids S3 overwrites on same filenames).
 @router.post("/api/uploadTextbookChapters")
 async def upload(path_arr: list[str] = Body(...), user_valid=Depends(verify_jwt)):
 
@@ -249,20 +247,29 @@ async def upload(path_arr: list[str] = Body(...), user_valid=Depends(verify_jwt)
     if not supabase_uid:
         raise HTTPException(status_code=401, detail="Missing UID")
 
+    upload_batch_id = str(uuid.uuid4())
 
     for path in path_arr:
         try:
-            file_name = Path(path).name
-            s3_key = f"textbooks/{supabase_uid}/{file_name}"
-            s3.upload_file(path, BUCKET, s3_key)
+            file_name = Path(path).name or "chapter.pdf"
+            s3_key = f"textbooks/{supabase_uid}/{upload_batch_id}/{file_name}"
+            s3.upload_file(
+                path,
+                BUCKET,
+                s3_key,
+                ExtraArgs={"ContentType": "application/pdf"},
+            )
             uploaded.append(s3_key)
         except Exception as e:
             failed.append(path)
             print(f"Error: {e}")
+
+    all_ok = len(failed) == 0
     return {
-        "message": "All files uploaded successfully",
+        "message": "All files uploaded successfully" if all_ok else "Some files failed to upload",
+        "upload_batch_id": upload_batch_id,
         "uploaded": uploaded,
-        "failed": failed
+        "failed": failed,
     }
 
 
@@ -276,7 +283,6 @@ async def get_job_status(textbook_id: str):
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD"),
         )
-        status="complete"
         row = await conn.fetchrow(
             """
             SELECT status
@@ -287,13 +293,11 @@ async def get_job_status(textbook_id: str):
         )
 
         if row:
-            status = row["status"]
-            return {"status": status}
-        else:
-            status = None  # or handle "not found"
+            return {"status": row["status"]}
+        raise HTTPException(status_code=404, detail="Textbook not found")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn: await conn.close()
-
-    return {"status": "failed"}

@@ -152,12 +152,16 @@ def extract_chapters_from_pdf_Updated_Better_Version(pdf_path, user_valid=Depend
     output_dir = os.path.join(os.path.dirname(__file__), "..", "bookadders", "textbookPDFs")
     os.makedirs(output_dir, exist_ok=True)
 
+    supabase_uid = user_valid.get("sub")
+    run_id = str(uuid.uuid4())
+    run_dir = os.path.join(output_dir, supabase_uid, run_id)
+    os.makedirs(run_dir, exist_ok=True)
+
     # Saves each chapter as a separate PDF and adds the path to listOfChapters
     for i, (_, page_range) in enumerate(mapOfChapters):
         writer = fitz.open()
         writer.insert_pdf(doc, from_page=page_range[0], to_page=page_range[1])
-        supabase_uid = user_valid.get("sub")
-        output_path = os.path.join(output_dir, f"{supabase_uid}", f"chapter{i + 1}.pdf")
+        output_path = os.path.join(run_dir, f"chapter{i + 1}.pdf")
         writer.save(output_path)
         listOfChapters.append(output_path)
         writer.close()
