@@ -1,5 +1,6 @@
 import fitz  # PyMuPDF
 import re
+import os
 
 
 def is_non_chapter_title(title_lower):
@@ -144,7 +145,22 @@ def extract_chapters_from_pdf_Updated_Better_Version(pdf_path):
 
         mapOfChapters[-1][1].append(end_page)
 
-    return mapOfChapters
+    listOfChapters = []
+
+    output_dir = os.path.join(os.path.dirname(__file__), "..", "bookadders", "textbookPDFs")
+    os.makedirs(output_dir, exist_ok=True)
+
+    for i, (_, page_range) in enumerate(mapOfChapters):
+        writer = fitz.open()
+        writer.insert_pdf(doc, from_page=page_range[0], to_page=page_range[1])
+        output_path = os.path.join(output_dir, f"chapter{i + 1}.pdf")
+        writer.save(output_path)
+        listOfChapters.append(output_path)
+        writer.close()
+
+    doc.close()
+
+    return listOfChapters
 
 
 def find_chapters_by_page(page, toc_title=""):
