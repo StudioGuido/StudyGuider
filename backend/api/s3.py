@@ -8,7 +8,7 @@ import asyncpg
 import time
 import re
 import fitz
-# import backend.api._retrieveChapters as rc
+import backend.api._retrieveChapters as rc
 
 router = APIRouter()
 jobs = {}  # {textbook_id: "processing" | "done"}
