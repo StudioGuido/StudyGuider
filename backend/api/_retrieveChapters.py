@@ -1,7 +1,9 @@
 import fitz  # PyMuPDF
 import re
 import os
-
+import uuid
+from api.auth import verify_jwt
+from fastapi import Depends
 
 def is_non_chapter_title(title_lower):
     NON_CHAPTER_KEYWORDS = [
@@ -22,7 +24,7 @@ def is_non_chapter_title(title_lower):
     return any(keyword in title_lower for keyword in NON_CHAPTER_KEYWORDS)
 
 
-def extract_chapters_from_pdf_Updated_Better_Version(pdf_path):
+def extract_chapters_from_pdf_Updated_Better_Version(pdf_path, user_valid=Depends(verify_jwt)):
     doc = fitz.open(pdf_path)
     toc = doc.get_toc()
     mapOfChapters = []
@@ -154,7 +156,8 @@ def extract_chapters_from_pdf_Updated_Better_Version(pdf_path):
     for i, (_, page_range) in enumerate(mapOfChapters):
         writer = fitz.open()
         writer.insert_pdf(doc, from_page=page_range[0], to_page=page_range[1])
-        output_path = os.path.join(output_dir, f"chapter{i + 1}.pdf")
+        supabase_uid = user_valid.get("sub")
+        output_path = os.path.join(output_dir, f"{supabase_uid}", f"chapter{i + 1}.pdf")
         writer.save(output_path)
         listOfChapters.append(output_path)
         writer.close()

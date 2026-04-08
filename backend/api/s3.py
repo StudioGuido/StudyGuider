@@ -253,7 +253,7 @@ async def upload(path_arr: list[str] = Body(...), user_valid=Depends(verify_jwt)
     for path in path_arr:
         try:
             file_name = Path(path).name
-            s3_key = f"textbooks/{file_name}"
+            s3_key = f"textbooks/{supabase_uid}/{file_name}"
             s3.upload_file(path, BUCKET, s3_key)
             uploaded.append(s3_key)
         except Exception as e:
