@@ -8,7 +8,7 @@ import asyncpg
 import time
 import re
 import fitz
-# import backend.api._retrieveChapters as rc
+import backend.api._retrieveChapters as rc
 
 router = APIRouter()
 jobs = {}  # {textbook_id: "processing" | "done"}
@@ -81,17 +81,14 @@ def split_pdf_worker(book_id: str, file_key: str):
 #     download_file(file_key, "backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
 
     # Step B: Extract chapters using the improved function from _retrieveChapters.py
-    mapOfChapters = rc.extract_chapters_from_pdf_Updated_Better_Version("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
+    listOfChapters = rc.extract_chapters_from_pdf_Updated_Better_Version("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
     
+
+    # Return an array --> ["backend/bookAdders/textbookPDFs/chapter1.pdf", "backend/bookAdders/textbookPDFs/chapter2.pdf", ...]
     # Step C: Split PDF into new files
-    reader = fitz.open("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
-    for i, (_, page_range) in enumerate(mapOfChapters):
-        writer = fitz.open()
-        writer.insert_pdf(reader, from_page=page_range[0], to_page=page_range[1])
-        writer.save(f"chapter{i + 1}.pdf")
-        writer.close()
-        
-    reader.close()
+
+    # for chapter_path in listOfChapters:
+        # Upload each chapter to S3 with chapter name
 
 
 
