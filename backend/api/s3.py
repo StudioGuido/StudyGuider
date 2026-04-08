@@ -83,19 +83,13 @@ def split_pdf_worker(book_id: str, file_key: str):
 #     # Step A: Download file from S3 using boto3
 #     download_file(file_key, "backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
 
-    # Step B: Extract chapters using the improved function from _retrieveChapters.py
+    # Step B: Extract chapters path using the improved function from _retrieveChapters.py
+    # Return an array --> ["backend/bookAdders/textbookPDFs/chapter1.pdf", "backend/bookAdders/textbookPDFs/chapter2.pdf", ...]
     listOfChapters = rc.extract_chapters_from_pdf_Updated_Better_Version("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
     
-
-    # Return an array --> ["backend/bookAdders/textbookPDFs/chapter1.pdf", "backend/bookAdders/textbookPDFs/chapter2.pdf", ...]
-    # Step C: Split PDF into new files
-
-    # for chapter_path in listOfChapters:
-        # Upload each chapter to S3 with chapter name
-
-
-
     # Step D: Upload new files to S3 (processed/book_id/...)
+    upload(listOfChapters)
+    
     # Step E: Update database status to "Complete"
     
      # Simulating a long 10-second PDF splitting process
