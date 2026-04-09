@@ -1,15 +1,20 @@
+from telnetlib import SUPDUP
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 import asyncpg
 import os
 from fastapi import status
 from fastapi.responses import JSONResponse
+from api.auth import verify_jwt
 
 router = APIRouter()
 '''allows grouping endpoints'''
 
 @router.get("/api/getTextbooks")
-async def getTextbooks_endpoint():
+async def getTextbooks_endpoint(user_id = Depends(verify_jwt)):
+    supabase_uid = user_id.get("sub")
+    if not supabase_uid:
+        raise HTTPException(status_code=401, detail="Missing UID")
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),
@@ -18,26 +23,18 @@ async def getTextbooks_endpoint():
             password=os.getenv("DATABASE_PASSWORD")
         )
 
-        rows = await conn.fetch("SELECT * FROM textbooks;")
+        row = await conn.fetchrow("SELECT * FROM user_textbook WHERE user_uid = $1;", supabase_uid)
 
         if rows == None:
             raise HTTPException(status_code=404, detail="Titles from textbooks not found")
 
         textbooks = [
             {
-                "title": row["title"],
-                "author": row["author"],
-                "description": row["description"],
-                "image_path": row["image_path"]
+                "textbook_id": row["textbook_id"],
             }
-            for row in rows
         ]
 
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"response": textbooks}
-            )
-
+        return textbooks
     except HTTPException:
         raise
     except Exception as e:
