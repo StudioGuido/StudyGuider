@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebRTC Voice Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #1a1a1a; color: #eee; padding: 2rem; }
+    h1 { font-size: 1.4rem; font-weight: 500; margin-bottom: 1.5rem; }
+    .controls { display: flex; gap: 12px; align-items: center; margin-bottom: 1rem; }
+    button {
+      padding: 0.5rem 1.4rem;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: #2a2a2a;
+      color: #eee;
+      font-size: 0.95rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s, transform 0.1s;
+    }
+    button:hover { background: #333; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    #talkBtn.active { background: #1e3a5f; border-color: #2196f3; color: #90caf9; transform: scale(0.97); }
+    #status { font-size: 0.85rem; padding: 4px 10px; border-radius: 6px; background: #2a2a2a; color: #888; }
+    #status.connected { color: #4caf50; }
+    #status.listening { color: #2196f3; }
+    #status.speaking { color: #ff9800; }
+    #status.waiting { color: #ce93d8; }
+    #status.error { color: #f44336; }
+    .hint { font-size: 0.8rem; color: #555; margin-bottom: 1.5rem; }
+    .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .panel { background: #242424; border: 1px solid #333; border-radius: 10px; padding: 1rem; min-height: 300px; display: flex; flex-direction: column; }
+    .panel h2 { font-size: 0.85rem; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem; }
+    .panel-content { flex: 1; overflow-y: auto; font-size: 0.9rem; line-height: 1.6; }
+    .transcript-entry { margin-bottom: 0.75rem; padding: 0.5rem 0.75rem; border-radius: 6px; }
+    .transcript-entry.user { background: #1e3a5f; color: #90caf9; }
+    .transcript-entry.assistant { background: #1e3a2f; color: #a5d6a7; }
+    .transcript-entry .label { font-size: 0.75rem; font-weight: 600; opacity: 0.7; margin-bottom: 2px; text-transform: uppercase; }
+    .log-entry { font-family: monospace; font-size: 0.8rem; padding: 3px 0; border-bottom: 1px solid #2a2a2a; }
+    .log-entry .log-time { color: #555; margin-right: 8px; }
+    .log-entry.type-session { color: #ce93d8; }
+    .log-entry.type-audio { color: #80cbc4; }
+    .log-entry.type-transcript { color: #a5d6a7; }
+    .log-entry.type-response { color: #90caf9; }
+    .log-entry.type-error { color: #ef9a9a; }
+    .log-entry.type-other { color: #888; }
+    @media (max-width: 600px) { .panels { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <h1>Feynman WebRTC Test</h1>
+  <div class="controls">
+    <button id="connectBtn">Connect</button>
+    <button id="talkBtn" disabled>🎤 Hold to Talk</button>
+    <span id="status">Not connected</span>
+  </div>
+  <p class="hint">First click Connect, then hold the button (or spacebar) to talk.</p>
+  <div class="panels">
+    <div class="panel">
+      <h2>Transcript</h2>
+      <div class="panel-content" id="transcript"></div>
+    </div>
+    <div class="panel">
+      <h2>Events</h2>
+      <div class="panel-content" id="eventLog"></div>
+    </div>
+  </div>
+
+  <audio id="remoteAudio" autoplay></audio>
+
+<script>
+  const connectBtn = document.getElementById("connectBtn");
+  const talkBtn = document.getElementById("talkBtn");
+  const statusEl = document.getElementById("status");
+  const transcriptEl = document.getElementById("transcript");
+  const eventLogEl = document.getElementById("eventLog");
+  const remoteAudio = document.getElementById("remoteAudio");
+
+  let pc = null;          // RTCPeerConnection
+  let dc = null;          // data channel
+  let localStream = null;
+  let audioTrack = null;
+  let isRecording = false;
+  let currentAssistantEntry = null;
+  let currentAssistantText = "";
+
+  function setStatus(text, cls) {
+    statusEl.textContent = text;
+    statusEl.className = cls || "";
+  }
+
+  function logEvent(type, detail) {
+    const entry = document.createElement("div");
+    const time = new Date().toLocaleTimeString("en-US", { hour12: false });
+    let category = "other";
+    if (type.startsWith("session")) category = "session";
+    else if (type.includes("audio")) category = "audio";
+    else if (type.includes("transcript")) category = "transcript";
+    else if (type.includes("response")) category = "response";
+    else if (type.includes("error")) category = "error";
+    entry.className = `log-entry type-${category}`;
+    entry.innerHTML = `<span class="log-time">${time}</span>${type}${detail ? " — " + detail : ""}`;
+    eventLogEl.appendChild(entry);
+    eventLogEl.scrollTop = eventLogEl.scrollHeight;
+  }
+
+  function addTranscript(role, text) {
+    const entry = document.createElement("div");
+    entry.className = `transcript-entry ${role}`;
+    entry.innerHTML = `<div class="label">${role}</div><div class="text">${text}</div>`;
+    transcriptEl.appendChild(entry);
+    transcriptEl.scrollTop = transcriptEl.scrollHeight;
+    return entry;
+  }
+
+  function handleEvent(event) {
+    logEvent(event.type);
+
+    if (event.type === "response.audio_transcript.delta") {
+      if (!currentAssistantEntry) {
+        currentAssistantText = "";
+        currentAssistantEntry = addTranscript("assistant", "");
+      }
+      currentAssistantText += event.delta;
+      currentAssistantEntry.querySelector(".text").textContent = currentAssistantText;
+      transcriptEl.scrollTop = transcriptEl.scrollHeight;
+      setStatus("Assistant speaking...", "speaking");
+    }
+
+    if (event.type === "response.audio_transcript.done") {
+      currentAssistantEntry = null;
+      currentAssistantText = "";
+      setStatus("Connected — hold to talk", "connected");
+    }
+
+    if (event.type === "conversation.item.input_audio_transcription.completed") {
+      addTranscript("user", event.transcript);
+    }
+
+    if (event.type === "response.done") {
+      setStatus("Connected — hold to talk", "connected");
+    }
+
+    if (event.type === "error") {
+      logEvent("error", event.error?.message || "unknown");
+      setStatus("Error", "error");
+    }
+  }
+
+  async function connect() {
+    try {
+      setStatus("Getting session token...", "waiting");
+      logEvent("connect", "fetching session from backend");
+
+      // 1. Get ephemeral token from your backend
+      const res = await fetch("http://localhost:8000/session");
+      const session = await res.json();
+      const token = session.client_secret.value;
+      logEvent("session", "token received");
+
+      // 2. Get mic access
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      logEvent("mic", "microphone access granted");
+
+      // 3. Create WebRTC peer connection
+      pc = new RTCPeerConnection();
+
+      // 4. Play incoming audio from OpenAI
+      pc.ontrack = (e) => {
+        remoteAudio.srcObject = e.streams[0];
+        logEvent("webrtc", "remote audio track received");
+      };
+
+      // 5. Add mic track but start muted
+      audioTrack = localStream.getAudioTracks()[0];
+      audioTrack.enabled = false; // muted until user holds button
+      pc.addTrack(audioTrack, localStream);
+
+      // 6. Set up data channel for events
+      dc = pc.createDataChannel("oai-events");
+      dc.onopen = () => logEvent("datachannel", "open");
+      dc.onmessage = (e) => handleEvent(JSON.parse(e.data));
+
+      // 7. Create SDP offer and send to OpenAI
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      const sdpRes = await fetch(
+        "https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview",
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/sdp"
+          },
+          body: offer.sdp
+        }
+      );
+
+      const answerSdp = await sdpRes.text();
+      await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
+
+      logEvent("webrtc", "connection established");
+      setStatus("Connected — hold to talk", "connected");
+      connectBtn.disabled = true;
+      talkBtn.disabled = false;
+
+    } catch (err) {
+      setStatus("Connection failed", "error");
+      logEvent("error", err.message);
+    }
+  }
+
+  function startTalking() {
+    if (isRecording || !audioTrack) return;
+    isRecording = true;
+    audioTrack.enabled = true;
+    talkBtn.classList.add("active");
+    talkBtn.textContent = "🔴 Recording...";
+    setStatus("Listening...", "listening");
+    logEvent("mic", "unmuted");
+  }
+
+  function stopTalking() {
+    if (!isRecording || !audioTrack) return;
+    isRecording = false;
+    audioTrack.enabled = false;
+    talkBtn.classList.remove("active");
+    talkBtn.textContent = "🎤 Hold to Talk";
+    setStatus("Waiting for response...", "waiting");
+    logEvent("mic", "muted — waiting for response");
+
+    // Tell OpenAI to respond now
+    if (dc && dc.readyState === "open") {
+      dc.send(JSON.stringify({ type: "input_audio_buffer.commit" }));
+      dc.send(JSON.stringify({ type: "response.create" }));
+    }
+  }
+
+  connectBtn.addEventListener("click", connect);
+  talkBtn.addEventListener("mousedown", (e) => { e.preventDefault(); startTalking(); });
+  talkBtn.addEventListener("mouseup", stopTalking);
+  talkBtn.addEventListener("mouseleave", stopTalking);
+  talkBtn.addEventListener("touchstart", (e) => { e.preventDefault(); startTalking(); });
+  talkBtn.addEventListener("touchend", stopTalking);
+  document.addEventListener("keydown", (e) => { if (e.code === "Space" && !e.repeat) { e.preventDefault(); startTalking(); } });
+  document.addEventListener("keyup", (e) => { if (e.code === "Space") { e.preventDefault(); stopTalking(); } });
+</script>
+</body>
+</html>
