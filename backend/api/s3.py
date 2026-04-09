@@ -208,12 +208,6 @@ async def trigger_pdf_processing(request: ProcessRequest):
                 WHERE textbook_id = $1
                 """,
                 request.book_id,
-                """
-                UPDATE user_textbook
-                SET status = 'complete'
-                WHERE textbook_id = $1
-                """,
-                request.book_id,
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
