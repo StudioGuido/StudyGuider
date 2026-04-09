@@ -1,25 +1,32 @@
 import React from "react";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Document, Page } from "react-pdf";
 import "./pdf-worker-setup";
+
+const RENDER_WIDTH = 800; // fixed rasterisation width — never changes
 
 export default function PdfViewer({ fileUrl, initialScale = 1 }) {
   const [numPages, setNumPages] = useState(0);
   const [scale, setScale] = useState(initialScale);
-  const [baseScale, setBaseScale] = useState(null);
+  const [containerWidth, setContainerWidth] = useState(0);
   const containerRef = useRef(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setContainerWidth(entry.contentRect.width - 32); // subtract px-4 padding
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const onDocumentLoad = ({ numPages }) => {
     setNumPages(numPages);
   };
 
-  const onFirstPageLoad = useCallback((page) => {
-    if (containerRef.current) {
-      const containerWidth = containerRef.current.clientWidth - 32; // subtract px-4 padding (16px * 2)
-      const pageWidth = page.originalWidth;
-      setBaseScale(containerWidth / pageWidth);
-    }
-  }, []);
+  // CSS scale factor: at 100% zoom the page fits the container width
+  const cssScale = containerWidth > 0 ? (containerWidth / RENDER_WIDTH) * scale : 1;
 
   const zoomIn = () =>
     setScale((s) => Math.min(Math.round(s * 1.1 * 10) / 10, 3));
@@ -72,15 +79,30 @@ export default function PdfViewer({ fileUrl, initialScale = 1 }) {
         >
           <div className="inline-flex min-w-full flex-col items-center gap-4 px-4">
             {Array.from({ length: numPages }, (_, index) => (
-              <Page
+              <div
                 key={index + 1}
-                pageNumber={index + 1}
-                scale={baseScale != null ? baseScale * scale : 1}
-                onLoadSuccess={index === 0 ? onFirstPageLoad : undefined}
-                renderAnnotationLayer={false}
-                renderTextLayer={false}
-                className="shadow-2xl shadow-black/70"
-              />
+                style={{
+                  width: RENDER_WIDTH * cssScale,
+                  height: "auto",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    transform: `scale(${cssScale})`,
+                    transformOrigin: "top left",
+                    transition: "transform 0.3s ease",
+                  }}
+                >
+                  <Page
+                    pageNumber={index + 1}
+                    width={RENDER_WIDTH}
+                    renderAnnotationLayer={false}
+                    renderTextLayer={false}
+                    className="shadow-2xl shadow-black/70"
+                  />
+                </div>
+              </div>
             ))}
           </div>
         </Document>
