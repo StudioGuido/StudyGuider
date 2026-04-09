@@ -1,15 +1,25 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Document, Page } from "react-pdf";
 import "./pdf-worker-setup";
 
 export default function PdfViewer({ fileUrl, initialScale = 1 }) {
   const [numPages, setNumPages] = useState(0);
   const [scale, setScale] = useState(initialScale);
+  const [baseScale, setBaseScale] = useState(null);
+  const containerRef = useRef(null);
 
   const onDocumentLoad = ({ numPages }) => {
     setNumPages(numPages);
   };
+
+  const onFirstPageLoad = useCallback((page) => {
+    if (containerRef.current) {
+      const containerWidth = containerRef.current.clientWidth - 32; // subtract px-4 padding (16px * 2)
+      const pageWidth = page.originalWidth;
+      setBaseScale(containerWidth / pageWidth);
+    }
+  }, []);
 
   const zoomIn = () =>
     setScale((s) => Math.min(Math.round(s * 1.1 * 10) / 10, 3));
@@ -52,20 +62,21 @@ export default function PdfViewer({ fileUrl, initialScale = 1 }) {
       </div>
 
       {/* Scrollable content area with all pages */}
-      <div className="flex-1 overflow-auto bg-[#050509] px-4 py-3">
+      <div ref={containerRef} className="flex-1 overflow-auto bg-[#050509] py-3">
         <Document
           file={fileUrl}
           onLoadSuccess={onDocumentLoad}
           loading={
-            <div className="text-xs text-slate-300">Loading textbook…</div>
+            <div className="px-4 text-xs text-slate-300">Loading textbook…</div>
           }
         >
-          <div className="flex flex-col items-center gap-4">
+          <div className="inline-flex min-w-full flex-col items-center gap-4 px-4">
             {Array.from({ length: numPages }, (_, index) => (
               <Page
                 key={index + 1}
                 pageNumber={index + 1}
-                scale={scale}
+                scale={baseScale != null ? baseScale * scale : 1}
+                onLoadSuccess={index === 0 ? onFirstPageLoad : undefined}
                 renderAnnotationLayer={false}
                 renderTextLayer={false}
                 className="shadow-2xl shadow-black/70"
