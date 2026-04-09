@@ -1,5 +1,6 @@
 .env
 /backend/__pycache__
 /backend/api/__pycache__
+/backend/bookadders/textbookPDFs
 /research/__pycache__
 /research/importFunctionality/myenv

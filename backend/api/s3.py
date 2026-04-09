@@ -10,10 +10,19 @@ import asyncpg
 import time
 import re
 import fitz
-# import backend.api._retrieveChapters as rc
+import api._retrieveChapters as rc
+
+"""
+Notes: 
+
+1. Set AWS variables aka look at the keys in AWS and put them
+in your .env file
+
+2. Add the following env var: AWS_DEFAULT_REGION=us-east-2
+"""
+
 
 router = APIRouter()
-jobs = {}  # {textbook_id: "processing" | "done"}
 
 # specific bucket
 BUCKET = "sg-textbooks"
@@ -46,24 +55,40 @@ def upload_file(local_path: str, *, key_prefix: str = "textbooks/uploads") -> st
         key,
         ExtraArgs={"ContentType": "application/pdf"},
     )
-
-    # this is the url that will backend needs to send to frontend with a key
-    # url = s3.generate_presigned_url(
-    #     "put_object",
-    #     Params={
-    #         "Bucket": BUCKET,
-    #         "Key": key,
-    #         "ContentType": "application/pdf"
-    #     },
-    #     ExpiresIn=300
-    # )
-    # print(url)
-
-
-
     print(f"Uploaded to: {key}")
     return key
 
+# Uploads chunked chapter PDFs (one batch id per request avoids S3 overwrites on same filenames).
+async def upload(supabase_uid, path_arr):
+    uploaded = []
+    failed = []
+
+    upload_batch_id = str(uuid.uuid4())
+    print("5", path_arr)
+    
+    for path in path_arr:
+        print("6", path)
+        try:
+            file_name = Path(path).name or "chapter.pdf"
+            s3_key = f"textbooks/{supabase_uid}/{upload_batch_id}/{file_name}"
+            s3.upload_file(
+                path,
+                BUCKET,
+                s3_key,
+                ExtraArgs={"ContentType": "application/pdf"},
+            )
+            uploaded.append(s3_key)
+        except Exception as e:
+            failed.append(path)
+            print(f"Error: {e}")
+
+    all_ok = len(failed) == 0
+    return {
+        "message": "All files uploaded successfully" if all_ok else "Some files failed to upload",
+        "upload_batch_id": upload_batch_id,
+        "uploaded": uploaded,
+        "failed": failed,
+    }
 
 def download_file(key: str, download_path: str):
     s3.download_file(
@@ -72,59 +97,6 @@ def download_file(key: str, download_path: str):
         download_path
     )
     print(f"Downloaded to: {download_path}")
-
-
-def split_pdf_worker(book_id: str, file_key: str):
-    """
-    This function runs in the background. It does NOT make the user wait.
-    """
-    print(f"[{book_id}] Starting background worker for {file_key}...")
-    
-#     # Step A: Download file from S3 using boto3
-#     download_file(file_key, "backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
-
-    # Step B: Extract chapters path using the improved function from _retrieveChapters.py
-    # Return an array --> ["backend/bookAdders/textbookPDFs/chapter1.pdf", "backend/bookAdders/textbookPDFs/chapter2.pdf", ...]
-    listOfChapters = rc.extract_chapters_from_pdf_Updated_Better_Version("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
-    
-    # Step D: Upload new files to S3 (processed/book_id/...)
-    upload(listOfChapters)
-    
-    # Step E: Update database status to "Complete"
-    
-     # Simulating a long 10-second PDF splitting process
-    time.sleep(10) 
-    
-    print(f"[{book_id}] Finished splitting! Uploaded to S3.")
-
-
-# # my personal path to an existing textbook
-# pathToTextbook = "../importFunctionality/textbooks/thinkpython2.pdf"
-
-# # 1. Upload
-# file_key = upload_file(pathToTextbook)
-
-# # # 2. Download (test)
-# download_file(file_key, "downloaded_textbook.pdf")
-
-
-"""
-Notes: 
-
-1. Set AWS variables aka look at the keys in AWS and put them
-in your .env file
-
-2. Add the following env var: AWS_DEFAULT_REGION=us-east-2
-"""
-
-# [['The way of the program', [23, 30]], ['Variables, expressions and statements', 
-# [31, 38]], ['Functions', [39, 50]], ['Case study: interface design', [51, 60]], 
-# ['Conditionals and recursion', [61, 72]], ['Fruitful functions', [73, 84]], ['Iteration', [85, 92]], 
-# ['Strings', [93, 104]], ['Case study: word play', [105, 110]], ['Lists', [111, 124]], ['Dictionaries', [125, 136]], 
-# ['Tuples', [137, 146]], ['Case study: data structure selection', [147, 158]], ['Files', [159, 168]], ['Classes and objects', 
-# [169, 176]], ['Classes and functions', [177, 182]], ['Classes and methods', [183, 192]], 
-# ['Inheritance', [193, 204]], ['The Goodies', [205, 214]], ['Debugging', [215, 222]], ['Analysis of Algorithms', [223, 231]]]
-
 
 # Provides frontend with a presigned url.
 @router.post("/api/getPresignedUrl")
@@ -174,27 +146,30 @@ async def get_url(user_valid=Depends(verify_jwt)):
 
 
 @router.post("/process-pdf")
-async def trigger_pdf_processing(request: ProcessRequest):
+async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(verify_jwt)):
     
-    # mark job as processing
-    jobs[request.book_id] = "processing"
+    supabase_uid = user_valid.get("sub")
+    if not supabase_uid:
+        raise HTTPException(status_code=401, detail="Missing UID")
 
     try:
         print(f"[{request.book_id}] Processing started...")
 
-        # Splits up textbook
-        # download_file(request.file_key, "downloaded_textbook.pdf")
-        # chapter_map = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf")
-        # print(chapter_map)
+        # downloads file from s3 (uploaded to via frontend)
+        download_file(request.file_key, "downloaded_textbook.pdf")
         
-        # simulate work
-        time.sleep(10)
+        # Generates list of local downloaded chapter paths
+        listOfChapters = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
+        
+        # creates keys from filepaths and uploads chunks to s3
+        await upload(supabase_uid, listOfChapters)
         
 
         print(f"[{request.book_id}] Processing complete.")
-        
+        # Update db
         conn = None
         try:
+            
             conn = await asyncpg.connect(
                 host=os.getenv("DATABASE_HOST"),
                 database=os.getenv("DATABASE_NAME"),
@@ -214,9 +189,6 @@ async def trigger_pdf_processing(request: ProcessRequest):
         finally:
             if conn: await conn.close()
 
-        # mark job as done
-        jobs[request.book_id] = "complete"
-
         return {
             "message": "Processing completed.",
             "book_id": request.book_id,
@@ -225,51 +197,13 @@ async def trigger_pdf_processing(request: ProcessRequest):
 
     except Exception as e:
         print(f"Error: {e}")
-        jobs[request.book_id] = "complete"
 
         raise HTTPException(status_code=500, detail="Processing failed")
 
 
-# Uploads chunked chapter PDFs (one batch id per request avoids S3 overwrites on same filenames).
-@router.post("/api/uploadTextbookChapters")
-async def upload(path_arr: list[str] = Body(...), user_valid=Depends(verify_jwt)):
-
-    uploaded = []
-    failed = []
-
-    supabase_uid = user_valid.get("sub")
-    if not supabase_uid:
-        raise HTTPException(status_code=401, detail="Missing UID")
-
-    upload_batch_id = str(uuid.uuid4())
-
-    for path in path_arr:
-        try:
-            file_name = Path(path).name or "chapter.pdf"
-            s3_key = f"textbooks/{supabase_uid}/{upload_batch_id}/{file_name}"
-            s3.upload_file(
-                path,
-                BUCKET,
-                s3_key,
-                ExtraArgs={"ContentType": "application/pdf"},
-            )
-            uploaded.append(s3_key)
-        except Exception as e:
-            failed.append(path)
-            print(f"Error: {e}")
-
-    all_ok = len(failed) == 0
-    return {
-        "message": "All files uploaded successfully" if all_ok else "Some files failed to upload",
-        "upload_batch_id": upload_batch_id,
-        "uploaded": uploaded,
-        "failed": failed,
-    }
-
 
 @router.get("/api/textbooks/{textbook_id}/status")
 async def get_job_status(textbook_id: str):
-    print("MADE")
     conn = None
     try:
         conn = await asyncpg.connect(

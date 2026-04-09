@@ -24,7 +24,7 @@ def is_non_chapter_title(title_lower):
     return any(keyword in title_lower for keyword in NON_CHAPTER_KEYWORDS)
 
 
-def extract_chapters_from_pdf_Updated_Better_Version(pdf_path, user_valid=Depends(verify_jwt)):
+def extract_chapters_from_pdf_Updated_Better_Version(pdf_path, supabase_uid):
     doc = fitz.open(pdf_path)
     toc = doc.get_toc()
     mapOfChapters = []
@@ -152,7 +152,6 @@ def extract_chapters_from_pdf_Updated_Better_Version(pdf_path, user_valid=Depend
     output_dir = os.path.join(os.path.dirname(__file__), "..", "bookadders", "textbookPDFs")
     os.makedirs(output_dir, exist_ok=True)
 
-    supabase_uid = user_valid.get("sub")
     run_id = str(uuid.uuid4())
     run_dir = os.path.join(output_dir, supabase_uid, run_id)
     os.makedirs(run_dir, exist_ok=True)

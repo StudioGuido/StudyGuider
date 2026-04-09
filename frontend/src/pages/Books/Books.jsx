@@ -60,8 +60,12 @@ async function handleUpload(file) {
     // 4) Notify backend to start processing
     const processResponse = await fetch("http://localhost:8000/process-pdf", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ book_id, file_key }),
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${currentToken}`,
+       },
+      body: JSON.stringify({ book_id, file_key  }),
+      
     });
     if (!processResponse.ok) throw new Error("Failed to start processing");
     const processData = await processResponse.json();
