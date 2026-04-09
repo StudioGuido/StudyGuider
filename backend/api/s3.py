@@ -8,7 +8,7 @@ import asyncpg
 import time
 import re
 import fitz
-import backend.api._retrieveChapters as rc
+# import backend.api._retrieveChapters as rc
 
 router = APIRouter()
 jobs = {}  # {textbook_id: "processing" | "done"}
@@ -81,7 +81,7 @@ def split_pdf_worker(book_id: str, file_key: str):
 #     download_file(file_key, "backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
 
     # Step B: Extract chapters using the improved function from _retrieveChapters.py
-    listOfChapters = rc.extract_chapters_from_pdf_Updated_Better_Version("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
+    # listOfChapters = rc.extract_chapters_from_pdf_Updated_Better_Version("backend/bookAdders/textbookPDFs/downloaded_textbook.pdf")
     
 
     # Return an array --> ["backend/bookAdders/textbookPDFs/chapter1.pdf", "backend/bookAdders/textbookPDFs/chapter2.pdf", ...]
@@ -208,14 +208,12 @@ async def trigger_pdf_processing(request: ProcessRequest):
                 password=os.getenv("DATABASE_PASSWORD"),
             )
             await conn.execute(
-                result = await conn.execute(
-                    """
-                    UPDATE user_textbook
-                    SET status = 'complete'
-                    WHERE textbook_id = $1
-                    """,
-                    request.book_id,
-                )
+                """
+                UPDATE user_textbook
+                SET status = 'complete'
+                WHERE textbook_id = $1
+                """,
+                request.book_id,
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
@@ -241,7 +239,7 @@ async def trigger_pdf_processing(request: ProcessRequest):
 # Uploads Chunked Textbook.
 @router.post("/api/uploadTextbookChapters")
 async def upload(string_path: str = "/api/bookAdders/textBookPDFs/chunks_example.pdf", user_valid=Depends(verify_jwt)):
-
+    
     print(string_path)
     
     supabase_uid = user_valid.get("sub")
@@ -261,6 +259,7 @@ async def upload(string_path: str = "/api/bookAdders/textBookPDFs/chunks_example
 
 @router.get("/api/textbooks/{textbook_id}/status")
 async def get_job_status(textbook_id: str):
+    print("MADE")
     conn = None
     try:
         conn = await asyncpg.connect(

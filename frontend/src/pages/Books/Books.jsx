@@ -68,6 +68,12 @@ async function handleUpload(file) {
     console.log(processData.message);
 
     // 5) Poll until complete
+    // const testval = await fetch(`/api/textbooks/${book_id}/status`, {
+    //   headers: { Authorization: `Bearer ${currentToken}` },
+    // });
+    // const text = await testval.text();
+    // console.log(text.slice(0, 200));
+    // console.log(testval.headers.get("content-type"));
     await pollStatus(book_id, currentToken);
 
     setShowUploadModal(false);
@@ -83,7 +89,7 @@ async function handleUpload(file) {
 async function pollStatus(textbookId, currentToken) {
   const MAX_ATTEMPTS = 60; // 3 min at 3s intervals
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const res = await fetch(`/api/textbooks/${textbookId}/status`, {
+    const res = await fetch(`http://localhost:8000/api/textbooks/${textbookId}/status`, {
       headers: { Authorization: `Bearer ${currentToken}` },
     });
     if (!res.ok) throw new Error("Failed to fetch status");
