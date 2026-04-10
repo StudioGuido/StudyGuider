@@ -47,7 +47,7 @@ export default function ChapterSidebar({ className = "", activePhase }) {
     <>
       <aside
         className={[
-          "shrink-0 h-screen sticky top-0 transition-all duration-300",
+          "shrink-0 h-screen sticky top-0 overflow-hidden transition-all duration-300",
           "bg-neutral-950 text-slate-50 border-r border-neutral-800",
           collapsed ? "w-14" : "w-80",
           className,
@@ -66,46 +66,44 @@ export default function ChapterSidebar({ className = "", activePhase }) {
           </button>
         </div>
 
-        {!collapsed && (
-          <>
-            <header className="px-4 pb-3 pt-1 border-b border-neutral-800">
-              <h2 className="text-xl font-semibold">{title}</h2>
-              {authors && <p className="text-sm text-slate-300">{authors}</p>}
-            </header>
+        <div className={`w-80 transition-opacity duration-300 ${collapsed ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+          <header className="px-4 pb-3 pt-1 border-b border-neutral-800">
+            <h2 className="text-xl font-semibold">{title}</h2>
+            {authors && <p className="text-sm text-slate-300">{authors}</p>}
+          </header>
 
-            <nav className="p-3 overflow-y-auto h-[calc(100%-7.5rem)]">
-              <ul className="space-y-2">
-                {chapters.map((c, idx) => (
-                  <li key={c.id}>
-                    <NavLink
-                      to={`/books/${bookId}/chapters/${c.id}/${activePhase === "understanding" ? "understanding" : "reinforce/flashcards"}`}
-                      className={({ isActive }) => getChapterClasses(isActive)}
-                      style={({ isActive }) =>
-                        isActive ? { color: "#000000" } : undefined
-                      }
-                      end={false}
-                    >
-                      <span className="font-medium">{`Chapter ${idx + 1}: ${c.title}`}</span>
-                    </NavLink>
-                  </li>
-                ))}
-
-                <li className="pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setModalOpen(true)}
-                    className="w-full rounded-lg px-4 py-3 bg-neutral-900 ring-1 ring-neutral-800 hover:bg-neutral-800 hover:ring-neutral-700 flex items-center justify-between"
+          <nav className="p-3 overflow-y-auto h-[calc(100vh-7.5rem)]">
+            <ul className="space-y-2">
+              {chapters.map((c, idx) => (
+                <li key={c.id}>
+                  <NavLink
+                    to={`/books/${bookId}/chapters/${c.id}/${activePhase === "understanding" ? "understanding" : "reinforce/flashcards"}`}
+                    className={({ isActive }) => getChapterClasses(isActive)}
+                    style={({ isActive }) =>
+                      isActive ? { color: "#000000" } : undefined
+                    }
+                    end={false}
                   >
-                    <span>Select New Chapter</span>
-                    <span className="text-slate-300" aria-hidden>
-                      ＋
-                    </span>
-                  </button>
+                    <span className="font-medium">{`Chapter ${idx + 1}: ${c.title}`}</span>
+                  </NavLink>
                 </li>
-              </ul>
-            </nav>
-          </>
-        )}
+              ))}
+
+              <li className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(true)}
+                  className="w-full rounded-lg px-4 py-3 bg-neutral-900 ring-1 ring-neutral-800 hover:bg-neutral-800 hover:ring-neutral-700 flex items-center justify-between"
+                >
+                  <span>Select New Chapter</span>
+                  <span className="text-slate-300" aria-hidden>
+                    ＋
+                  </span>
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
       </aside>
 
       {modalOpen && (
