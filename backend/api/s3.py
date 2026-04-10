@@ -59,29 +59,61 @@ def upload_file(local_path: str, *, key_prefix: str = "textbooks/uploads") -> st
     return key
 
 # Uploads chunked chapter PDFs (one batch id per request avoids S3 overwrites on same filenames).
-async def upload(supabase_uid, path_arr):
+async def upload(supabase_uid, path_arr, textbook_id):
     uploaded = []
     failed = []
 
     upload_batch_id = str(uuid.uuid4())
     print("5", path_arr)
     
-    for path in path_arr:
-        print("6", path)
-        try:
-            file_name = Path(path).name or "chapter.pdf"
-            s3_key = f"textbooks/{supabase_uid}/{upload_batch_id}/{file_name}"
-            s3.upload_file(
-                path,
-                BUCKET,
-                s3_key,
-                ExtraArgs={"ContentType": "application/pdf"},
-            )
-            uploaded.append(s3_key)
-        except Exception as e:
-            failed.append(path)
-            print(f"Error: {e}")
-
+    conn = None
+    try:
+        conn = await asyncpg.connect(
+            host=os.getenv("DATABASE_HOST"),
+            database=os.getenv("DATABASE_NAME"),
+            user=os.getenv("DATABASE_USER"),
+            password=os.getenv("DATABASE_PASSWORD"),
+        )
+        
+        # Iterates over paths, uploading them to s3 and postgre db
+        chapter_count = 1
+        for path in path_arr:
+            print("6", path)
+            try:
+                # Generates chapter id and insert chapter into the db
+                chapter_id = str(uuid.uuid4())
+                await conn.execute(
+                    """
+                    INSERT INTO textbook_chapter (chapter_id, textbook_id)
+                    VALUES ($1, $2)
+                    ON CONFLICT (chapter_id, textbook_id) DO NOTHING;
+                    """,
+                    chapter_count,
+                    textbook_id,
+                )
+                chapter_count+=1
+                
+                # chapter_name = Path(path).name or "chapter.pdf"
+                # s3_key = f"textbooks/{supabase_uid}/{upload_batch_id}/{file_name}"
+                local_file_path = Path(path)
+                print(local_file_path.parts)
+                s3_key = f"users/{supabase_uid}/textbooks/{textbook_id}/chapters/{chapter_count}"
+                s3.upload_file(
+                    path,
+                    BUCKET,
+                    s3_key,
+                    ExtraArgs={"ContentType": "application/pdf"},
+                )
+                uploaded.append(s3_key)
+            except Exception as e:
+                failed.append(path)
+                print(f"Error: {e}")
+                
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn: await conn.close()
+    
     all_ok = len(failed) == 0
     return {
         "message": "All files uploaded successfully" if all_ok else "Some files failed to upload",
@@ -162,7 +194,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
         listOfChapters = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
         
         # creates keys from filepaths and uploads chunks to s3
-        await upload(supabase_uid, listOfChapters)
+        await upload(supabase_uid, listOfChapters, request.book_id)
         
 
         print(f"[{request.book_id}] Processing complete.")

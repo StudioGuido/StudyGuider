@@ -221,8 +221,12 @@ async def init_db():
             # -- Chapters table
             textbook_chapter_table = """
             CREATE TABLE textbook_chapter (
-                chapter_id VARCHAR(255) PRIMARY KEY,
-                textbook_id VARCHAR(255) REFERENCES user_textbook(textbook_id) ON DELETE CASCADE
+                chapter_id INTEGER,
+                textbook_id VARCHAR(255),
+                PRIMARY KEY (chapter_id, textbook_id),
+                FOREIGN KEY (textbook_id)
+                    REFERENCES user_textbook(textbook_id)
+                    ON DELETE CASCADE
             );
             """
             await conn.execute(textbook_chapter_table)
