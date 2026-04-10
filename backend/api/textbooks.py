@@ -1,10 +1,6 @@
-from telnetlib import SUPDUP
-from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Depends
 import asyncpg
 import os
-from fastapi import status
-from fastapi.responses import JSONResponse
 from api.auth import verify_jwt
 
 router = APIRouter()
@@ -15,6 +11,7 @@ async def getTextbooks_endpoint(user_id = Depends(verify_jwt)):
     supabase_uid = user_id.get("sub")
     if not supabase_uid:
         raise HTTPException(status_code=401, detail="Missing UID")
+    conn = None
     try:
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),
@@ -23,24 +20,29 @@ async def getTextbooks_endpoint(user_id = Depends(verify_jwt)):
             password=os.getenv("DATABASE_PASSWORD")
         )
 
-        row = await conn.fetchrow("SELECT * FROM user_textbook WHERE user_uid = $1;", supabase_uid)
+        rows = await conn.fetch(
+            "SELECT textbook_id, textbook_title, status FROM user_textbook WHERE user_uid = $1;",
+            supabase_uid,
+        )
 
-        if rows == None:
+        if not rows:
             raise HTTPException(status_code=404, detail="Titles from textbooks not found")
 
-        textbooks = [
+        return [
             {
                 "textbook_id": row["textbook_id"],
+                "textbook_title": row["textbook_title"],
+                "status": row["status"],
             }
+            for row in rows
         ]
-
-        return textbooks
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
-        await conn.close()
+        if conn is not None:
+            await conn.close()
 '''
 Fetches all textbooks from the database and returns a list of dictionaries 
 containing title, author, description, and image_path.

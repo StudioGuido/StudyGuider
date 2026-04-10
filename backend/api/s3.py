@@ -191,8 +191,9 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
         download_file(request.file_key, "downloaded_textbook.pdf")
         
         # Generates list of local downloaded chapter paths
-        listOfChapters = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
-        
+        listOfChapters, textbook_title = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
+
+
         # creates keys from filepaths and uploads chunks to s3
         await upload(supabase_uid, listOfChapters, request.book_id)
         
@@ -212,9 +213,10 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
                 """
                 UPDATE user_textbook
                 SET status = 'complete'
-                WHERE textbook_id = $1
+                WHERE textbook_id = $1 AND textbook_title = $2
                 """,
                 request.book_id,
+                textbook_title,
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
