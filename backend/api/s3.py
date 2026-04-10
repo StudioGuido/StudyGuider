@@ -152,13 +152,14 @@ async def get_url(user_valid=Depends(verify_jwt)):
         status="processing"
         await conn.execute(
             """
-            INSERT INTO user_textbook (textbook_id, user_uid, status)
-            VALUES ($1, $2, $3)
+            INSERT INTO user_textbook (textbook_id, user_uid, status, textbook_title)
+            VALUES ($1, $2, $3, $4)
             ON CONFLICT (textbook_id) DO NOTHING;
             """,
             textbook_id,
             supabase_uid,
             status,
+            "placeholder",
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -179,7 +180,7 @@ async def get_url(user_valid=Depends(verify_jwt)):
 
 @router.post("/process-pdf")
 async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(verify_jwt)):
-    
+    print("\n\n1\n\n")
     supabase_uid = user_valid.get("sub")
     if not supabase_uid:
         raise HTTPException(status_code=401, detail="Missing UID")
@@ -193,12 +194,13 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
         # Generates list of local downloaded chapter paths
         listOfChapters, textbook_title = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
 
-
+        print("\n\n Uploading textbook", flush=True)
         # creates keys from filepaths and uploads chunks to s3
         await upload(supabase_uid, listOfChapters, request.book_id)
-        
+        print("\n\n Finished uploading textbook\n\n")
 
-        print(f"[{request.book_id}] Processing complete.")
+
+        print(f"[{request.book_id}] Processing complete.\n\n")
         # Update db
         conn = None
         try:
@@ -212,11 +214,12 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
             await conn.execute(
                 """
                 UPDATE user_textbook
-                SET status = 'complete'
-                WHERE textbook_id = $1 AND textbook_title = $2
+                SET status = 'complete',
+                  textbook_title = $1
+                WHERE textbook_id = $2
                 """,
-                request.book_id,
                 textbook_title,
+                request.book_id,
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))

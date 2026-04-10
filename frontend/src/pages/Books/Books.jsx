@@ -16,9 +16,16 @@ export default function Books() {
   const [uploadError, setUploadError] = useState(null);
   const [status, setStatus] = useState("");
 
+  async function getJWT() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const currentToken = sessionData.session?.access_token;
+    console.log(currentToken)
+  }
+
   useEffect(() => {
     fakeApi.getBooks().then(setBooks);
     console.log(user);
+    getJWT();
   }, []);
   
   if (!books)
