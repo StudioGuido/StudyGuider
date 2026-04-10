@@ -9,16 +9,31 @@ export default function PdfViewer({ fileUrl, initialScale = 1 }) {
   const [numPages, setNumPages] = useState(0);
   const [scale, setScale] = useState(initialScale);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [pageHeight, setPageHeight] = useState(0);
+  const [animateTransform, setAnimateTransform] = useState(false);
   const containerRef = useRef(null);
+  const animateTimerRef = useRef(null);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    let initialized = false;
     const observer = new ResizeObserver(([entry]) => {
-      setContainerWidth(entry.contentRect.width - 32); // subtract px-4 padding
+      const w = entry.contentRect.width - 32; // subtract px-4 padding
+      setContainerWidth(w);
+      // Only animate after the initial measurement, not on zoom
+      if (initialized) {
+        setAnimateTransform(true);
+        clearTimeout(animateTimerRef.current);
+        animateTimerRef.current = setTimeout(() => setAnimateTransform(false), 350);
+      }
+      initialized = true;
     });
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      clearTimeout(animateTimerRef.current);
+    };
   }, []);
 
   const onDocumentLoad = ({ numPages }) => {
@@ -83,20 +98,22 @@ export default function PdfViewer({ fileUrl, initialScale = 1 }) {
                 key={index + 1}
                 style={{
                   width: RENDER_WIDTH * cssScale,
-                  height: "auto",
+                  height: pageHeight ? pageHeight * cssScale : "auto",
                   overflow: "hidden",
+                  transition: animateTransform ? "width 0.3s ease, height 0.3s ease" : "none",
                 }}
               >
                 <div
                   style={{
                     transform: `scale(${cssScale})`,
                     transformOrigin: "top left",
-                    transition: "transform 0.3s ease",
+                    transition: animateTransform ? "transform 0.3s ease" : "none",
                   }}
                 >
                   <Page
                     pageNumber={index + 1}
                     width={RENDER_WIDTH}
+                    onLoadSuccess={index === 0 ? (page) => setPageHeight(page.height) : undefined}
                     renderAnnotationLayer={false}
                     renderTextLayer={false}
                     className="shadow-2xl shadow-black/70"

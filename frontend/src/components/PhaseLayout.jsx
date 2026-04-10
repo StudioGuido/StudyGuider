@@ -31,12 +31,20 @@ export default function PhaseLayout() {
     <section className="h-screen flex overflow-hidden">
       <ChapterSidebar activePhase={activePhase} />
       <div className="flex-1 px-8 py-6 flex flex-col gap-6 overflow-hidden min-h-0">
-        <button
-        onClick={handleSignOut}
-        className="self-end bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm transition-colors"
-      >
-        Sign Out
-      </button>
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigate("/books")}
+            className="bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded text-sm transition-colors"
+          >
+            &larr; Books
+          </button>
+          <button
+            onClick={handleSignOut}
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm transition-colors"
+          >
+            Sign Out
+          </button>
+        </div>
         <PhaseNavbar
           activePhase={activePhase}
           onSelectPhase={handlePhaseSelect}

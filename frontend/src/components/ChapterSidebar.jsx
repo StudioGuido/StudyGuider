@@ -55,7 +55,7 @@ export default function ChapterSidebar({ className = "", activePhase }) {
         aria-label="Chapter navigation"
       >
         {/* Toggle button */}
-        <div className="flex items-center px-3 pt-4 pb-2">
+        <div className="flex items-center pr-2 pl-2 pt-4 pb-2">
           <button
             type="button"
             onClick={() => setCollapsed((c) => !c)}
