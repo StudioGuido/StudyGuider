@@ -109,20 +109,17 @@ match test_no:
         Test 1: Basic User creation and viewing of username:
         """
         testUserCreation()
-
     case 2:
         """
         Test 2: Update username and view result:
         """
         testUserUpdates()
         testUserGet()
-
     case 3:
         """
         Test 3: Delete user:
         """
         testUserDeletion()
-
     case 4:
         """
         Test 4: All tests combined:

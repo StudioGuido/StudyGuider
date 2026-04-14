@@ -50,74 +50,8 @@ async def create_user(user_valid=Depends(verify_jwt)):
     finally:
         if conn: await conn.close()
 
-# --- 2. GET MY PROFILE ---
-# @router.get("/api/users/me")
-# async def get_my_profile(user_valid=Depends(verify_jwt)):
-#     supabase_uid = user_valid.get("sub")
-#     conn = None
-#     try:
-#         conn = await asyncpg.connect(
-#             host=os.getenv("DATABASE_HOST"),
-#             database=os.getenv("DATABASE_NAME"),
-#             user=os.getenv("DATABASE_USER"),
-#             password=os.getenv("DATABASE_PASSWORD"),
-#         )
 
-#         user = await conn.fetchrow(
-#             "SELECT * FROM users WHERE supabase_uid = $1",
-#             supabase_uid,
-#         )
-
-#         if not user:
-#             # If they exist in Supabase but not our DB, create them now (JIT)
-#             user = await conn.fetchrow(
-#                 "INSERT INTO users (supabase_uid, email) VALUES ($1, $2) RETURNING *",
-#                 supabase_uid, user_valid.get("email")
-#             )
-
-#         return {"response": dict(user)}
-#     except Exception as e:
-#         logger.error(f"Error in get_me: {e}")
-#         raise HTTPException(status_code=500, detail="Database error")
-#     finally:
-#         if conn: await conn.close()
-
-# --- 3. UPDATE USER PROFILE ---
-# @router.put("/api/updateUser")
-# async def update_user(userData: UserUpdate, user_valid=Depends(verify_jwt)):
-#     supabase_uid = user_valid.get("sub")
-#     conn = None
-#     try:
-#         conn = await asyncpg.connect(
-#             host=os.getenv("DATABASE_HOST"),
-#             database=os.getenv("DATABASE_NAME"),
-#             user=os.getenv("DATABASE_USER"),
-#             password=os.getenv("DATABASE_PASSWORD"),
-#         )
-
-#         # We update names instead of a unique username
-#         result = await conn.execute(
-#             """
-#             UPDATE users
-#             SET first_name = $1, last_name = $2
-#             WHERE supabase_uid = $3
-#             """,
-#             userData.first_name,
-#             userData.last_name,
-#             supabase_uid,
-#         )
-
-#         if result == "UPDATE 0":
-#             raise HTTPException(status_code=404, detail="User not found")
-
-#         return {"response": "Profile Update Successful"}
-#     except Exception as e:
-#         logger.error(f"Error in update_user: {e}")
-#         raise HTTPException(status_code=500, detail=str(e))
-#     finally:
-#         if conn: await conn.close()
-
-# --- 4. DELETE USER ---
+# --- 2. DELETE USER ---
 @router.delete("/api/users/me")
 async def delete_user(user_valid=Depends(verify_jwt)):
     supabase_uid = user_valid.get("sub")
