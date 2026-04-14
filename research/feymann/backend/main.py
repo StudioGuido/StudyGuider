@@ -1,6 +1,7 @@
 from fastapi import FastAPI
+from api.context import router as context_router
 from fastapi.middleware.cors import CORSMiddleware
-from api.voice import router as trans
+from api.voice import router as voice_router
 
 app = FastAPI()
 
@@ -12,4 +13,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(trans)
+app.include_router(voice_router)
+app.include_router(context_router)
