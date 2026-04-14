@@ -20,10 +20,8 @@
     }
     button:hover { background: #333; }
     button:disabled { opacity: 0.4; cursor: not-allowed; }
-    #talkBtn.active { background: #1e3a5f; border-color: #2196f3; color: #90caf9; transform: scale(0.97); }
     #status { font-size: 0.85rem; padding: 4px 10px; border-radius: 6px; background: #2a2a2a; color: #888; }
     #status.connected { color: #4caf50; }
-    #status.listening { color: #2196f3; }
     #status.speaking { color: #ff9800; }
     #status.waiting { color: #ce93d8; }
     #status.error { color: #f44336; }
@@ -51,10 +49,9 @@
   <h1>Feynman WebRTC Test</h1>
   <div class="controls">
     <button id="connectBtn">Connect</button>
-    <button id="talkBtn" disabled>🎤 Hold to Talk</button>
     <span id="status">Not connected</span>
   </div>
-  <p class="hint">First click Connect, then hold the button (or spacebar) to talk.</p>
+  <p class="hint">Click Connect and just start talking — VAD will detect when you speak.</p>
   <div class="panels">
     <div class="panel">
       <h2>Transcript</h2>
@@ -70,19 +67,23 @@
 
 <script>
   const connectBtn = document.getElementById("connectBtn");
-  const talkBtn = document.getElementById("talkBtn");
   const statusEl = document.getElementById("status");
   const transcriptEl = document.getElementById("transcript");
   const eventLogEl = document.getElementById("eventLog");
   const remoteAudio = document.getElementById("remoteAudio");
 
-  let pc = null;          // RTCPeerConnection
-  let dc = null;          // data channel
+  let pc = null;
+  let dc = null;
   let localStream = null;
-  let audioTrack = null;
-  let isRecording = false;
   let currentAssistantEntry = null;
   let currentAssistantText = "";
+
+  // Hardcoded chunks for testing — replace with real RAG endpoint later
+  const chunks = [
+    "The mitochondria is the powerhouse of the cell.",
+    "Cells are the basic unit of life.",
+    "DNA carries genetic information."
+  ];
 
   function setStatus(text, cls) {
     statusEl.textContent = text;
@@ -116,6 +117,18 @@
   function handleEvent(event) {
     logEvent(event.type);
 
+    // --- RAG injection: fires when user finishes speaking ---
+    if (event.type === "conversation.item.done" && event.item?.role === "user") {
+      logEvent("rag", "injecting context and triggering response");
+      dc.send(JSON.stringify({
+        type: "response.create",
+        response: {
+            modalities: ["audio", "text"],
+            instructions: `You are a Feynman technique tutor. Answer the user's question using ONLY the context below.\n\nContext: ${chunks.join(" ")}`
+        }
+      }));
+    }   
+
     if (event.type === "response.audio_transcript.delta") {
       if (!currentAssistantEntry) {
         currentAssistantText = "";
@@ -130,7 +143,7 @@
     if (event.type === "response.audio_transcript.done") {
       currentAssistantEntry = null;
       currentAssistantText = "";
-      setStatus("Connected — hold to talk", "connected");
+      setStatus("Connected — just start talking", "connected");
     }
 
     if (event.type === "conversation.item.input_audio_transcription.completed") {
@@ -138,7 +151,7 @@
     }
 
     if (event.type === "response.done") {
-      setStatus("Connected — hold to talk", "connected");
+      setStatus("Connected — just start talking", "connected");
     }
 
     if (event.type === "error") {
@@ -171,17 +184,33 @@
         logEvent("webrtc", "remote audio track received");
       };
 
-      // 5. Add mic track but start muted
-      audioTrack = localStream.getAudioTracks()[0];
-      audioTrack.enabled = false; // muted until user holds button
+      // 5. Add mic track — always live, VAD handles detection
+      const audioTrack = localStream.getAudioTracks()[0];
       pc.addTrack(audioTrack, localStream);
 
-      // 6. Set up data channel for events
+      // 6. Set up data channel
       dc = pc.createDataChannel("oai-events");
-      dc.onopen = () => logEvent("datachannel", "open");
+
+      // 6a. On open: configure session to disable auto-response
+      dc.onopen = () => {
+        logEvent("datachannel", "open");
+        dc.send(JSON.stringify({
+          type: "session.update",
+          session: {
+            input_audio_transcription: { model: "whisper-1" },
+            turn_detection: {
+              type: "server_vad",
+              interrupt_response: false,
+              create_response: false
+            }
+          }
+        }));
+      };
+
+      // 6b. On message: handle all incoming events
       dc.onmessage = (e) => handleEvent(JSON.parse(e.data));
 
-      // 7. Create SDP offer and send to OpenAI
+      // 7. SDP handshake
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
@@ -201,9 +230,8 @@
       await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
 
       logEvent("webrtc", "connection established");
-      setStatus("Connected — hold to talk", "connected");
+      setStatus("Connected — just start talking", "connected");
       connectBtn.disabled = true;
-      talkBtn.disabled = false;
 
     } catch (err) {
       setStatus("Connection failed", "error");
@@ -211,40 +239,7 @@
     }
   }
 
-  function startTalking() {
-    if (isRecording || !audioTrack) return;
-    isRecording = true;
-    audioTrack.enabled = true;
-    talkBtn.classList.add("active");
-    talkBtn.textContent = "🔴 Recording...";
-    setStatus("Listening...", "listening");
-    logEvent("mic", "unmuted");
-  }
-
-  function stopTalking() {
-    if (!isRecording || !audioTrack) return;
-    isRecording = false;
-    audioTrack.enabled = false;
-    talkBtn.classList.remove("active");
-    talkBtn.textContent = "🎤 Hold to Talk";
-    setStatus("Waiting for response...", "waiting");
-    logEvent("mic", "muted — waiting for response");
-
-    // Tell OpenAI to respond now
-    if (dc && dc.readyState === "open") {
-      dc.send(JSON.stringify({ type: "input_audio_buffer.commit" }));
-      dc.send(JSON.stringify({ type: "response.create" }));
-    }
-  }
-
   connectBtn.addEventListener("click", connect);
-  talkBtn.addEventListener("mousedown", (e) => { e.preventDefault(); startTalking(); });
-  talkBtn.addEventListener("mouseup", stopTalking);
-  talkBtn.addEventListener("mouseleave", stopTalking);
-  talkBtn.addEventListener("touchstart", (e) => { e.preventDefault(); startTalking(); });
-  talkBtn.addEventListener("touchend", stopTalking);
-  document.addEventListener("keydown", (e) => { if (e.code === "Space" && !e.repeat) { e.preventDefault(); startTalking(); } });
-  document.addEventListener("keyup", (e) => { if (e.code === "Space") { e.preventDefault(); stopTalking(); } });
 </script>
 </body>
 </html>
