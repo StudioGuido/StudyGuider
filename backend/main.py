@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from api.generate import router as generate_router
+from api.s3 import router as s3_router
 from api.textbooks import router as textbooks_router
 from api.chapter import router as chapter_router
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,6 +20,7 @@ app = FastAPI()
 
 # Register endpoints
 app.include_router(generate_router)
+app.include_router(s3_router)
 app.include_router(textbooks_router)
 app.include_router(chapter_router)
 app.include_router(user_router)

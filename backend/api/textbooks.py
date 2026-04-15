@@ -1,21 +1,17 @@
-from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Depends
 import asyncpg
 import os
-from fastapi import status
-from fastapi.responses import JSONResponse
-import logging
-import uuid
+from api.auth import verify_jwt
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 @router.get("/api/getTextbooks")
-async def getTextbooks_endpoint():
-
-    request_id = str(uuid.uuid4())
-    logger.info(f"[{request_id}] GET /api/getTextbooks called")
-
+async def getTextbooks_endpoint(user_id = Depends(verify_jwt)):
+    supabase_uid = user_id.get("sub")
+    if not supabase_uid:
+        raise HTTPException(status_code=401, detail="Missing UID")
+    conn = None
     try:
         logger.info(f"[{request_id}] Connecting to database")
 
@@ -25,39 +21,31 @@ async def getTextbooks_endpoint():
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD")
         )
-        
-        logger.info(f"[{request_id}] Fetching textbook from database")
-        rows = await conn.fetch("SELECT * FROM textbooks;")
 
-        if rows == None:
-            logger.warning(f"[{request_id}] No textbooks found")
+        rows = await conn.fetch(
+            "SELECT textbook_id, textbook_title, status FROM user_textbook WHERE user_uid = $1;",
+            supabase_uid,
+        )
+
+        if not rows:
             raise HTTPException(status_code=404, detail="Titles from textbooks not found")
 
-        textbooks = [
+        return [
             {
-                "title": row["title"],
-                "author": row["author"],
-                "description": row["description"],
-                "image_path": row["image_path"]
+                "textbook_id": row["textbook_id"],
+                "textbook_title": row["textbook_title"],
+                "status": row["status"],
             }
             for row in rows
         ]
-
-        logger.info(f"[{request_id}] Successfully fetched {len(textbooks)} textbook(s)")
-
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"response": textbooks}
-            )
-
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"[{request_id}] Database error", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
-        await conn.close()
-        logger.info(f"[{request_id}] DB connection closed")
+        if conn is not None:
+            await conn.close()
 '''
 Fetches all textbooks from the database and returns a list of dictionaries 
 containing title, author, description, and image_path.
