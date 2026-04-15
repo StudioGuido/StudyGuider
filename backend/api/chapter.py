@@ -27,10 +27,14 @@ class ChapterOpenRequest(BaseModel):
 
 @router.get("/api/getChapters")
 async def getChapters_endpoint(textbook: str, user_id = Depends(verify_jwt)):
+
     '''
     This api is used to retrieve every chapter within a textbook given
     a existing textbook title
     '''
+
+    request_id = str(uuid.uuid4())
+
 
     supabase_uid = user_id.get("sub")
     if not supabase_uid:
