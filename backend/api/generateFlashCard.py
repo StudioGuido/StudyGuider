@@ -1,4 +1,8 @@
+from datetime import datetime
+
+from api.auth import verify_jwt
 from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 import os 
 import asyncpg
@@ -6,6 +10,9 @@ import random
 from fastapi import status
 from fastapi.responses import JSONResponse
 from .openAIHelper import get_openai_response
+# import asyncio 
+# from contextlib import asynccontextmanager 
+
 
 #for perf testing
 import csv
@@ -24,16 +31,19 @@ class FlashRequest(BaseModel):
 
 
 @router.post("/api/generateFlashCard")
-async def generate_endpoint(request: FlashRequest):
+async def generate_endpoint(request: FlashRequest ):  #user validation didn't go through (are we passing the user id as a jwt token??)
     '''
     This endpoint will generate a x amount of flashcards.
     It will return flashcards in a map of cards that contain
     a question and an answer
     '''
+    # user_id = user_valid.get("sub")  # Assuming the user ID is stored in the sub claim of the JWT?
 
+    user_id = '1'  # Placeholder user ID for testing purposes. Replace later
     chapter = request.chapter
     textbook = request.textbook
     count = request.count
+    
 
     #Start the timer for performance testing
     request_start = time.perf_counter()
@@ -53,6 +63,9 @@ async def generate_endpoint(request: FlashRequest):
     print("\n\n")
 
     # Validate inputs first.
+
+    #user validation
+
     if not textbook or not chapter or count <= 0:
         raise HTTPException(status_code=400, detail="Invalid textbook or chapter title")
 
@@ -63,11 +76,17 @@ async def generate_endpoint(request: FlashRequest):
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD")
         )
+
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to connect to database.")
+        
+    try: #just for now 
+        await conn.execute("""
+            INSERT INTO users(supabase_uid)
+            VALUES ($1)
+            ON CONFLICT (supabase_uid) DO NOTHING
+        """, user_id)
 
-    try:
-        # Gather chapter from textbook
         res = await conn.fetchrow("""
             SELECT c.textbook_id, c.chapter_number
             FROM chapters c
@@ -81,17 +100,14 @@ async def generate_endpoint(request: FlashRequest):
         # Extract the amount of chunks in the chapter
         textbook_id = res["textbook_id"]
         chapter_number = res["chapter_number"]
-
+        #filters only for this current user from the master flashcard table 
         existing_flashcards = await conn.fetch("""
-            SELECT id, question, answer, chunk_index
+            SELECT fc_id, question, answer, chunk_index
             FROM master_flashcard
-            WHERE textbook_id = $1 AND chapter_number = $2
-            and not exists (
-                select 1 from seen_cards sc
-                where sc.flashcard_id = master_flashcard.id
-                    
-            )
-        """, textbook_id, chapter_number)
+            WHERE textbook_id = $1 AND chapter_number = $2 AND user_id = $3 AND last_seen < NOW() - INTERVAL '1 day'
+            ORDER BY last_seen ASC
+        """, textbook_id, chapter_number, user_id)
+#larger values means it was just seen so we want to order by ascending last_seen so we get the flashcards that werent seen for a while
 
         print(f"Existing flashcards found: {len(existing_flashcards)}")
 
@@ -170,20 +186,20 @@ async def generate_endpoint(request: FlashRequest):
                             continue
 
                         try:
+                    
+                            # # Insert into seen_card table
+                            # flashcard_id = await conn.fetchval("""
+                            #     SELECT fc_id FROM master_flashcard
+                            #     WHERE textbook_id = $1 AND chapter_number = $2 AND question = $3
+                            # """, textbook_id, chapter_number, question)
+                            # await conn.execute("""
+                            #     INSERT INTO seen_card(flashcard_id, user_id)
+                            #     VALUES ($1, $2)
+                            # """, flashcard_id, user_id)
                             await conn.execute("""
-                                INSERT INTO master_flashcard(textbook_id, chapter_number, question, answer, chunk_index)
-                                VALUES ($1, $2, $3, $4, $5)
-                            """, textbook_id, chapter_number, question, answer, random_chunk)
-                            # Insert into seen_cards table
-                            flashcard_id = await conn.fetchval("""
-                                SELECT id FROM master_flashcard
-                                WHERE textbook_id = $1 AND chapter_number = $2 AND question = $3
-                            """, textbook_id, chapter_number, question)
-                            await conn.execute("""
-                                INSERT INTO seen_cards(flashcard_id, user_id)
-                                VALUES ($1, $2)
-                            """, flashcard_id, user_id) #not there yet...
-
+                            INSERT INTO master_flashcard(textbook_id, chapter_number, question, answer, chunk_index, user_id)
+                            VALUES ($1, $2, $3, $4, $5, $6)
+                        """, textbook_id, chapter_number, question, answer, random_chunk, user_id)
                         except Exception as e:
                             print("unable to populate master table", str(e))
                         else:
@@ -218,6 +234,7 @@ async def generate_endpoint(request: FlashRequest):
     except Exception as e:
         status_code = 500
         error = str(e)
+        print("TOP LEVEL ERROR:", str(e))  # add this line
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
         elapsed_time = round(time.perf_counter() - request_start, 4)
@@ -266,3 +283,5 @@ async def generate_endpoint(request: FlashRequest):
             writer.writerow(row)
 
         await conn.close()
+
+

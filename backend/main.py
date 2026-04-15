@@ -9,6 +9,12 @@ from api.user_studymat import router as user_studymat_router
 from api.generateFlashCard import router as flashcard_router
 from api.generateSummary import router as summary_router
 
+from apscheduler.schedulers.background import BackgroundScheduler
+import psycopg2
+import os
+
+
+user_id = '1' # Replace with actual user ID logic????
 app = FastAPI()
 
 # Register endpoints
@@ -36,4 +42,36 @@ app.include_router(flashcard_router)
 app.include_router(summary_router)
 
 
-# uvicorn main:app --reload
+'''Scheduler to clear seen_card table every 24 hours'''
+scheduler = BackgroundScheduler()
+
+# Scheduler setup
+scheduler = BackgroundScheduler()
+
+def cleanup():
+    try:
+        conn = psycopg2.connect(
+            host=os.getenv("DATABASE_HOST"),
+            database=os.getenv("DATABASE_NAME"),
+            user=os.getenv("DATABASE_USER"),
+            password=os.getenv("DATABASE_PASSWORD")
+        )
+        cursor = conn.cursor()  
+        cursor.execute("DELETE FROM master_flashcard WHERE created_at < NOW() - INTERVAL '30 seconds';")
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("Old rows deleted")
+    except Exception as e:
+        print(f"deleting failed: {e}")
+
+@app.on_event("startup")
+def start_scheduler():
+    scheduler.add_job(cleanup, "interval", seconds=30)
+    scheduler.start()
+    print("scheduler started")
+
+@app.on_event("shutdown")
+def shutdown_scheduler():
+    scheduler.shutdown()
+    print("scheduler stopped")

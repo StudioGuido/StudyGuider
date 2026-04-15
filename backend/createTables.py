@@ -149,48 +149,56 @@ async def init_db():
 
             usersTable = """
             CREATE TABLE users (
-            supabase_uid VARCHAR(255) PRIMARY KEY,
-            username VARCHAR(150) UNIQUE NOT NULL,
-            created_at TIMESTAMP DEFAULT NOW(),
-            last_login TIMESTAMP
+            supabase_uid VARCHAR(255) PRIMARY KEY
             );
             """
             await conn.execute(usersTable)
-            
-            master_flashcard_table = """
-            CREATE TABLE IF NOT EXISTS master_flashcard(
-            id SERIAL PRIMARY KEY, 
-            question TEXT NOT NULL,
-            answer TEXT NOT NULL, 
-            textbook_id INTEGER NOT NULL,
-            chapter_number INTEGER NOT NULL,
-            chunk_index INTEGER NOT NULL,
-            FOREIGN KEY (textbook_id, chapter_number) 
-            REFERENCES chapters(textbook_id, chapter_number) 
-            ON DELETE CASCADE
-            );
-            """
-            await conn.execute(master_flashcard_table)
 
             flashCardSetTable = """
-            CREATE TABLE flash_card_set (
-            fcset_id SERIAL PRIMARY KEY,
-            set_title VARCHAR(255) UNIQUE NOT NULL,
-            user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
-            UNIQUE (user_id, set_title)
+            CREATE TABLE IF NOT EXISTS flash_card_set (
+                fcset_id SERIAL PRIMARY KEY,
+                set_title VARCHAR(255) NOT NULL,
+                user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
+                UNIQUE (user_id, set_title)
             );
             """
             await conn.execute(flashCardSetTable)
 
-            flashCardTable = """
-            CREATE TABLE flash_card (
-            fc_id SERIAL PRIMARY KEY,
-            fcset_id INTEGER REFERENCES flash_card_set(fcset_id) ON DELETE CASCADE,
-            question TEXT NOT NULL,
-            answer TEXT NOT NULL
+            master_flashcard_table = """
+            CREATE TABLE IF NOT EXISTS master_flashcard(
+                fc_id SERIAL PRIMARY KEY,
+                question TEXT NOT NULL,
+                answer TEXT NOT NULL,
+                textbook_id INTEGER NOT NULL,
+                chapter_number INTEGER NOT NULL,
+                chunk_index INTEGER NOT NULL,
+                user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
+                last_seen TIMESTAMP DEFAULT NOW(),
+                created_at TIMESTAMP DEFAULT NOW(),
+                FOREIGN KEY (textbook_id, chapter_number, chunk_index)
+                REFERENCES chapter_embeddings(textbook_id, chapter_number, chunk_index)
+                ON DELETE CASCADE
             );
             """
-            await conn.execute(flashCardTable)
+            await conn.execute(master_flashcard_table)
+
+            flash_card_set_assignment_table = """
+            CREATE TABLE IF NOT EXISTS flash_card_set_assignment (
+                fcset_id INTEGER NOT NULL REFERENCES flash_card_set(fcset_id) ON DELETE CASCADE,
+                master_fc_id INTEGER NOT NULL REFERENCES master_flashcard(fc_id) ON DELETE CASCADE,
+                PRIMARY KEY (fcset_id, master_fc_id)
+            );
+            """
+            await conn.execute(flash_card_set_assignment_table)
+            
+            seenflashcards_table = """
+            CREATE TABLE IF NOT EXISTS seen_card (
+                user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
+                flashcard_id INTEGER NOT NULL REFERENCES master_flashcard(fc_id) ON DELETE CASCADE,
+                PRIMARY KEY (user_id, flashcard_id)
+            );
+            """
+            await conn.execute(seenflashcards_table)
 
             summaryTable = """
             CREATE TABLE summary (
@@ -215,5 +223,3 @@ async def init_db():
 
 
 asyncio.run(init_db())
-
-
