@@ -2,7 +2,6 @@ import boto3
 import os
 import uuid
 from pathlib import Path
-
 from fastapi import APIRouter, HTTPException, Depends, status, BackgroundTasks, Body
 from api.auth import verify_jwt
 from pydantic import BaseModel

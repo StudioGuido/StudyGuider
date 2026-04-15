@@ -2,12 +2,14 @@ from fastapi import APIRouter, HTTPException, Depends
 import asyncpg
 import os
 from api.auth import verify_jwt
-
+import logging
 router = APIRouter()
 logger = logging.getLogger(__name__)
+import uuid
 
 @router.get("/api/getTextbooks")
 async def getTextbooks_endpoint(user_id = Depends(verify_jwt)):
+    request_id = str(uuid.uuid4())
     supabase_uid = user_id.get("sub")
     if not supabase_uid:
         raise HTTPException(status_code=401, detail="Missing UID")
