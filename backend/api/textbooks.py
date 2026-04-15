@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 import asyncpg
 import os
+import logging
 from api.auth import verify_jwt
 
 router = APIRouter()
