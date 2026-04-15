@@ -52,13 +52,8 @@ AUTH_HEADERS = {
 def testUserCreation():
     url = "http://0.0.0.0:8000/api/createUser"
 
-    json = {
-        "username": "pierce",
-    }
-
     response = requests.post(
         url=url,
-        json=json,
         headers={"Content-Type": "application/json", **AUTH_HEADERS},
     )
 
@@ -75,61 +70,22 @@ def testUserDeletion():
     print(response.json())
 
 
-def testUserUpdates():
-    url = "http://0.0.0.0:8000/api/updateUser"
-
-    json = {
-        "username": "pierce's cooler username",
-    }
-
-    response = requests.put(url=url, json=json, headers=AUTH_HEADERS)
-
-    print("Updated USER")
-    print(response.json())
-
-
-def testUserGet():
-    url = "http://0.0.0.0:8000/api/users/me"
-
-    response = requests.get(url, headers=AUTH_HEADERS)
-
-    print("USER json:")
-    print(response.json())
-
-
-test_no = 1
-
+test_no = 0
 match test_no:
-
     case 0:
-        testUserGet()
-
+        """
+        Test 1: Basic User creation:
+        """
+        testUserCreation()
     case 1:
         """
-        Test 1: Basic User creation and viewing of username:
-        """
-        testUserCreation()
-    case 2:
-        """
-        Test 2: Update username and view result:
-        """
-        testUserUpdates()
-        testUserGet()
-    case 3:
-        """
-        Test 3: Delete user:
+        Test 2: Basic User deletion:
         """
         testUserDeletion()
-    case 4:
+    case 2:
         """
-        Test 4: All tests combined:
+        Test 3: Creation+Deletion combined:
         """
         testUserCreation()
-        time.sleep(5)  
-        testUserGet()
-        time.sleep(5)
-        testUserUpdates()
-        time.sleep(5)
-        testUserGet()
-        time.sleep(5)
+        time.sleep(10)  
         testUserDeletion()
