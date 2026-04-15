@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel
 import os
 import asyncpg
@@ -6,24 +6,37 @@ from fastapi.responses import JSONResponse
 from fastapi import status
 import logging
 import uuid
+from api.auth import verify_jwt
+import redis.asyncio as redis
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+redis_client = redis.Redis(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT"), db=os.getenv("REDIS_DB"))
 
 class ChapterRequest(BaseModel):
     textbook: str
+    user_id: str
+
+#Used to reopen a chapter with Redis cache
+class ChapterOpenRequest(BaseModel):
+    textbook: str
+    chapter_title: str
+    user_id: str
 
 
 @router.get("/api/getChapters")
-async def getChapters_endpoint(textbook: str):
+async def getChapters_endpoint(textbook: str, user_id = Depends(verify_jwt)):
     '''
     This api is used to retrieve every chapter within a textbook given
     a existing textbook title
     '''
-    request_id = str(uuid.uuid4())
 
-    logger.info(f"[{request_id}] Fetching chapters for textbook=%s", textbook)
+    supabase_uid = user_id.get("sub")
+    if not supabase_uid:
+        raise HTTPException(status_code=401, detail="Missing UID")
+    conn = None
+
     try:
         conn = await asyncpg.connect(
         host=os.getenv("DATABASE_HOST"),
@@ -69,4 +82,26 @@ async def getChapters_endpoint(textbook: str):
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
     finally:
-        await conn.close()
+        if conn is not None:
+            await conn.close()
+
+
+@router.post("/api/openChapter")
+async def openChapter_endpoint(request: ChapterOpenRequest, user_id=Depends(verify_jwt)):
+    supabase_uid = user_id.get("sub")
+    if not supabase_uid:
+        raise HTTPException(status_code=401, detail="Missing UID")
+
+    try:
+        redis_key = f"chapter:{request.textbook}:{request.chapter_title}:{supabase_uid}"
+        ttl_seconds = 600
+        await redis_client.set(redis_key, request.chapter_title, ex=ttl_seconds)
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "response": "Chapter opened successfully",
+                "active_chapter": request.chapter_title,
+            },
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Redis error: {str(e)}")
