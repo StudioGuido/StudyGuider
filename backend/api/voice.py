@@ -8,7 +8,7 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 router = APIRouter()
 
-@router.get("/session")
+@router.get("/api/session")
 async def create_session():
     async with httpx.AsyncClient() as client:
         response = await client.post(

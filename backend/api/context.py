@@ -1,4 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi import status
 from pydantic import BaseModel
 from api.embedding_utils import generate_contextHelper
 import logging
@@ -13,7 +15,7 @@ class TranscriptRequest(BaseModel):
     chapter: str
     textbook: str
 
-@router.post("/context")
+@router.post("/api/context")
 async def get_context(request: TranscriptRequest):
     request_id = str(uuid.uuid4())
     '''
@@ -38,7 +40,7 @@ async def get_context(request: TranscriptRequest):
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={ "response": contextResponse})
+            content={"response": contextResponse})
     except HTTPException:
         raise
     except Exception as e:
