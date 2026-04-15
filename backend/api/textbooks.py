@@ -4,7 +4,7 @@ import os
 from api.auth import verify_jwt
 
 router = APIRouter()
-'''allows grouping endpoints'''
+logger = logging.getLogger(__name__)
 
 @router.get("/api/getTextbooks")
 async def getTextbooks_endpoint(user_id = Depends(verify_jwt)):
@@ -13,6 +13,8 @@ async def getTextbooks_endpoint(user_id = Depends(verify_jwt)):
         raise HTTPException(status_code=401, detail="Missing UID")
     conn = None
     try:
+        logger.info(f"[{request_id}] Connecting to database")
+
         conn = await asyncpg.connect(
             host=os.getenv("DATABASE_HOST"),
             database=os.getenv("DATABASE_NAME"),
@@ -39,6 +41,7 @@ async def getTextbooks_endpoint(user_id = Depends(verify_jwt)):
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"[{request_id}] Database error", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
         if conn is not None:
