@@ -85,6 +85,14 @@ async def getChapters_endpoint(textbook_id: str, user_id = Depends(verify_jwt)):
             await conn.close()
 
 
+@router.get("/api/redis/health")
+async def redis_health():
+    try:
+        pong = await redis_client.ping()
+        return {"ok": bool(pong)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Redis error: {str(e)}")
+
 @router.post("/api/openChapter")
 async def openChapter_endpoint(request: ChapterOpenRequest, user_id=Depends(verify_jwt)):
     supabase_uid = user_id.get("sub")
