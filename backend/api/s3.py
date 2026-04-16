@@ -38,7 +38,7 @@ s3 = boto3.client(
 # s3 = boto3.client("s3")
 
 class ProcessRequest(BaseModel):
-    book_id: str
+    book_id: int
     file_key: str
 
 def upload_file(local_path: str, *, key_prefix: str = "textbooks/uploads") -> str:
@@ -90,12 +90,13 @@ async def upload(supabase_uid, path_arr, textbook_id):
                 # Then insert into DB
                 await conn.execute(
                     """
-                    INSERT INTO textbook_chapter (chapter_id, textbook_id)
-                    VALUES ($1, $2)
-                    ON CONFLICT (chapter_id, textbook_id) DO NOTHING;
+                    INSERT INTO chapters (textbook_id, chapter_number, chapter_title)
+                    VALUES ($1, $2, $3)
+                    ON CONFLICT (textbook_id, chapter_number) DO NOTHING;
                     """,
-                    chapter_count,
                     textbook_id,
+                    chapter_count,
+                    "chapter_title_placeholder",
                 )
 
                 uploaded.append(s3_key)
@@ -148,17 +149,21 @@ async def get_url(user_valid=Depends(verify_jwt)):
             password=os.getenv("DATABASE_PASSWORD"),
         )
         status="processing"
-        await conn.execute(
+        row = await conn.fetchrow(
             """
-            INSERT INTO user_textbook (textbook_id, user_uid, status, textbook_title)
-            VALUES ($1, $2, $3, $4)
-            ON CONFLICT (textbook_id) DO NOTHING;
+            INSERT INTO textbooks (user_uid, title, author, description, image_path, status)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id;
             """,
-            textbook_id,
             supabase_uid,
+            "title_placeholder",
+            "author_placeholder",
+            "desc_placeholder",
+            "image_path_placeholder",
             status,
-            "placeholder",
         )
+
+        textbook_id = row["id"]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
@@ -211,10 +216,10 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
             )
             await conn.execute(
                 """
-                UPDATE user_textbook
+                UPDATE textbooks
                 SET status = 'complete',
-                  textbook_title = $1
-                WHERE textbook_id = $2
+                    title = $1
+                WHERE id = $2;
                 """,
                 textbook_title,
                 request.book_id,
@@ -250,7 +255,7 @@ async def get_job_status(textbook_id: str):
         row = await conn.fetchrow(
             """
             SELECT status
-            FROM user_textbook
+            FROM textbooks
             WHERE textbook_id = $1
             """,
             textbook_id,

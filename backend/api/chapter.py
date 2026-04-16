@@ -24,21 +24,18 @@ class ChapterRequest(BaseModel):
 
 #Used to reopen a chapter with Redis cache
 class ChapterOpenRequest(BaseModel):
-    textbook: str
+    textbook: int
     chapter_title: str
     user_id: str
 
 
 @router.get("/api/getChapters")
-async def getChapters_endpoint(textbook_id: str, user_id = Depends(verify_jwt)):
+async def getChapters_endpoint(textbook_id: int, user_id = Depends(verify_jwt)):
 
     '''
     This api is used to retrieve every chapter within a textbook given
     a existing textbook title
     '''
-
-    request_id = str(uuid.uuid4())
-
 
     supabase_uid = user_id.get("sub")
     if not supabase_uid:
@@ -53,20 +50,15 @@ async def getChapters_endpoint(textbook_id: str, user_id = Depends(verify_jwt)):
         password=os.getenv("DATABASE_PASSWORD")
         )
 
-        logger.debug(f"[{request_id}] Successfully found textbook with id: {textbook_id}")
-
         rows = await conn.fetch(
-            "SELECT chapter_id FROM textbook_chapter WHERE textbook_id = $1;",
+            "SELECT chapter_number FROM chapters WHERE textbook_id = $1;",
             textbook_id
         )
 
         if not rows:
-            logger.warning(f"[{request_id}] No chapters found for textbook_id=%s", textbook_id)
             raise HTTPException(status_code=404, detail="Chapter Titles not found")
 
-        logger.debug(f"[{request_id}] Successfully retrieved all chapters")
-
-        chapters = [row["chapter_id"] for row in rows]
+        chapters = [row["chapter_number"] for row in rows]
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -77,7 +69,6 @@ async def getChapters_endpoint(textbook_id: str, user_id = Depends(verify_jwt)):
         raise
 
     except Exception as e:
-        logger.error(f"[{request_id}] Database error occured")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
     finally:

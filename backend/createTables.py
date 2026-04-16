@@ -97,10 +97,12 @@ async def init_db():
             create_textbook_table_query = """
             CREATE TABLE IF NOT EXISTS textbooks (
                 id SERIAL PRIMARY KEY,
+                user_uid VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
                 title TEXT NOT NULL,
                 author TEXT NOT NULL,
                 description TEXT NOT NULL,
                 image_path TEXT NOT NULL
+                status VARCHAR(255) NOT NULL
             );
             """
             await conn.execute(create_textbook_table_query)
@@ -207,30 +209,30 @@ async def init_db():
             """
             await conn.execute(summaryTable)
             
-            # -- Textbooks table
-            user_textbook_table = """
-            CREATE TABLE user_textbook (
-                textbook_id VARCHAR(255) PRIMARY KEY,
-                textbook_title VARCHAR(255) NOT NULL,
-                user_uid VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
-                status VARCHAR(255) NOT NULL
-            );
-            """
-            await conn.execute(user_textbook_table)
+            # -- Textbooks table - REFACTORED
+            # user_textbook_table = """
+            # CREATE TABLE user_textbook (
+            #     textbook_id VARCHAR(255) PRIMARY KEY,
+            #     textbook_title VARCHAR(255) NOT NULL,
+            #     user_uid VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
+            #     status VARCHAR(255) NOT NULL
+            # );
+            # """
+            # await conn.execute(user_textbook_table)
 
 
-            # -- Chapters table
-            textbook_chapter_table = """
-            CREATE TABLE textbook_chapter (
-                chapter_id INTEGER,
-                textbook_id VARCHAR(255),
-                PRIMARY KEY (chapter_id, textbook_id),
-                FOREIGN KEY (textbook_id)
-                    REFERENCES user_textbook(textbook_id)
-                    ON DELETE CASCADE
-            );
-            """
-            await conn.execute(textbook_chapter_table)
+            # -- Chapters table - REFACTORED
+            # textbook_chapter_table = """
+            # CREATE TABLE textbook_chapter (
+            #     chapter_id INTEGER,
+            #     textbook_id VARCHAR(255),
+            #     PRIMARY KEY (chapter_id, textbook_id),
+            #     FOREIGN KEY (textbook_id)
+            #         REFERENCES user_textbook(textbook_id)
+            #         ON DELETE CASCADE
+            # );
+            # """
+            # await conn.execute(textbook_chapter_table)
 
             await conn.close()
 

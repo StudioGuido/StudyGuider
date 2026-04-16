@@ -34,7 +34,7 @@ export default function Understanding({ defaultMode = "summary" }) {
         .then((data) => setSummary(data?.text ?? null));
     }
   }, [bookId, chapterId, mode]); // revisit
-
+  
   const bookTitle = "Sample Book Title";
   const chapterTitle = "Chapter 1: Introduction";
 
