@@ -1,28 +1,24 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
-import { fakeApi } from "../services/fakeApi";
+import { supabase } from "../services/supabaseClient";
 import { X } from 'lucide-react';
 
 export default function BookModal({ book, onClose }) {
   const navigate = useNavigate();
   if (!book) return null;
 
-  const goToFirstChapter = async () => {
-    const chapters = await fakeApi.getChapters(book.id);
-    const first = chapters[0];
-    if (first) {
-      navigate(`/books/${book.id}/chapters/${first.id}/understanding`);
-      return true;
-    }
-    return false;
-  };
-
   async function handleStart() {
+    const session = await supabase.auth.getSession();
+    const token = session.data.session.access_token;
+
+    const res = await fetch(
+      `http://localhost:8000/api/getChapters?textbook_id=${book.id}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const data = await res.json();
+    const firstChapter = data.response[0];
+
     onClose();
-    const navigated = await goToFirstChapter();
-    if (!navigated) {
-      navigate(`/books/${book.id}/chapters`);
-    }
+    navigate(`/books/${book.id}/chapters/${firstChapter}/understanding`);
   }
 
   return (

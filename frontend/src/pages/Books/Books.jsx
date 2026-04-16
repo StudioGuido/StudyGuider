@@ -27,9 +27,17 @@ export default function Books() {
   };
   
   useEffect(() => {
-    fakeApi.getBooks().then(setBooks);
-    console.log(user);
-    getJWT();
+    async function fetchBooks() {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session.access_token;
+
+      const res = await fetch("http://localhost:8000/api/getTextbooks", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setBooks(data);
+    }
+    fetchBooks();
   }, []);
   
   if (!books)
@@ -141,8 +149,8 @@ async function pollStatus(textbookId, currentToken) {
           <ul className="space-y-3">
             {books.map((b) => (
               <BookCard
-                key={b.id}
-                book={b}
+                key={b.textbook_id}
+                book={{ id: b.textbook_id, title: b.textbook_title }}
                 onSelect={(book) => setSelectedBook(book)}
               />
             ))}
