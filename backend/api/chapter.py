@@ -12,7 +12,11 @@ import redis.asyncio as redis
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-redis_client = redis.Redis(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT"), db=os.getenv("REDIS_DB"))
+redis_client = redis.Redis(
+    host=os.getenv("REDIS_HOST", "localhost"),
+    port=int(os.getenv("REDIS_PORT", "6379")),
+    db=int(os.getenv("REDIS_DB", "0")),
+)
 
 class ChapterRequest(BaseModel):
     textbook: str
@@ -26,7 +30,7 @@ class ChapterOpenRequest(BaseModel):
 
 
 @router.get("/api/getChapters")
-async def getChapters_endpoint(textbook: str, user_id = Depends(verify_jwt)):
+async def getChapters_endpoint(textbook_id: str, user_id = Depends(verify_jwt)):
 
     '''
     This api is used to retrieve every chapter within a textbook given
@@ -49,30 +53,21 @@ async def getChapters_endpoint(textbook: str, user_id = Depends(verify_jwt)):
         password=os.getenv("DATABASE_PASSWORD")
         )
 
-        textbook_id = await conn.fetchval(
-        "SELECT id FROM textbooks WHERE title = $1;",
-        textbook)
-
-
-        if textbook_id is None:
-            logger.warning(f"[{request_id}] Textbook not found: %s", textbook)
-            raise HTTPException(status_code=404, detail="Textbook not found")
-
         logger.debug(f"[{request_id}] Successfully found textbook with id: {textbook_id}")
 
         rows = await conn.fetch(
-            "SELECT chapter_title FROM chapters WHERE textbook_id = $1;",
+            "SELECT chapter_id FROM textbook_chapter WHERE textbook_id = $1;",
             textbook_id
         )
 
         if not rows:
             logger.warning(f"[{request_id}] No chapters found for textbook_id=%s", textbook_id)
-            raise HTTPException(status_code=404, detail="Chater Titles not found")
+            raise HTTPException(status_code=404, detail="Chapter Titles not found")
 
         logger.debug(f"[{request_id}] Successfully retrieved all chapters")
 
-        # select only chapter_titles from row
-        chapters = [row["chapter_title"] for row in rows]
+        chapters = [row["chapter_id"] for row in rows]
+
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={"response": chapters}
