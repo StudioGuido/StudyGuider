@@ -1,6 +1,7 @@
 import pandas as pd
 from langchain.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+import fitz
 import re
 
 
@@ -64,19 +65,23 @@ def remove_Anything_Before_Content(text:str):
     return cleaned_text
 
 
-def splitIntoChunks_to_MapToChapter(chapters:list):
+def splitIntoChunks_to_MapToChapter(pdf_paths: list[str]):
     '''
     This function will split each chapters text into chunks.
     It then creates a hashmap with format:
 
-    {1: text, 2: text, ....}
+    {1: [text], 2: [text], ....}
     '''
     chapterChunksMap = {}
 
     # Create a text splitter instance with desired chunk size and overlap
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
-    for i, chapter in enumerate(chapters, start=1):
-        chunks = text_splitter.split_text(chapter)
+    for i, pdf_path in enumerate(pdf_paths, start=1):
+        reader = fitz.open(pdf_path)
+        
+        chapter_text = " ".join(page.get_text() for page in reader if page.get_text())
+
+        chunks = text_splitter.split_text(chapter_text)
         
         chapterChunksMap[i] = chunks
 

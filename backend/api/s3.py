@@ -11,6 +11,7 @@ import time
 import re
 import fitz
 import api._retrieveChapters as rc
+import api._creatingEmbeddings as ce
 
 """
 Notes: 
@@ -161,6 +162,19 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
         # Generates list of local downloaded chapter paths
         listOfChapters = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
         
+        # TODO: Call creating embeddings function here
+        print(1)
+        await ce.fillTables(listOfChapters, request.book_id)
+        print(2)
+        """
+        1. Run the app with s3 upload once to get the seperate files
+        2. Write your helper function that will create embeddings
+        2.5 Add those embeddings to the database
+        3. Test that you are doing this correctly
+        4. Then you can integrate it into the main code.
+        5. Merge your code with Pierce's code
+        
+        """
         # creates keys from filepaths and uploads chunks to s3
         await upload(supabase_uid, listOfChapters)
         

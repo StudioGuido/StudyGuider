@@ -117,19 +117,19 @@ async def init_db():
             """
             await conn.execute(chaptersTable)
 
-            embeddingTable = """
-            CREATE TABLE IF NOT EXISTS chapter_embeddings (
-                textbook_id INTEGER NOT NULL,
-                chapter_number INTEGER NOT NULL,
-                chunk_index INTEGER NOT NULL,
-                embedding vector(384) NOT NULL,
-                chunk_text TEXT NOT NULL,
-                PRIMARY KEY (textbook_id, chapter_number, chunk_index),
-                FOREIGN KEY (textbook_id, chapter_number) REFERENCES chapters (textbook_id, chapter_number)
-                    ON DELETE CASCADE
-            );
-            """
-            await conn.execute(embeddingTable)
+            # embeddingTable = """
+            # CREATE TABLE IF NOT EXISTS chapter_embeddings (
+            #     textbook_id VARCHAR(255) REFERENCES user_textbook(textbook_id) ON DELETE CASCADE,
+            #     chapter_number INTEGER NOT NULL,
+            #     chunk_index INTEGER NOT NULL,
+            #     embedding vector(384) NOT NULL,
+            #     chunk_text TEXT NOT NULL,
+            #     PRIMARY KEY (textbook_id, chapter_number, chunk_index),
+            #     FOREIGN KEY (textbook_id, chapter_number) REFERENCES chapters (textbook_id, chapter_number)
+            #         ON DELETE CASCADE
+            # );
+            # """
+            # await conn.execute(embeddingTable)
 
             # usersTable = """
             # CREATE TABLE users (
@@ -226,6 +226,21 @@ async def init_db():
             );
             """
             await conn.execute(textbook_chapter_table)
+
+            # -- Embeddings table
+            embeddingTable = """
+            CREATE TABLE IF NOT EXISTS chapter_embeddings (
+                textbook_id VARCHAR(255) REFERENCES user_textbook(textbook_id) ON DELETE CASCADE,
+                chapter_number INTEGER NOT NULL,
+                chunk_index INTEGER NOT NULL,
+                embedding vector(384) NOT NULL,
+                chunk_text TEXT NOT NULL,
+                PRIMARY KEY (textbook_id, chapter_number, chunk_index),
+                FOREIGN KEY (textbook_id, chapter_number) REFERENCES chapters (textbook_id, chapter_number)
+                    ON DELETE CASCADE
+            );
+            """
+            await conn.execute(embeddingTable)
 
             await conn.close()
 
