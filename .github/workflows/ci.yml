@@ -65,7 +65,7 @@ jobs:
         run: docker compose up -d --remove-orphans
 
       - name: Wait for backend
-        run: sleep 60
+        run: sleep 250
 
       - name: Check backend health
         run: curl --fail http://localhost:8000/health
