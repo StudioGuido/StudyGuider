@@ -61,9 +61,6 @@ def upload_file(local_path: str, *, key_prefix: str = "textbooks/uploads") -> st
 async def upload(supabase_uid, path_arr, textbook_id):
     uploaded = []
     failed = []
-
-    upload_batch_id = str(uuid.uuid4())
-    print("5", path_arr)
     
     conn = None
     try:
@@ -73,14 +70,24 @@ async def upload(supabase_uid, path_arr, textbook_id):
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD"),
         )
-        
-        # Iterates over paths, uploading them to s3 and postgre db
+
         chapter_count = 1
+
+        # Iterate over paths, uploading them to S3 and inserting into DB
         for path in path_arr:
-            print("6", path)
             try:
-                # Generates chapter id and insert chapter into the db
-                chapter_id = str(uuid.uuid4())
+                s3_key = f"users/{supabase_uid}/textbooks/{textbook_id}/chapters/{chapter_count}"
+                # print(f"Uploading {local_file_path} -> {s3_key}")
+
+                # Upload to S3 FIRST
+                s3.upload_file(
+                    path,
+                    BUCKET,
+                    s3_key,
+                    ExtraArgs={"ContentType": "application/pdf"},
+                )
+
+                # Then insert into DB
                 await conn.execute(
                     """
                     INSERT INTO textbook_chapter (chapter_id, textbook_id)
@@ -90,33 +97,25 @@ async def upload(supabase_uid, path_arr, textbook_id):
                     chapter_count,
                     textbook_id,
                 )
-                chapter_count+=1
-                
-                # chapter_name = Path(path).name or "chapter.pdf"
-                # s3_key = f"textbooks/{supabase_uid}/{upload_batch_id}/{file_name}"
-                local_file_path = Path(path)
-                print(local_file_path.parts)
-                s3_key = f"users/{supabase_uid}/textbooks/{textbook_id}/chapters/{chapter_count}"
-                s3.upload_file(
-                    path,
-                    BUCKET,
-                    s3_key,
-                    ExtraArgs={"ContentType": "application/pdf"},
-                )
+
                 uploaded.append(s3_key)
+                chapter_count += 1
+
             except Exception as e:
                 failed.append(path)
-                print(f"Error: {e}")
-                
+                print(f"Error uploading {path}: {e}")
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
     finally:
-        if conn: await conn.close()
-    
+        if conn:
+            await conn.close()
+
     all_ok = len(failed) == 0
+
     return {
         "message": "All files uploaded successfully" if all_ok else "Some files failed to upload",
-        "upload_batch_id": upload_batch_id,
         "uploaded": uploaded,
         "failed": failed,
     }
