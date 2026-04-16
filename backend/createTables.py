@@ -211,6 +211,7 @@ async def init_db():
             user_textbook_table = """
             CREATE TABLE user_textbook (
                 textbook_id VARCHAR(255) PRIMARY KEY,
+                textbook_title VARCHAR(255) NOT NULL,
                 user_uid VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
                 status VARCHAR(255) NOT NULL
             );
@@ -221,8 +222,12 @@ async def init_db():
             # -- Chapters table
             textbook_chapter_table = """
             CREATE TABLE textbook_chapter (
-                chapter_id VARCHAR(255) PRIMARY KEY,
-                textbook_id VARCHAR(255) REFERENCES user_textbook(textbook_id) ON DELETE CASCADE
+                chapter_id INTEGER,
+                textbook_id VARCHAR(255),
+                PRIMARY KEY (chapter_id, textbook_id),
+                FOREIGN KEY (textbook_id)
+                    REFERENCES user_textbook(textbook_id)
+                    ON DELETE CASCADE
             );
             """
             await conn.execute(textbook_chapter_table)

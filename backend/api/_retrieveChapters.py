@@ -26,6 +26,7 @@ def is_non_chapter_title(title_lower):
 
 def extract_chapters_from_pdf_Updated_Better_Version(pdf_path, supabase_uid):
     doc = fitz.open(pdf_path)
+    textbook_title = doc.metadata["title"]
     toc = doc.get_toc()
     mapOfChapters = []
 
@@ -167,7 +168,7 @@ def extract_chapters_from_pdf_Updated_Better_Version(pdf_path, supabase_uid):
 
     doc.close()
 
-    return listOfChapters
+    return listOfChapters, textbook_title
 
 
 def find_chapters_by_page(page, toc_title=""):

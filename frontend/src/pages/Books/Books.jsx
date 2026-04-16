@@ -16,9 +16,20 @@ export default function Books() {
   const [uploadError, setUploadError] = useState(null);
   const [status, setStatus] = useState("");
 
+  async function getJWT() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const currentToken = sessionData.session?.access_token;
+    console.log(currentToken)
+  }
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+  
   useEffect(() => {
     fakeApi.getBooks().then(setBooks);
     console.log(user);
+    getJWT();
   }, []);
   
   if (!books)
@@ -111,7 +122,14 @@ async function pollStatus(textbookId, currentToken) {
 
   return (
     <main className="min-h-screen text-white flex items-center justify-center px-4">
+              <button
+        onClick={handleSignOut}
+        className="absolute top-8 right-8 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm transition-colors"
+      >
+        Sign Out
+      </button>
       <section className="w-full max-w-2xl">
+        
         <header className="text-center mb-6">
           <h1 className="text-4xl font-extrabold">Welcome, {user?.user_metadata?.firstName || user?.email || "User"}!</h1>
           <p className="text-gray-300 mt-2">

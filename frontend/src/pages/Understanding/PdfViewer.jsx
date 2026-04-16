@@ -1,15 +1,47 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Document, Page } from "react-pdf";
 import "./pdf-worker-setup";
+
+const RENDER_WIDTH = 800; // fixed rasterisation width — never changes
 
 export default function PdfViewer({ fileUrl, initialScale = 1 }) {
   const [numPages, setNumPages] = useState(0);
   const [scale, setScale] = useState(initialScale);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [pageHeight, setPageHeight] = useState(0);
+  const [animateTransform, setAnimateTransform] = useState(false);
+  const containerRef = useRef(null);
+  const animateTimerRef = useRef(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    let initialized = false;
+    const observer = new ResizeObserver(([entry]) => {
+      const w = entry.contentRect.width - 32; // subtract px-4 padding
+      setContainerWidth(w);
+      // Only animate after the initial measurement, not on zoom
+      if (initialized) {
+        setAnimateTransform(true);
+        clearTimeout(animateTimerRef.current);
+        animateTimerRef.current = setTimeout(() => setAnimateTransform(false), 350);
+      }
+      initialized = true;
+    });
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      clearTimeout(animateTimerRef.current);
+    };
+  }, []);
 
   const onDocumentLoad = ({ numPages }) => {
     setNumPages(numPages);
   };
+
+  // CSS scale factor: at 100% zoom the page fits the container width
+  const cssScale = containerWidth > 0 ? (containerWidth / RENDER_WIDTH) * scale : 1;
 
   const zoomIn = () =>
     setScale((s) => Math.min(Math.round(s * 1.1 * 10) / 10, 3));
@@ -52,24 +84,42 @@ export default function PdfViewer({ fileUrl, initialScale = 1 }) {
       </div>
 
       {/* Scrollable content area with all pages */}
-      <div className="flex-1 overflow-auto bg-[#050509] px-4 py-3">
+      <div ref={containerRef} className="flex-1 overflow-auto bg-[#050509] py-3">
         <Document
           file={fileUrl}
           onLoadSuccess={onDocumentLoad}
           loading={
-            <div className="text-xs text-slate-300">Loading textbook…</div>
+            <div className="px-4 text-xs text-slate-300">Loading textbook…</div>
           }
         >
-          <div className="flex flex-col items-center gap-4">
+          <div className="inline-flex min-w-full flex-col items-center gap-4 px-4">
             {Array.from({ length: numPages }, (_, index) => (
-              <Page
+              <div
                 key={index + 1}
-                pageNumber={index + 1}
-                scale={scale}
-                renderAnnotationLayer={false}
-                renderTextLayer={false}
-                className="shadow-2xl shadow-black/70"
-              />
+                style={{
+                  width: RENDER_WIDTH * cssScale,
+                  height: pageHeight ? pageHeight * cssScale : "auto",
+                  overflow: "hidden",
+                  transition: animateTransform ? "width 0.3s ease, height 0.3s ease" : "none",
+                }}
+              >
+                <div
+                  style={{
+                    transform: `scale(${cssScale})`,
+                    transformOrigin: "top left",
+                    transition: animateTransform ? "transform 0.3s ease" : "none",
+                  }}
+                >
+                  <Page
+                    pageNumber={index + 1}
+                    width={RENDER_WIDTH}
+                    onLoadSuccess={index === 0 ? (page) => setPageHeight(page.height) : undefined}
+                    renderAnnotationLayer={false}
+                    renderTextLayer={false}
+                    className="shadow-2xl shadow-black/70"
+                  />
+                </div>
+              </div>
             ))}
           </div>
         </Document>

@@ -8,6 +8,7 @@ export default function ChapterSidebar({ className = "", activePhase }) {
   const [chapters, setChapters] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedChapterId, setSelectedChapterId] = useState("");
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -46,48 +47,63 @@ export default function ChapterSidebar({ className = "", activePhase }) {
     <>
       <aside
         className={[
-          "w-80 shrink-0 h-screen sticky top-0",
+          "shrink-0 h-screen sticky top-0 overflow-hidden transition-all duration-300",
           "bg-neutral-950 text-slate-50 border-r border-neutral-800",
+          collapsed ? "w-14" : "w-80",
           className,
         ].join(" ")}
         aria-label="Chapter navigation"
       >
-        <header className="px-4 pb-3 pt-5 border-b border-neutral-800">
-          <h2 className="text-xl font-semibold">{title}</h2>
-          {authors && <p className="text-sm text-slate-300">{authors}</p>}
-        </header>
+        {/* Toggle button */}
+        <div className="flex items-center pr-2 pl-2 pt-4 pb-2">
+          <button
+            type="button"
+            onClick={() => setCollapsed((c) => !c)}
+            className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-neutral-800 transition-colors"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            <span className="text-lg leading-none">&#9776;</span>
+          </button>
+        </div>
 
-        <nav className="p-3 overflow-y-auto h-[calc(100%-4.25rem)]">
-          <ul className="space-y-2">
-            {chapters.map((c, idx) => (
-              <li key={c.id}>
-                <NavLink
-                  to={`/books/${bookId}/chapters/${c.id}/${activePhase === "understanding" ? "understanding" : "reinforce/flashcards"}`}
-                  className={({ isActive }) => getChapterClasses(isActive)}
-                  style={({ isActive }) =>
-                    isActive ? { color: "#000000" } : undefined
-                  }
-                  end={false}
+        <div className={`w-80 transition-opacity duration-300 ${collapsed ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+          <header className="px-4 pb-3 pt-1 border-b border-neutral-800">
+            <h2 className="text-xl font-semibold">{title}</h2>
+            {authors && <p className="text-sm text-slate-300">{authors}</p>}
+          </header>
+
+          <nav className="p-3 overflow-y-auto h-[calc(100vh-7.5rem)]">
+            <ul className="space-y-2">
+              {chapters.map((c, idx) => (
+                <li key={c.id}>
+                  <NavLink
+                    to={`/books/${bookId}/chapters/${c.id}/${activePhase === "understanding" ? "understanding" : "reinforce/flashcards"}`}
+                    className={({ isActive }) => getChapterClasses(isActive)}
+                    style={({ isActive }) =>
+                      isActive ? { color: "#000000" } : undefined
+                    }
+                    end={false}
+                  >
+                    <span className="font-medium">{`Chapter ${idx + 1}: ${c.title}`}</span>
+                  </NavLink>
+                </li>
+              ))}
+
+              <li className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(true)}
+                  className="w-full rounded-lg px-4 py-3 bg-neutral-900 ring-1 ring-neutral-800 hover:bg-neutral-800 hover:ring-neutral-700 flex items-center justify-between"
                 >
-                  <span className="font-medium">{`Chapter ${idx + 1}: ${c.title}`}</span>
-                </NavLink>
+                  <span>Select New Chapter</span>
+                  <span className="text-slate-300" aria-hidden>
+                    ＋
+                  </span>
+                </button>
               </li>
-            ))}
-
-            <li className="pt-1">
-              <button
-                type="button"
-                onClick={() => setModalOpen(true)}
-                className="w-full rounded-lg px-4 py-3 bg-neutral-900 ring-1 ring-neutral-800 hover:bg-neutral-800 hover:ring-neutral-700 flex items-center justify-between"
-              >
-                <span>Select New Chapter</span>
-                <span className="text-slate-300" aria-hidden>
-                  ＋
-                </span>
-              </button>
-            </li>
-          </ul>
-        </nav>
+            </ul>
+          </nav>
+        </div>
       </aside>
 
       {modalOpen && (

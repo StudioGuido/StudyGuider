@@ -1,6 +1,8 @@
+"""
+Manual API tests for user study material endpoints.
+"""
+
 import requests
-import asyncio
-import time
 
 SUPABASE_URL = "https://bafblcxwhdvikgcpcnds.supabase.co"
 SUPABASE_ANON_KEY = "sb_publishable_EHbCfU3Xd5oku8EZZTLD7g_1bxWBYnC"
@@ -8,6 +10,8 @@ SUPABASE_ANON_KEY = "sb_publishable_EHbCfU3Xd5oku8EZZTLD7g_1bxWBYnC"
 EMAIL = "test@gmail.com"
 PASSWORD = "testpass123"
 
+
+# ---------------- AUTH ---------------- #
 
 def get_jwt():
     url = f"{SUPABASE_URL}/auth/v1/token?grant_type=password"
@@ -17,12 +21,11 @@ def get_jwt():
         "Content-Type": "application/json",
     }
 
-    json = {
-        "email": EMAIL,
-        "password": PASSWORD,
-    }
-
-    response = requests.post(url, headers=headers, json=json)
+    response = requests.post(
+        url,
+        headers=headers,
+        json={"email": EMAIL, "password": PASSWORD},
+    )
 
     if response.status_code != 200:
         print("Login failed:", response.text)
@@ -33,210 +36,161 @@ def get_jwt():
 
 TOKEN = get_jwt()
 
-AUTH_HEADERS = {
-    "Authorization": f"Bearer {TOKEN}",
-}
-JSON_AUTH_HEADERS = {"Content-Type": "application/json", **AUTH_HEADERS}
+AUTH_HEADERS = {"Authorization": f"Bearer {TOKEN}"}
+JSON_HEADERS = {"Content-Type": "application/json", **AUTH_HEADERS}
 
 
-def testFlashCardSetCreation():
-    url = "http://0.0.0.0:8000/api/createFlashCardSet"
-    headers = JSON_AUTH_HEADERS
+BASE_URL = "http://0.0.0.0:8000/api"
 
-    json1 = {
-        "title": "Basic Math FlashCards",
-    }
-    response1 = requests.post(url=url, json=json1, headers=headers)
-    json2 = {
-        "title": "Advanced Math FlashCards",
-    }
-    response2 = requests.post(url=url, json=json2, headers=headers)
-    print(f"CREATED FLASH CARD SETS")
-    print(response1.json())
-    print(response2.json())
 
-def testFlashcardSetUpdates():
-    updated_title = "REALLY Advanced Math FlashCards"
-    url = f"http://0.0.0.0:8000/api/updateFlashSet/{updated_title}"
+# ---------------- FLASHCARD SET ---------------- #
 
-    headers = JSON_AUTH_HEADERS
+def create_sets():
+    print("\n--- Creating Sets ---")
+    for title in ["Basic Math FlashCards", "Advanced Math FlashCards"]:
+        res = requests.post(
+            f"{BASE_URL}/createFlashCardSet",
+            json={"title": title},
+            headers=JSON_HEADERS,
+        )
+        print(res.json())
 
-    json = {
-        "title": "Advanced Math FlashCards",
-    }
-    response = requests.put(url=url, json=json, headers=headers)
-    print("Updated USER")
-    print(response.json())
 
-def testFlashCardsCreation():
-    url = "http://0.0.0.0:8000/api/addToFlashCardSet"
-    headers = JSON_AUTH_HEADERS
-    json1 = [
-        {
-            "flashcardset": {
-                "title": "Basic Math FlashCards",
-            },
-            "question": "1 + 1",
-            "answer": "2",
+def update_set():
+    print("\n--- Updating Set ---")
+    res = requests.put(
+        f"{BASE_URL}/updateFlashcardSetName",
+        params={
+            "old_title": "Advanced Math FlashCards",
+            "new_title": "REALLY Advanced Math FlashCards",
         },
-        {
-            "flashcardset": {
-                "title": "Basic Math FlashCards",
-            },
-            "question": "1 - 1",
-            "answer": "0",
-        },
-        {
-            "flashcardset": {
-                "title": "Basic Math FlashCards",
-            },
-            "question": "1 * 1",
-            "answer": "1",
-        },
-        {
-            "flashcardset": {
-                "title": "Basic Math FlashCards",
-            },
-            "question": "1 / 1",
-            "answer": "1",
-        },
-        {
-            "flashcardset": {
-                "title": "Basic Math FlashCards",
-            },
-            "question": "1 ^ 1",
-            "answer": "1",
-        },
+        headers=JSON_HEADERS,
+    )
+    print(res.json())
+
+
+def delete_set(title):
+    print(f"\n--- Deleting Set: {title} ---")
+    res = requests.delete(
+        f"{BASE_URL}/deleteFlashSet",
+        json={"title": title},
+        headers=JSON_HEADERS,
+    )
+    print(res.json())
+
+
+def get_sets():
+    print("\n--- All Sets ---")
+    res = requests.get(f"{BASE_URL}/getAllFlashcardSets", headers=JSON_HEADERS)
+    print(res.json())
+
+
+# ---------------- FLASHCARDS ---------------- #
+
+def create_and_assign_flashcards():
+    print("\n--- Creating & Assigning Flashcards ---")
+
+    create_url = f"{BASE_URL}/addMasterFlashcard"
+    assign_url = f"{BASE_URL}/addFlashcardToSet"
+
+    flashcards = [
+        {"question": "1 + 1", "answer": "2"},
+        {"question": "1 - 1", "answer": "0"},
     ]
-    response1 = requests.post(url=url, json=json1, headers=headers)
 
-    json2 = [
-        {
-            "flashcardset": {
-                "title": "Advanced Math FlashCards",
+    for fc in flashcards:
+        # Create master flashcard
+        res = requests.post(
+            create_url,
+            json={
+                **fc,
+                "textbook_id": 1,
+                "chapter_number": 1,
+                "chunk_index": 1,
             },
-            "question": "f(x) = 2x^2, What is f'(x)",
-            "answer": "4x",
-        },
-        {
-            "flashcardset": {
-                "title": "Advanced Math FlashCards",
+            headers=JSON_HEADERS,
+        )
+
+        data = res.json()
+        print(data)
+
+        fc_id = data["response"]["fc_id"]
+
+        # Assign to set
+        assign_res = requests.post(
+            assign_url,
+            json={
+                "set_title": "Basic Math FlashCards",
+                "flashcard_id": fc_id,
             },
-            "question": "f(x) = 2x, What is f'(x)",
-            "answer": "2",
+            headers=JSON_HEADERS,
+        )
+        print(assign_res.json())
+
+
+def get_flashcards_from_set():
+    print("\n--- Flashcards From Set ---")
+    res = requests.get(
+        f"{BASE_URL}/getFlashcardsFromSet",
+        params={"title": "REALLY Advanced Math FlashCards"},
+        headers=JSON_HEADERS,
+    )
+    print(res.json())
+
+
+# ---------------- SUMMARY ---------------- #
+
+def save_summary():
+    print("\n--- Saving Summary ---")
+    res = requests.post(
+        f"{BASE_URL}/saveSummary",
+        json={
+            "title": "Important Summary",
+            "content": "ChatGPT says that ......",
         },
-        {
-            "flashcardset": {
-                "title": "Advanced Math FlashCards",
-            },
-            "question": "f(x) = 2, What is f'(x)",
-            "answer": "0",
-        },
-        {
-            "flashcardset": {
-                "title": "Advanced Math FlashCards",
-            },
-            "question": "417 % 10",
-            "answer": "17",
-        },
-        {
-            "flashcardset": {
-                "title": "Advanced Math FlashCards",
-            },
-            "question": "5!",
-            "answer": "120",
-        },
-    ]
-    response2 = requests.post(url=url, json=json2, headers=headers)
-    print(f"CREATED FLASH CARDS")
-    print(response1.json())
-    print(response2.json())
+        headers=JSON_HEADERS,
+    )
+    print(res.json())
 
 
-def testFlashCardSetDeletion1():
-    url = f"http://0.0.0.0:8000/api/deleteFlashSet"
-    headers = JSON_AUTH_HEADERS
-
-    json = {
-        "title": "Basic Math FlashCards",
-    }
-
-    response = requests.delete(url=url, json=json, headers=headers)
-    print("DELETED FLASHSET")
-    print(response.json())
+def get_summaries():
+    print("\n--- Get Summaries ---")
+    res = requests.get(f"{BASE_URL}/getSummaries", headers=JSON_HEADERS)
+    print(res.json())
 
 
-def testFlashCardSetDeletion2():
-    url = f"http://0.0.0.0:8000/api/deleteFlashSet"
-    headers = JSON_AUTH_HEADERS
+# ---------------- SEEN ---------------- #
 
-    json = {
-        "title": "REALLY Advanced Math FlashCards",
-    }
-
-    response = requests.delete(url=url, json=json, headers=headers)
-    print("DELETED FLASHSET")
-    print(response.json())
-    
+def get_seen_flashcards():
+    print("\n--- Seen Flashcards ---")
+    res = requests.get(f"{BASE_URL}/getSeenFlashcards", headers=JSON_HEADERS)
+    print(res.json())
 
 
-def testSummarySaving():
-    url = "http://0.0.0.0:8000/api/saveSummary"
-    headers = JSON_AUTH_HEADERS
-
-    json = {
-        "title": "Important Generated Summary",
-        "content": "Chatgpt says that ......",
-    }
-    response = requests.post(url=url, json=json, headers=headers)
-    print(f"SAVED SUMMARY")
-    print(response.json())
-
-
-def testGetFlashCardsFromSet2():
-    url = "http://0.0.0.0:8000/api/getFlashcardsFromSet"
-    headers = JSON_AUTH_HEADERS
-
-    json = {
-        "title": "Advanced Math FlashCards",
-    }
-    response = requests.get(url=url, json=json, headers=headers)
-    print(f"Got Flash Cards")
-    print(response.json())
-
-
-def testGetAllFlashcardSets():
-    url = "http://0.0.0.0:8000/api/getAllFlashcardSets"
-    headers = JSON_AUTH_HEADERS
-    response = requests.get(url=url, headers=headers)
-    print(f"Got Flash Card Sets")
-    print(response.json())
-
+# ---------------- RUN ---------------- #
 
 test_no = 3
+
 match test_no:
     case 0:
         print("No tests ran")
+
     case 1:
-        """
-        Test 1: Creation of Summary, Flashcard Sets and Flash Cards:
-        """
-        testFlashCardSetCreation()
-        testFlashCardsCreation()
-        testSummarySaving()
+        # Full creation flow
+        create_sets()
+        create_and_assign_flashcards()
+        save_summary()
+
     case 2:
-        """
-        Test 2: Gathering all Flash Cards in a set for front end display purposes, Updating the name of a set, and displaying all sets:
-        """
-        testGetFlashCardsFromSet2()
-        testFlashcardSetUpdates()
-        testGetAllFlashcardSets()
+        # Update + retrieval
+        update_set()
+        get_flashcards_from_set()
+        get_sets()
+        get_summaries()
+
     case 3:
-        """
-        Test 3: Deleting Flash Card sets:
-        """
-        testGetAllFlashcardSets()
-        testFlashCardSetDeletion2()
-        testGetAllFlashcardSets()
-        testFlashCardSetDeletion1()
-        testGetAllFlashcardSets()
+        # Deletion flow
+        get_sets()
+        delete_set("REALLY Advanced Math FlashCards")
+        delete_set("Basic Math FlashCards")
+        get_sets()

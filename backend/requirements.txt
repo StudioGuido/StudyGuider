@@ -49,6 +49,7 @@ mypy-extensions==1.0.0
 networkx==3.2.1
 numpy==2.0.2
 openai==1.70.0
+google-genai==1.46.0
 orjson==3.10.16
 packaging==24.2
 pandas==2.2.3
@@ -99,5 +100,6 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
 s3transfer==0.16.0
 six==1.17.0
-PyMuPDF==1.27.2.2
-
+PyMuPDF==1.23.26
+sentence-transformers==5.1.2
+sentencepiece==0.2.0
