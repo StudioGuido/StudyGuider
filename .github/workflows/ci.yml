@@ -2,9 +2,11 @@ name: CI Pipeline
 
 on:
   push:
-    branches-ignore:
-      - main
-      - "research/*"
+    # branches-ignore:
+    #   - main
+    #   - "research/*"
+    branches:
+      - "**"
   pull_request:
     branches:
       - main
