@@ -15,7 +15,7 @@ on:
   
 
 jobs:
-  environment: "Main Env"
+  environment: main-env
   test:
     runs-on: ubuntu-latest
     
