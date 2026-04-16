@@ -1,6 +1,6 @@
 
 async function getToken() {
-    const res = await fetch("/session");
+    const res = await fetch("http://localhost:8000/session");
     const data = await res.json();
     return data.client_secret.value;
 }
@@ -17,7 +17,7 @@ async function startSession() {
 
     // playback
     pc.ontrack = (e) => {
-        const audio = document.getElementById("audio-output");
+        const audio = document.getElementById("remoteAudio");
         audio.srcObject = e.streams[0];
     }
 
@@ -38,16 +38,16 @@ async function startSession() {
         const event = JSON.parse(e.data);
         console.log("FULL EVENT:", JSON.stringify(event, null, 2));
 
-        const userText = event.transcript
+        const userText = event.item?.content?.[0]?.transcript;
         console.log("userText:", userText);
 
         console.log(event.type, event);
 
-        if (event.type === "conversation.item.done") {
+        if (event.type === "conversation.item.created") {
             const chunks = [
-                "The mitochondria is the powerhouse of the cell.",
-                "Cells are the basic unit of life.",
-                "DNA carries genetic information."
+                "john is 67 years old and lives alone in Blacksburg, VA",
+                "John's favorite food is pizza, and he does not like tacos",
+                "John likes to play the flute and chase ducks"
             ]
 
             dc.send(JSON.stringify({
@@ -89,3 +89,11 @@ async function startSession() {
 
     await pc.setRemoteDescription({ type: "answer", sdp: await sdpRes.text() });
 }
+
+document.getElementById("connectBtn").addEventListener("click", () => {
+    console.log("button clicked");          // ← is the click even registering?
+    document.getElementById("connectBtn").disabled = true;
+    startSession().catch(err => {
+        console.error("startSession failed:", err);  // ← catch silent async errors
+    });
+});
