@@ -149,8 +149,8 @@ async function pollStatus(textbookId, currentToken) {
           <ul className="space-y-3">
             {books.map((b) => (
               <BookCard
-                key={b.textbook_id}
-                book={{ id: b.textbook_id, title: b.textbook_title }}
+                key={b.id}
+                book={{ id: b.id, title: b.title }}
                 onSelect={(book) => setSelectedBook(book)}
               />
             ))}

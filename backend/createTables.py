@@ -94,6 +94,13 @@ async def init_db():
             """
             )
 
+            usersTable = """
+            CREATE TABLE IF NOT EXISTS users (
+            supabase_uid VARCHAR(255) PRIMARY KEY
+            );
+            """
+            await conn.execute(usersTable)
+
             create_textbook_table_query = """
             CREATE TABLE IF NOT EXISTS textbooks (
                 id SERIAL PRIMARY KEY,
@@ -101,14 +108,14 @@ async def init_db():
                 title TEXT NOT NULL,
                 author TEXT NOT NULL,
                 description TEXT NOT NULL,
-                image_path TEXT NOT NULL
+                image_path TEXT NOT NULL,
                 status VARCHAR(255) NOT NULL
             );
             """
             await conn.execute(create_textbook_table_query)
 
             chaptersTable = """
-            CREATE TABLE chapters (
+            CREATE TABLE IF NOT EXISTS chapters (
                 textbook_id INTEGER NOT NULL,
                 chapter_number INTEGER NOT NULL,
                 chapter_title TEXT NOT NULL,
@@ -132,29 +139,6 @@ async def init_db():
             );
             """
             await conn.execute(embeddingTable)
-
-            # usersTable = """
-            # CREATE TABLE users (
-            # id SERIAL PRIMARY KEY,
-            # username VARCHAR(150) UNIQUE NOT NULL,
-            # email VARCHAR(255) UNIQUE NOT NULL,
-            # password_hash TEXT NOT NULL,
-            # first_name VARCHAR(255),
-            # last_name VARCHAR(255),
-            # created_at TIMESTAMP DEFAULT NOW(),
-            # provider VARCHAR(50),
-            # provider_id VARCHAR(255),
-            # last_login TIMESTAMP,
-            # auth_level user_role DEFAULT 'user'
-            # );
-            # """
-
-            usersTable = """
-            CREATE TABLE users (
-            supabase_uid VARCHAR(255) PRIMARY KEY
-            );
-            """
-            await conn.execute(usersTable)
 
             flashCardSetTable = """
             CREATE TABLE IF NOT EXISTS flash_card_set (

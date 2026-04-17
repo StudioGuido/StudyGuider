@@ -66,7 +66,7 @@ for any database errors.
     
 @router.get("/api/getTextbookTitle")
 async def get_textbook_title(
-    textbook_id: str,
+    textbook_id: int,
     user_valid=Depends(verify_jwt)
 ):
     conn = None
@@ -96,7 +96,7 @@ async def get_textbook_title(
             raise HTTPException(status_code=404, detail="Textbook not found")
 
         return {
-            "textbook_title": row["textbook_title"]
+            "textbook_title": row["title"]
         }
 
     except HTTPException:

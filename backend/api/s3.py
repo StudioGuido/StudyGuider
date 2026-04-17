@@ -137,8 +137,8 @@ async def get_url(user_valid=Depends(verify_jwt)):
     if not supabase_uid:
         raise HTTPException(status_code=401, detail="Missing UID")
 
-    textbook_id = str(uuid.uuid4())
-    key = f"textbooks/{textbook_id}"
+    s3_uuid = str(uuid.uuid4())
+    key = f"textbooks/{s3_uuid}"
 
     conn = None
     try:
@@ -243,7 +243,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
 
 
 @router.get("/api/textbooks/{textbook_id}/status")
-async def get_job_status(textbook_id: str):
+async def get_job_status(textbook_id: int):
     conn = None
     try:
         conn = await asyncpg.connect(
@@ -256,7 +256,7 @@ async def get_job_status(textbook_id: str):
             """
             SELECT status
             FROM textbooks
-            WHERE textbook_id = $1
+            WHERE id = $1
             """,
             textbook_id,
         )

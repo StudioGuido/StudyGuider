@@ -19,7 +19,7 @@ redis_client = redis.Redis(
 )
 
 class ChapterRequest(BaseModel):
-    textbook: str
+    textbook: int
     user_id: str
 
 #Used to reopen a chapter with Redis cache

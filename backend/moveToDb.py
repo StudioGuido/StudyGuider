@@ -46,9 +46,9 @@ async def fillTables():
 
                 # insert the text book id, title, and author
                 await conn.execute("""
-                    INSERT INTO textbooks (id, title, author, description, image_path)
-                    VALUES ($1, $2, $3, $4, $5);
-                """, next_id, title, author, description, path)
+                    INSERT INTO textbooks (user_uid, title, author, description, image_path, status)
+                    VALUES ($1, $2, $3, $4, $5, $6);
+                """, next_id, title, author, description, path, "status_placeholder")
 
                 # adding to the chapters table
                 for chapter_id, group in df.groupby('chapter'):
