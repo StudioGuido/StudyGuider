@@ -104,21 +104,30 @@ async def generate_endpoint(request: FlashRequest ):  #user validation didn't go
         existing_flashcards = await conn.fetch("""
             SELECT fc_id, question, answer, chunk_index
             FROM master_flashcard
-            WHERE textbook_id = $1 AND chapter_number = $2 AND user_id = $3 AND last_seen < NOW() - INTERVAL '1 day'
+            WHERE textbook_id = $1 AND chapter_number = $2 AND user_id = $3 AND last_seen < NOW() - INTERVAL '1 minute'
             ORDER BY last_seen ASC
-        """, textbook_id, chapter_number, user_id)
+            LIMIT $4
+            
+        """, textbook_id, chapter_number, user_id, count)
 #larger values means it was just seen so we want to order by ascending last_seen so we get the flashcards that werent seen for a while
 
         print(f"Existing flashcards found: {len(existing_flashcards)}")
 
         question_answer_pair = {}
+        seen_ids = []
 
         for i, row in enumerate(existing_flashcards):
             if len(question_answer_pair) >= count:
                 break
             question_answer_pair[f"Question {i}"] = (row["question"], row["answer"])
             print(question_answer_pair)
+            seen_ids.append(row["fc_id"])
 
+        if seen_ids: 
+            await conn.execute(""" 
+                UPDATE master_flashcard SET last_seen = NOW()
+                WHERE fc_id = ANY($1::int[])                       
+                                """, seen_ids)
         if len(question_answer_pair) < count:
             chunkCount = await conn.fetchrow("""
                 SELECT COUNT(*) 
@@ -187,21 +196,20 @@ async def generate_endpoint(request: FlashRequest ):  #user validation didn't go
 
                         try:
                     
-                            # # Insert into seen_card table
-                            # flashcard_id = await conn.fetchval("""
-                            #     SELECT fc_id FROM master_flashcard
-                            #     WHERE textbook_id = $1 AND chapter_number = $2 AND question = $3
-                            # """, textbook_id, chapter_number, question)
-                            # await conn.execute("""
-                            #     INSERT INTO seen_card(flashcard_id, user_id)
-                            #     VALUES ($1, $2)
-                            # """, flashcard_id, user_id)
+                            # Insert into seen_card table
+                            fc_id = await conn.fetchval("""
+                                INSERT INTO master_flashcard(textbook_id, chapter_number, question, answer, chunk_index, user_id)
+                                VALUES ($1, $2, $3, $4, $5, $6)
+                                RETURNING fc_id
+                            """, textbook_id, chapter_number, question, answer, random_chunk, user_id)
+
                             await conn.execute("""
-                            INSERT INTO master_flashcard(textbook_id, chapter_number, question, answer, chunk_index, user_id)
-                            VALUES ($1, $2, $3, $4, $5, $6)
-                        """, textbook_id, chapter_number, question, answer, random_chunk, user_id)
+                                INSERT INTO seen_card(user_id, flashcard_id)
+                                VALUES ($1, $2)
+                                ON CONFLICT DO NOTHING
+                            """, user_id, fc_id)
                         except Exception as e:
-                            print("unable to populate master table", str(e))
+                            print("unable to populate master table or seen table", str(e))
                         else:
                             print(f"INSERTED FLASHCARD: {question[0:50]}...into master_flashcard")
                             question_answer_pair[f"Question {c}"] = (question, answer)
@@ -226,6 +234,8 @@ async def generate_endpoint(request: FlashRequest ):  #user validation didn't go
             status_code=status.HTTP_200_OK,
             content={"response": question_answer_pair}
         )
+    
+        
 
     except HTTPException as e:
         status_code = e.status_code

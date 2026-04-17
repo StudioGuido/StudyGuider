@@ -57,7 +57,7 @@ def cleanup():
             password=os.getenv("DATABASE_PASSWORD")
         )
         cursor = conn.cursor()  
-        cursor.execute("DELETE FROM master_flashcard WHERE created_at < NOW() - INTERVAL '30 seconds';")
+        cursor.execute("DELETE FROM master_flashcard WHERE created_at < NOW() - INTERVAL '7 days';")
         conn.commit()
         cursor.close()
         conn.close()
