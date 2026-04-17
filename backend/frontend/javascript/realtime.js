@@ -1,6 +1,6 @@
 
 async function getToken() {
-    const res = await fetch("http://localhost:8000/session");
+    const res = await fetch("http://localhost:8000/api/session");
     const data = await res.json();
     return data.client_secret.value;
 }
@@ -25,8 +25,12 @@ async function startSession() {
         dc.send(JSON.stringify({
             type: "session.update",
             session: {
+                input_audio_transcription: {
+                    model: "whisper-1"
+                },
                 turn_detection: {
                     type: "server_vad",
+                    threshold: 0.95,
                     interrupt_response: false,
                     create_response: false
                 }
@@ -37,35 +41,47 @@ async function startSession() {
     dc.onmessage = async (e) => {
         const event = JSON.parse(e.data);
         console.log("FULL EVENT:", JSON.stringify(event, null, 2));
-
-        const userText = event.item?.content?.[0]?.transcript;
-        console.log("userText:", userText);
-
         console.log(event.type, event);
 
-        if (event.type === "conversation.item.created") {
-            const chunks = [
-                "john is 67 years old and lives alone in Blacksburg, VA",
-                "John's favorite food is pizza, and he does not like tacos",
-                "John likes to play the flute and chase ducks"
-            ]
+        if (event.type === "conversation.item.input_audio_transcription.completed") {
+            const userText = event.transcript;
+            if (!userText) return;
+
+            let chunks = [];
+            try {
+            const res = await fetch("http://localhost:8000/api/context", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    transcript: userText,
+                    chapter: "The Way of the Program",
+                    textbook: "thinkpython2"
+                })
+            });
+            const data = await res.json();
+            chunks = data.response;
+
+            console.log(chunks);
+
+            } catch (err) {
+                console.error("Context fetch failed:", err);
+            }
 
             dc.send(JSON.stringify({
                 type: "response.create",
                 response: {
                     modalities: ["audio", "text"],
-                    instructions: "Answer the user's question using the provided context.",
                     input: [{
                         type: "message",
                         role: "user",
                         content: [
                             {
                                 type: "input_text",
-                                text: `Relevant Context: ${chunks.join(" ")}`
+                                text: `Relevant Context: ${chunks}`
                             },
                             {
                                 type: "input_text",
-                                text: `User question: ${userText}`
+                                text: `User query: ${userText}`
                             }
                         ]
                     }]
