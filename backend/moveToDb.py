@@ -40,15 +40,20 @@ async def fillTables():
                 path = str(imgPath)
                 
 
-                # finding texbook id to follow sequential pattern
-                result = await conn.fetchval("SELECT MAX(id) FROM textbooks")
-                next_id = (result + 1) if result is not None else 1
-
-                # insert the text book id, title, and author
-                await conn.execute("""
+                # user_uid is a Supabase UID (str), not the textbook id. Seed CSV rows have no owner.
+                textbook_id = await conn.fetchval(
+                    """
                     INSERT INTO textbooks (user_uid, title, author, description, image_path, status)
-                    VALUES ($1, $2, $3, $4, $5, $6);
-                """, next_id, title, author, description, path, "status_placeholder")
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                    RETURNING id;
+                    """,
+                    None,
+                    title,
+                    author,
+                    description,
+                    path,
+                    "status_placeholder",
+                )
 
                 # adding to the chapters table
                 for chapter_id, group in df.groupby('chapter'):
@@ -58,7 +63,7 @@ async def fillTables():
                         INSERT INTO chapters (textbook_id, chapter_number, chapter_title)
                         VALUES ($1, $2, $3)
                         ON CONFLICT (textbook_id, chapter_number) DO NOTHING;
-                    """, next_id, chapter_id, chapter_title)
+                    """, textbook_id, chapter_id, chapter_title)
 
                     # adding the vector embeddings by iterating by rows from groups
                     for chunk_index, (_, row) in enumerate(group.iterrows(), start=1):
@@ -68,7 +73,7 @@ async def fillTables():
                         await conn.execute("""
                             INSERT INTO chapter_embeddings (textbook_id, chapter_number, chunk_index, embedding, chunk_text)
                             VALUES ($1, $2, $3, $4, $5);
-                        """, next_id, chapter_id, chunk_index, embedding_str, chunk_text)
+                        """, textbook_id, chapter_id, chunk_index, embedding_str, chunk_text)
 
             await conn.close()
             print("✅ All Data Was Added To Tables")

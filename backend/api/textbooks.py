@@ -33,8 +33,8 @@ async def getTextbooks_endpoint(user_id = Depends(verify_jwt)):
             supabase_uid,
         )
 
-        if not rows:
-            raise HTTPException(status_code=404, detail="Titles from textbooks not found")
+        # if not rows:
+        #     raise HTTPException(status_code=404, detail="Titles from textbooks not found")
 
         return [
             {
