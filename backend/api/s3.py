@@ -129,7 +129,7 @@ def download_file(key: str, download_path: str):
     )
     print(f"Downloaded to: {download_path}")
 
-# Provides frontend with a presigned url.
+# Provides frontend with a presigned url for textbook.
 @router.post("/api/getPresignedUrl")
 async def get_url(user_valid=Depends(verify_jwt)):
     
@@ -179,6 +179,75 @@ async def get_url(user_valid=Depends(verify_jwt)):
         ExpiresIn=3600,
     )
     return {"presigned_url": url, "book_id": textbook_id, "file_key": key}
+
+# Provides frontend with a presigned url for textbook chapter.
+@router.get("/api/textbooks/{textbook_id}/chapters/{chapter_id}/pdf")
+async def get_chapter_pdf_url(
+    textbook_id: int,
+    chapter_id: int,
+    user_valid=Depends(verify_jwt),
+):
+    supabase_uid = user_valid.get("sub")
+    if not supabase_uid:
+        raise HTTPException(status_code=401, detail="Missing UID")
+
+    conn = None
+    try:
+        conn = await asyncpg.connect(
+            host=os.getenv("DATABASE_HOST"),
+            database=os.getenv("DATABASE_NAME"),
+            user=os.getenv("DATABASE_USER"),
+            password=os.getenv("DATABASE_PASSWORD"),
+        )
+
+        # Verify ownership + existence
+        row = await conn.fetchrow(
+            """
+            SELECT c.id
+            FROM chapters c
+            JOIN textbooks t ON c.textbook_id = t.id
+            WHERE c.id = $1
+              AND t.id = $2
+              AND t.user_uid = $3;
+            """,
+            chapter_id,
+            textbook_id,
+            supabase_uid,
+        )
+
+        if not row:
+            raise HTTPException(status_code=404, detail="Chapter not found")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        # log e internally
+        raise HTTPException(status_code=500, detail="Database error")
+    finally:
+        if conn:
+            await conn.close()
+
+    # ✅ Construct S3 key (now safe)
+    key = f"users/{supabase_uid}/textbooks/{textbook_id}/chapters/{chapter_id}.pdf"
+
+    try:
+        url = s3.generate_presigned_url(
+            "get_object",
+            Params={
+                "Bucket": BUCKET,
+                "Key": key,
+                "ContentType": "application/pdf"
+            },
+            ExpiresIn=3600,  # 1 hour
+        )
+    except Exception as e:
+        # log e internally
+        raise HTTPException(status_code=500, detail="Failed to generate URL")
+
+    return {
+        "presigned_url": url,
+        "file_key": key,
+    }
 
 
 @router.post("/process-pdf")
