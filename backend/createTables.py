@@ -104,7 +104,7 @@ async def init_db():
             create_textbook_table_query = """
             CREATE TABLE IF NOT EXISTS textbooks (
                 id SERIAL PRIMARY KEY,
-                user_uid VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
+                user_uid UUID REFERENCES users(supabase_uid) ON DELETE CASCADE,
                 title TEXT NOT NULL,
                 author TEXT NOT NULL,
                 description TEXT NOT NULL,
@@ -144,7 +144,7 @@ async def init_db():
             CREATE TABLE IF NOT EXISTS flash_card_set (
                 fcset_id SERIAL PRIMARY KEY,
                 set_title VARCHAR(255) NOT NULL,
-                user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
+                user_id UUID REFERENCES users(supabase_uid) ON DELETE CASCADE,
                 UNIQUE (user_id, set_title)
             );
             """
@@ -176,7 +176,7 @@ async def init_db():
             
             seenflashcards_table = """
             CREATE TABLE IF NOT EXISTS seen_card (
-                user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
+                user_id UUID REFERENCES users(supabase_uid) ON DELETE CASCADE,
                 flashcard_id INTEGER NOT NULL REFERENCES master_flashcard(fc_id) ON DELETE CASCADE,
                 PRIMARY KEY (user_id, flashcard_id)
             );
@@ -184,9 +184,9 @@ async def init_db():
             await conn.execute(seenflashcards_table)
 
             summaryTable = """
-            CREATE TABLE summary (
+            CREATE TABLE IF NOT EXISTS summary (
             summary_id SERIAL PRIMARY KEY,
-            user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
+            user_id UUID REFERENCES users(supabase_uid) ON DELETE CASCADE,
             title VARCHAR(255) NOT NULL,
             content TEXT NOT NULL
             );
