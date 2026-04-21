@@ -21,6 +21,12 @@ export default function PhaseLayout() {
       setActivePhase(phase);
       return;
     }
+
+    if (phase === "mastery") {
+      navigate(`/books/${bookId}/chapters/${chapterId}/mastery`);
+      setActivePhase(phase);
+      return;
+    }
   };
 
   const handleSignOut = async () => {

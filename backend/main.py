@@ -33,9 +33,7 @@ app.include_router(context_router)
 # Change this to match your frontend port (3000)
 origins = [
     "http://localhost:3000",
-    "http://localhost:5173",
-    "http://localhost:5501",
-    "http://127.0.0.1:5501"
+    "http://localhost:5173"
 ]
 
 # Add CORS middleware to allow frontend to connect
