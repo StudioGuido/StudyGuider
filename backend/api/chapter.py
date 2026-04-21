@@ -51,7 +51,7 @@ async def getChapters_endpoint(textbook_id: int, user_id = Depends(verify_jwt)):
         )
 
         rows = await conn.fetch(
-            "SELECT chapter_number FROM chapters WHERE textbook_id = $1;",
+            "SELECT chapter_number FROM chapters WHERE textbook_id = $1 ORDER BY chapter_number;",
             textbook_id
         )
 

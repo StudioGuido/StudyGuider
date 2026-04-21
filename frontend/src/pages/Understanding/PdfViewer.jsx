@@ -5,7 +5,7 @@ import "./pdf-worker-setup";
 
 const RENDER_WIDTH = 800; // fixed rasterisation width — never changes
 
-export default function PdfViewer({ fileUrl, initialScale = 1 }) {
+export default function PdfViewer({ fileUrl, initialScale = 1, error = null }) {
   const [numPages, setNumPages] = useState(0);
   const [scale, setScale] = useState(initialScale);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -85,44 +85,54 @@ export default function PdfViewer({ fileUrl, initialScale = 1 }) {
 
       {/* Scrollable content area with all pages */}
       <div ref={containerRef} className="flex-1 overflow-auto bg-[#050509] py-3">
-        <Document
-          file={fileUrl}
-          onLoadSuccess={onDocumentLoad}
-          loading={
-            <div className="px-4 text-xs text-slate-300">Loading textbook…</div>
-          }
-        >
-          <div className="inline-flex min-w-full flex-col items-center gap-4 px-4">
-            {Array.from({ length: numPages }, (_, index) => (
-              <div
-                key={index + 1}
-                style={{
-                  width: RENDER_WIDTH * cssScale,
-                  height: pageHeight ? pageHeight * cssScale : "auto",
-                  overflow: "hidden",
-                  transition: animateTransform ? "width 0.3s ease, height 0.3s ease" : "none",
-                }}
-              >
+        {error ? (
+          <div className="flex h-full items-center justify-center px-4 text-sm text-slate-400">
+            {error}
+          </div>
+        ) : !fileUrl ? (
+          <div className="flex h-full items-center justify-center px-4 text-xs text-slate-300">
+            Loading chapter…
+          </div>
+        ) : (
+          <Document
+            file={fileUrl}
+            onLoadSuccess={onDocumentLoad}
+            loading={
+              <div className="px-4 text-xs text-slate-300">Loading textbook…</div>
+            }
+          >
+            <div className="inline-flex min-w-full flex-col items-center gap-4 px-4">
+              {Array.from({ length: numPages }, (_, index) => (
                 <div
+                  key={index + 1}
                   style={{
-                    transform: `scale(${cssScale})`,
-                    transformOrigin: "top left",
-                    transition: animateTransform ? "transform 0.3s ease" : "none",
+                    width: RENDER_WIDTH * cssScale,
+                    height: pageHeight ? pageHeight * cssScale : "auto",
+                    overflow: "hidden",
+                    transition: animateTransform ? "width 0.3s ease, height 0.3s ease" : "none",
                   }}
                 >
-                  <Page
-                    pageNumber={index + 1}
-                    width={RENDER_WIDTH}
-                    onLoadSuccess={index === 0 ? (page) => setPageHeight(page.height) : undefined}
-                    renderAnnotationLayer={false}
-                    renderTextLayer={false}
-                    className="shadow-2xl shadow-black/70"
-                  />
+                  <div
+                    style={{
+                      transform: `scale(${cssScale})`,
+                      transformOrigin: "top left",
+                      transition: animateTransform ? "transform 0.3s ease" : "none",
+                    }}
+                  >
+                    <Page
+                      pageNumber={index + 1}
+                      width={RENDER_WIDTH}
+                      onLoadSuccess={index === 0 ? (page) => setPageHeight(page.height) : undefined}
+                      renderAnnotationLayer={false}
+                      renderTextLayer={false}
+                      className="shadow-2xl shadow-black/70"
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </Document>
+              ))}
+            </div>
+          </Document>
+        )}
       </div>
     </div>
   );

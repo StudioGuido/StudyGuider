@@ -203,10 +203,10 @@ async def get_chapter_pdf_url(
         # Verify ownership + existence
         row = await conn.fetchrow(
             """
-            SELECT c.id
+            SELECT c.chapter_number
             FROM chapters c
             JOIN textbooks t ON c.textbook_id = t.id
-            WHERE c.id = $1
+            WHERE c.chapter_number = $1
               AND t.id = $2
               AND t.user_uid = $3;
             """,
@@ -228,7 +228,7 @@ async def get_chapter_pdf_url(
             await conn.close()
 
     # ✅ Construct S3 key (now safe)
-    key = f"users/{supabase_uid}/textbooks/{textbook_id}/chapters/{chapter_id}.pdf"
+    key = f"users/{supabase_uid}/textbooks/{textbook_id}/chapters/{chapter_id}"
 
     try:
         url = s3.generate_presigned_url(
@@ -236,7 +236,6 @@ async def get_chapter_pdf_url(
             Params={
                 "Bucket": BUCKET,
                 "Key": key,
-                "ContentType": "application/pdf"
             },
             ExpiresIn=3600,  # 1 hour
         )
