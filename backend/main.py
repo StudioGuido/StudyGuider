@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from api.generate import router as generate_router
-from api.s3 import router as s3_router
 from api.textbooks import router as textbooks_router
 from api.chapter import router as chapter_router
 from fastapi.middleware.cors import CORSMiddleware
 from api.user import router as user_router
 from api.user_studymat import router as user_studymat_router
+from api.context import router as context_router
+from api.voice import router as voice_router
 
 from logging_config import setup_logging
 from api.generateFlashCard import router as flashcard_router
@@ -20,16 +21,19 @@ app = FastAPI()
 
 # Register endpoints
 app.include_router(generate_router)
-app.include_router(s3_router)
 app.include_router(textbooks_router)
 app.include_router(chapter_router)
 app.include_router(user_router)
 app.include_router(user_studymat_router)
+app.include_router(voice_router)
+app.include_router(context_router)
 
 # Change this to match your frontend port (3000)
 origins = [
     "http://localhost:3000",
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "http://localhost:5501",
+    "http://127.0.0.1:5501"
 ]
 
 # Add CORS middleware to allow frontend to connect
