@@ -96,7 +96,7 @@ async def get_textbook_title(
             raise HTTPException(status_code=404, detail="Textbook not found")
 
         return {
-            "textbook_title": row["title"]
+            "title": row["title"]
         }
 
     except HTTPException:

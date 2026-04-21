@@ -265,7 +265,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
         # Generates list of local downloaded chapter paths
         listOfChapters, textbook_title = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
 
-        print("\n\n Uploading textbook", flush=True)
+        print("\n\n Uploading textbook: ", textbook_title, flush=True)
         # creates keys from filepaths and uploads chunks to s3
         await upload(supabase_uid, listOfChapters, request.book_id)
         print("\n\n Finished uploading textbook\n\n")
