@@ -192,12 +192,17 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
         download_file(request.file_key, "downloaded_textbook.pdf")
         
         # Generates list of local downloaded chapter paths
-        listOfChapters = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
+        listOfChapters, book_title = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
         
         # TODO: Call creating embeddings function here
-        print(1)
-        await ce.fillTables(listOfChapters, request.book_id)
-        print(2)
+        # Debugging Embeddings
+        # for p in listOfChapters:
+        #     print(repr(p), "exists:", os.path.exists(p) if isinstance(p, str) else "not-a-str", flush=True)
+
+        # print("\n\n100000\n\n")
+        ce.createEmbeddings(listOfChapters)
+        # await ce.fillTables(listOfChapters, request.book_id)
+        # print("\n\n200000\n\n")
         """
         1. Run the app with s3 upload once to get the seperate files
         2. Write your helper function that will create embeddings
@@ -208,7 +213,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
         
         """
         # creates keys from filepaths and uploads chunks to s3
-        await upload(supabase_uid, listOfChapters)
+        # await upload(supabase_uid, listOfChapters)
         
 
         print("\n\n Uploading textbook", flush=True)
@@ -228,15 +233,14 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
                 user=os.getenv("DATABASE_USER"),
                 password=os.getenv("DATABASE_PASSWORD"),
             )
+
             await conn.execute(
                 """
                 UPDATE user_textbook
-                SET status = 'complete',
-                  textbook_title = $1
-                WHERE textbook_id = $2
+                SET status = 'complete'
+                WHERE textbook_id = $1
                 """,
-                textbook_title,
-                request.book_id,
+                request.book_id,  # only one argument to match only $1
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))

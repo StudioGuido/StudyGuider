@@ -19,10 +19,26 @@ def createEmbeddings(pdf_paths: list[str]):
     vectorEmbedder = VectorEmbedder(os.getenv("MODEL_ID"), dataFrame)
     vectorEmbedder.createEmbeddings()
 
-    return vectorEmbedder.getEmbeddingsDf()
+    # Debugging - Checks if the embeddings were created
+    newFrame = vectorEmbedder.getEmbeddingsDf()
+
+    # Resolve path relative to this file's location:
+    # _creatingEmbeddings.py lives in backend/api/, so go up one level into backend/bookAdders/csv/
+    this_file_dir = os.path.dirname(os.path.abspath(__file__))
+    csv_dir = os.path.abspath(os.path.join(this_file_dir, "..", "bookAdders", "csv"))
+    os.makedirs(csv_dir, exist_ok=True)
+
+    output_path = os.path.join(csv_dir, "testingEmbeddings.csv")
+    print(f"Saving CSV to: {output_path}", flush=True)
+    newFrame.to_csv(output_path, index=False)
+    
 
 
-async def fillTables(pdf_paths: list[str], textbook_id: str):
+    # return vectorEmbedder.getEmbeddingsDf()
+
+
+async def fillTables(pdf_paths: list[str], textbook_id: int):
+    print(f"fillTables called with textbook_id={textbook_id}, type={type(textbook_id)}")
     '''
     Fill table is an asynchronous function that will fill our SQL tables using
     every textbook entry within the main.csv.
@@ -47,7 +63,11 @@ async def fillTables(pdf_paths: list[str], textbook_id: str):
 
             for chapter_id, group in df.groupby('chapter'):
                 for chunk_index, (_, row) in enumerate(group.iterrows(), start=1):
-                    embedding_str = json.dumps(row['text_vector_embeddings'])
+                    embedding_list = row['text_vector_embeddings']
+
+                    # Convert to postgres vector literal format
+                    embedding_str = "[" + ",".join(str(x) for x in embedding_list) + "]"
+
                     chunk_text = row['chunk_text']
 
                     await conn.execute("""
