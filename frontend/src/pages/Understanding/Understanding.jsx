@@ -68,9 +68,6 @@ export default function Understanding({ defaultMode = "summary" }) {
     return () => { alive = false; };
   }, [bookId, chapterId]);
 
-  const bookTitle = "Sample Book Title";
-  const chapterTitle = "Chapter 1: Introduction";
-
   // useEffect to grab textbook title
   useEffect(() => {
     async function fetchTitle() {
