@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 import os
 import asyncpg
@@ -9,18 +9,27 @@ import logging
 import uuid
 import time
 from .AIHelper import get_gemini_response
+from api.auth import verify_jwt
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
+# class SummaryRequest(BaseModel):
+#     textbook: str
+#     chapter: str
+    
 class SummaryRequest(BaseModel):
-    textbook: str
-    chapter: str
+    textbook: int
+    chapter: int
 
 
 @router.post("/api/generateSummary")
-async def generate_endpoint(request: SummaryRequest):
+async def generate_endpoint(request: SummaryRequest, user_valid=Depends(verify_jwt)):
+    supabase_uid = user_valid.get("sub")
+    
+    if not supabase_uid:
+        raise HTTPException(status_code=401, detail="Missing UID")
 
     request_id = str(uuid.uuid4())
     start_time = time.time()
@@ -30,8 +39,8 @@ async def generate_endpoint(request: SummaryRequest):
         "chapter": request.chapter
     })
 
-    chapter = request.chapter
-    textbook = request.textbook
+    # chapter = request.chapter
+    # textbook = request.textbook
 
     conn = None
 
@@ -47,19 +56,22 @@ async def generate_endpoint(request: SummaryRequest):
 
         logger.info(f"[{request_id}] Fetching chapter metadata")
 
-        res = await conn.fetchrow("""
-            SELECT c.textbook_id, c.chapter_number
-            FROM chapters c
-            JOIN textbooks t ON c.textbook_id = t.id
-            WHERE t.title = $1 AND c.chapter_title = $2;
-        """, textbook, chapter)
+        # res = await conn.fetchrow("""
+        #     SELECT c.textbook_id, c.chapter_number
+        #     FROM chapters c
+        #     JOIN textbooks t ON c.textbook_id = t.id
+        #     WHERE t.title = $1 AND c.chapter_title = $2;
+        # """, textbook, chapter)
 
-        if res is None:
-            logger.warning(f"[{request_id}] Invalid textbook/chapter")
-            raise HTTPException(status_code=400, detail="Invalid textbook or chapter title")
+        # if res is None:
+        #     logger.warning(f"[{request_id}] Invalid textbook/chapter")
+        #     raise HTTPException(status_code=400, detail="Invalid textbook or chapter title")
 
-        textbook_id = res["textbook_id"]
-        chapter_number = res["chapter_number"]
+        # textbook_id = res["textbook_id"]
+        # chapter_number = res["chapter_number"]
+        
+        textbook_id = request.textbook
+        chapter_number = request.chapter
 
         logger.info(f"[{request_id}] Fetching chunks", extra={
             "textbook_id": textbook_id,

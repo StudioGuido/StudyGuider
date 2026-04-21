@@ -26,10 +26,19 @@ export default function Books() {
     await supabase.auth.signOut();
   };
   
+  async function fetchBooks() {
+    const session = await supabase.auth.getSession();
+    const token = session.data.session.access_token;
+
+    const res = await fetch("http://localhost:8000/api/getTextbooks", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    setBooks(data);
+  }
+
   useEffect(() => {
-    fakeApi.getBooks().then(setBooks);
-    console.log(user);
-    getJWT();
+    fetchBooks();
   }, []);
   
   if (!books)
@@ -41,6 +50,7 @@ export default function Books() {
 
 async function handleUpload(file) {
   try {
+
     // 1) Get a fresh token directly — don't rely on state which may be null
     const { data: sessionData } = await supabase.auth.getSession();
     const currentToken = sessionData.session?.access_token;
@@ -55,9 +65,8 @@ async function handleUpload(file) {
       },
     });
     if (!res.ok) throw new Error("Failed to get upload URL");
-    const { presigned_url, book_id, file_key } = await res.json();
 
-    console.log(presigned_url)
+    const { presigned_url, book_id, file_key } = await res.json();
 
     // 3) Upload file directly to S3
     const uploadRes = await fetch(presigned_url, {
@@ -78,6 +87,7 @@ async function handleUpload(file) {
       body: JSON.stringify({ book_id, file_key  }),
       
     });
+
     if (!processResponse.ok) throw new Error("Failed to start processing");
     const processData = await processResponse.json();
     console.log(processData.message);
@@ -90,6 +100,9 @@ async function handleUpload(file) {
     // console.log(text.slice(0, 200));
     // console.log(testval.headers.get("content-type"));
     await pollStatus(book_id, currentToken);
+
+    // Refresh user textbook list (after upload)
+    await fetchBooks();
 
     setShowUploadModal(false);
   } catch (err) {
@@ -142,7 +155,7 @@ async function pollStatus(textbookId, currentToken) {
             {books.map((b) => (
               <BookCard
                 key={b.id}
-                book={b}
+                book={{ id: b.id, title: b.title }}
                 onSelect={(book) => setSelectedBook(book)}
               />
             ))}

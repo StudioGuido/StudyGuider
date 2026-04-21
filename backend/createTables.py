@@ -94,19 +94,28 @@ async def init_db():
             """
             )
 
+            usersTable = """
+                CREATE TABLE IF NOT EXISTS users (
+                    supabase_uid uuid PRIMARY KEY
+                );
+            """
+            await conn.execute(usersTable)
+
             create_textbook_table_query = """
             CREATE TABLE IF NOT EXISTS textbooks (
                 id SERIAL PRIMARY KEY,
+                user_uid UUID REFERENCES users(supabase_uid) ON DELETE CASCADE,
                 title TEXT NOT NULL,
                 author TEXT NOT NULL,
                 description TEXT NOT NULL,
-                image_path TEXT NOT NULL
+                image_path TEXT NOT NULL,
+                status VARCHAR(255) NOT NULL
             );
             """
             await conn.execute(create_textbook_table_query)
 
             chaptersTable = """
-            CREATE TABLE chapters (
+            CREATE TABLE IF NOT EXISTS chapters (
                 textbook_id INTEGER NOT NULL,
                 chapter_number INTEGER NOT NULL,
                 chapter_title TEXT NOT NULL,
@@ -131,34 +140,11 @@ async def init_db():
             """
             await conn.execute(embeddingTable)
 
-            # usersTable = """
-            # CREATE TABLE users (
-            # id SERIAL PRIMARY KEY,
-            # username VARCHAR(150) UNIQUE NOT NULL,
-            # email VARCHAR(255) UNIQUE NOT NULL,
-            # password_hash TEXT NOT NULL,
-            # first_name VARCHAR(255),
-            # last_name VARCHAR(255),
-            # created_at TIMESTAMP DEFAULT NOW(),
-            # provider VARCHAR(50),
-            # provider_id VARCHAR(255),
-            # last_login TIMESTAMP,
-            # auth_level user_role DEFAULT 'user'
-            # );
-            # """
-
-            usersTable = """
-            CREATE TABLE users (
-            supabase_uid VARCHAR(255) PRIMARY KEY
-            );
-            """
-            await conn.execute(usersTable)
-
             flashCardSetTable = """
             CREATE TABLE IF NOT EXISTS flash_card_set (
                 fcset_id SERIAL PRIMARY KEY,
                 set_title VARCHAR(255) NOT NULL,
-                user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
+                user_id UUID REFERENCES users(supabase_uid) ON DELETE CASCADE,
                 UNIQUE (user_id, set_title)
             );
             """
@@ -190,7 +176,7 @@ async def init_db():
             
             seenflashcards_table = """
             CREATE TABLE IF NOT EXISTS seen_card (
-                user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
+                user_id UUID REFERENCES users(supabase_uid) ON DELETE CASCADE,
                 flashcard_id INTEGER NOT NULL REFERENCES master_flashcard(fc_id) ON DELETE CASCADE,
                 PRIMARY KEY (user_id, flashcard_id)
             );
@@ -198,39 +184,14 @@ async def init_db():
             await conn.execute(seenflashcards_table)
 
             summaryTable = """
-            CREATE TABLE summary (
+            CREATE TABLE IF NOT EXISTS summary (
             summary_id SERIAL PRIMARY KEY,
-            user_id VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
+            user_id UUID REFERENCES users(supabase_uid) ON DELETE CASCADE,
             title VARCHAR(255) NOT NULL,
             content TEXT NOT NULL
             );
             """
             await conn.execute(summaryTable)
-            
-            # -- Textbooks table
-            user_textbook_table = """
-            CREATE TABLE user_textbook (
-                textbook_id VARCHAR(255) PRIMARY KEY,
-                textbook_title VARCHAR(255) NOT NULL,
-                user_uid VARCHAR(255) REFERENCES users(supabase_uid) ON DELETE CASCADE,
-                status VARCHAR(255) NOT NULL
-            );
-            """
-            await conn.execute(user_textbook_table)
-
-
-            # -- Chapters table
-            textbook_chapter_table = """
-            CREATE TABLE textbook_chapter (
-                chapter_id INTEGER,
-                textbook_id VARCHAR(255),
-                PRIMARY KEY (chapter_id, textbook_id),
-                FOREIGN KEY (textbook_id)
-                    REFERENCES user_textbook(textbook_id)
-                    ON DELETE CASCADE
-            );
-            """
-            await conn.execute(textbook_chapter_table)
 
             await conn.close()
 

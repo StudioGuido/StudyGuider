@@ -38,7 +38,7 @@ s3 = boto3.client(
 # s3 = boto3.client("s3")
 
 class ProcessRequest(BaseModel):
-    book_id: str
+    book_id: int
     file_key: str
 
 def upload_file(local_path: str, *, key_prefix: str = "textbooks/uploads") -> str:
@@ -61,9 +61,6 @@ def upload_file(local_path: str, *, key_prefix: str = "textbooks/uploads") -> st
 async def upload(supabase_uid, path_arr, textbook_id):
     uploaded = []
     failed = []
-
-    upload_batch_id = str(uuid.uuid4())
-    print("5", path_arr)
     
     conn = None
     try:
@@ -73,50 +70,53 @@ async def upload(supabase_uid, path_arr, textbook_id):
             user=os.getenv("DATABASE_USER"),
             password=os.getenv("DATABASE_PASSWORD"),
         )
-        
-        # Iterates over paths, uploading them to s3 and postgre db
+
         chapter_count = 1
+
+        # Iterate over paths, uploading them to S3 and inserting into DB
         for path in path_arr:
-            print("6", path)
             try:
-                # Generates chapter id and insert chapter into the db
-                chapter_id = str(uuid.uuid4())
-                await conn.execute(
-                    """
-                    INSERT INTO textbook_chapter (chapter_id, textbook_id)
-                    VALUES ($1, $2)
-                    ON CONFLICT (chapter_id, textbook_id) DO NOTHING;
-                    """,
-                    chapter_count,
-                    textbook_id,
-                )
-                chapter_count+=1
-                
-                # chapter_name = Path(path).name or "chapter.pdf"
-                # s3_key = f"textbooks/{supabase_uid}/{upload_batch_id}/{file_name}"
-                local_file_path = Path(path)
-                print(local_file_path.parts)
                 s3_key = f"users/{supabase_uid}/textbooks/{textbook_id}/chapters/{chapter_count}"
+                # print(f"Uploading {local_file_path} -> {s3_key}")
+
+                # Upload to S3 FIRST
                 s3.upload_file(
                     path,
                     BUCKET,
                     s3_key,
                     ExtraArgs={"ContentType": "application/pdf"},
                 )
+
+                # Then insert into DB
+                await conn.execute(
+                    """
+                    INSERT INTO chapters (textbook_id, chapter_number, chapter_title)
+                    VALUES ($1, $2, $3)
+                    ON CONFLICT (textbook_id, chapter_number) DO NOTHING;
+                    """,
+                    textbook_id,
+                    chapter_count,
+                    "chapter_title_placeholder",
+                )
+
                 uploaded.append(s3_key)
+                chapter_count += 1
+
             except Exception as e:
                 failed.append(path)
-                print(f"Error: {e}")
-                
+                print(f"Error uploading {path}: {e}")
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
     finally:
-        if conn: await conn.close()
-    
+        if conn:
+            await conn.close()
+
     all_ok = len(failed) == 0
+
     return {
         "message": "All files uploaded successfully" if all_ok else "Some files failed to upload",
-        "upload_batch_id": upload_batch_id,
         "uploaded": uploaded,
         "failed": failed,
     }
@@ -129,7 +129,7 @@ def download_file(key: str, download_path: str):
     )
     print(f"Downloaded to: {download_path}")
 
-# Provides frontend with a presigned url.
+# Provides frontend with a presigned url for textbook.
 @router.post("/api/getPresignedUrl")
 async def get_url(user_valid=Depends(verify_jwt)):
     
@@ -137,8 +137,8 @@ async def get_url(user_valid=Depends(verify_jwt)):
     if not supabase_uid:
         raise HTTPException(status_code=401, detail="Missing UID")
 
-    textbook_id = str(uuid.uuid4())
-    key = f"textbooks/{textbook_id}"
+    s3_uuid = str(uuid.uuid4())
+    key = f"textbooks/{s3_uuid}"
 
     conn = None
     try:
@@ -149,17 +149,21 @@ async def get_url(user_valid=Depends(verify_jwt)):
             password=os.getenv("DATABASE_PASSWORD"),
         )
         status="processing"
-        await conn.execute(
+        row = await conn.fetchrow(
             """
-            INSERT INTO user_textbook (textbook_id, user_uid, status, textbook_title)
-            VALUES ($1, $2, $3, $4)
-            ON CONFLICT (textbook_id) DO NOTHING;
+            INSERT INTO textbooks (user_uid, title, author, description, image_path, status)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id;
             """,
-            textbook_id,
             supabase_uid,
+            "title_placeholder",
+            "author_placeholder",
+            "desc_placeholder",
+            "image_path_placeholder",
             status,
-            "placeholder",
         )
+
+        textbook_id = row["id"]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
@@ -175,6 +179,74 @@ async def get_url(user_valid=Depends(verify_jwt)):
         ExpiresIn=3600,
     )
     return {"presigned_url": url, "book_id": textbook_id, "file_key": key}
+
+# Provides frontend with a presigned url for textbook chapter.
+@router.get("/api/textbooks/{textbook_id}/chapters/{chapter_id}/pdf")
+async def get_chapter_pdf_url(
+    textbook_id: int,
+    chapter_id: int,
+    user_valid=Depends(verify_jwt),
+):
+    supabase_uid = user_valid.get("sub")
+    if not supabase_uid:
+        raise HTTPException(status_code=401, detail="Missing UID")
+
+    conn = None
+    try:
+        conn = await asyncpg.connect(
+            host=os.getenv("DATABASE_HOST"),
+            database=os.getenv("DATABASE_NAME"),
+            user=os.getenv("DATABASE_USER"),
+            password=os.getenv("DATABASE_PASSWORD"),
+        )
+
+        # Verify ownership + existence
+        row = await conn.fetchrow(
+            """
+            SELECT c.chapter_number
+            FROM chapters c
+            JOIN textbooks t ON c.textbook_id = t.id
+            WHERE c.chapter_number = $1
+              AND t.id = $2
+              AND t.user_uid = $3;
+            """,
+            chapter_id,
+            textbook_id,
+            supabase_uid,
+        )
+
+        if not row:
+            raise HTTPException(status_code=404, detail="Chapter not found")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        # log e internally
+        raise HTTPException(status_code=500, detail="Database error")
+    finally:
+        if conn:
+            await conn.close()
+
+    # ✅ Construct S3 key (now safe)
+    key = f"users/{supabase_uid}/textbooks/{textbook_id}/chapters/{chapter_id}"
+
+    try:
+        url = s3.generate_presigned_url(
+            "get_object",
+            Params={
+                "Bucket": BUCKET,
+                "Key": key,
+            },
+            ExpiresIn=3600,  # 1 hour
+        )
+    except Exception as e:
+        # log e internally
+        raise HTTPException(status_code=500, detail="Failed to generate URL")
+
+    return {
+        "presigned_url": url,
+        "file_key": key,
+    }
 
 
 @router.post("/process-pdf")
@@ -193,7 +265,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
         # Generates list of local downloaded chapter paths
         listOfChapters, textbook_title = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
 
-        print("\n\n Uploading textbook", flush=True)
+        print("\n\n Uploading textbook: ", textbook_title, flush=True)
         # creates keys from filepaths and uploads chunks to s3
         await upload(supabase_uid, listOfChapters, request.book_id)
         print("\n\n Finished uploading textbook\n\n")
@@ -212,10 +284,10 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
             )
             await conn.execute(
                 """
-                UPDATE user_textbook
+                UPDATE textbooks
                 SET status = 'complete',
-                  textbook_title = $1
-                WHERE textbook_id = $2
+                    title = $1
+                WHERE id = $2;
                 """,
                 textbook_title,
                 request.book_id,
@@ -239,7 +311,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
 
 
 @router.get("/api/textbooks/{textbook_id}/status")
-async def get_job_status(textbook_id: str):
+async def get_job_status(textbook_id: int):
     conn = None
     try:
         conn = await asyncpg.connect(
@@ -251,8 +323,8 @@ async def get_job_status(textbook_id: str):
         row = await conn.fetchrow(
             """
             SELECT status
-            FROM user_textbook
-            WHERE textbook_id = $1
+            FROM textbooks
+            WHERE id = $1
             """,
             textbook_id,
         )
