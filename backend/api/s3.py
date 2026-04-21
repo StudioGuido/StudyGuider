@@ -288,7 +288,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
         # await upload(supabase_uid, listOfChapters)
         
 
-        print("\n\n Uploading textbook: ", textbook_title, flush=True)
+        print("\n\n Uploading textbook: ", book_title, flush=True)
         # creates keys from filepaths and uploads chunks to s3
         await upload(supabase_uid, listOfChapters, request.book_id)
         print("\n\n Finished uploading textbook\n\n")
@@ -308,12 +308,13 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
 
             await conn.execute(
                 """
-                UPDATE user_textbook
+                UPDATE textbooks
                 SET status = 'complete',
-                  textbook_title = $1
-                WHERE textbook_id = $2
+                    title = $1
+                WHERE id = $2;
                 """,
-                request.book_id,  # only one argument to match only $1
+                textbook_title,
+                request.book_id,
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
