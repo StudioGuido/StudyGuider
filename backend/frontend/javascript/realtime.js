@@ -82,7 +82,7 @@ async function startSession() {
                             {
                                 type: "input_text",
                                 text: `User query: ${userText}`
-                            }
+                            }                        
                         ]
                     }]
                 }
