@@ -3,7 +3,6 @@ import PhaseNavbar from "../../components/PhaseNavbar";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { fakeApi } from "../../services/fakeApi";
-import { supabase } from '../../services/supabaseClient';
 import { supabase } from "../../services/supabaseClient";
 import PdfViewer from "./PdfViewer";
 import Summary from "./Summary";
