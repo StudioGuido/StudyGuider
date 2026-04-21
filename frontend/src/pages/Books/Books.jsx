@@ -1,6 +1,4 @@
-import { fakeApi } from "../../services/fakeApi";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from '../../services/supabaseClient';
 import BookCard from "../../components/BookCard";
@@ -11,7 +9,6 @@ export default function Books() {
   const [books, setBooks] = useState(null);
   const [selectedBook, setSelectedBook] = useState(null);
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const [status, setStatus] = useState("");
@@ -40,6 +37,10 @@ export default function Books() {
   useEffect(() => {
     fetchBooks();
   }, []);
+
+  useEffect(() => {
+    loadBooks();
+  }, [loadBooks, user?.id]);
   
   if (!books)
     return (
@@ -105,6 +106,7 @@ async function handleUpload(file) {
     await fetchBooks();
 
     setShowUploadModal(false);
+    window.location.reload();
   } catch (err) {
     console.error("Upload error:", err);
     const message = err.message === "Failed to fetch"
