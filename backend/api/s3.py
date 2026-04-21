@@ -10,6 +10,7 @@ import time
 import re
 import fitz
 import api._retrieveChapters as rc
+import api._creatingEmbeddings as ce
 
 """
 Notes: 
@@ -263,7 +264,29 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
         download_file(request.file_key, "downloaded_textbook.pdf")
         
         # Generates list of local downloaded chapter paths
-        listOfChapters, textbook_title = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
+        listOfChapters, book_title = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
+        
+        # TODO: Call creating embeddings function here
+        # Debugging Embeddings
+        # for p in listOfChapters:
+        #     print(repr(p), "exists:", os.path.exists(p) if isinstance(p, str) else "not-a-str", flush=True)
+
+        # print("\n\n100000\n\n")
+        ce.createEmbeddings(listOfChapters)
+        # await ce.fillTables(listOfChapters, request.book_id)
+        # print("\n\n200000\n\n")
+        """
+        1. Run the app with s3 upload once to get the seperate files
+        2. Write your helper function that will create embeddings
+        2.5 Add those embeddings to the database
+        3. Test that you are doing this correctly
+        4. Then you can integrate it into the main code.
+        5. Merge your code with Pierce's code
+        
+        """
+        # creates keys from filepaths and uploads chunks to s3
+        # await upload(supabase_uid, listOfChapters)
+        
 
         print("\n\n Uploading textbook: ", textbook_title, flush=True)
         # creates keys from filepaths and uploads chunks to s3
@@ -282,15 +305,15 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
                 user=os.getenv("DATABASE_USER"),
                 password=os.getenv("DATABASE_PASSWORD"),
             )
+
             await conn.execute(
                 """
-                UPDATE textbooks
+                UPDATE user_textbook
                 SET status = 'complete',
-                    title = $1
-                WHERE id = $2;
+                  textbook_title = $1
+                WHERE textbook_id = $2
                 """,
-                textbook_title,
-                request.book_id,
+                request.book_id,  # only one argument to match only $1
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
