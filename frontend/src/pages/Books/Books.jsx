@@ -40,10 +40,6 @@ export default function Books() {
   useEffect(() => {
     fetchBooks();
   }, []);
-
-  useEffect(() => {
-    loadBooks();
-  }, [loadBooks, user?.id]);
   
   if (!books)
     return (
