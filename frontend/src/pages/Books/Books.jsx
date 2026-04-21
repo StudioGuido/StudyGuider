@@ -1,14 +1,17 @@
+import { fakeApi } from "../../services/fakeApi";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from '../../services/supabaseClient';
 import BookCard from "../../components/BookCard";
 import BookModal from "../../components/BookModal";
 import UploadModal from "../../components/UploadModal";
+import { useNavigate } from "react-router-dom";
 
 export default function Books() {
   const [books, setBooks] = useState(null);
   const [selectedBook, setSelectedBook] = useState(null);
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const [status, setStatus] = useState("");
