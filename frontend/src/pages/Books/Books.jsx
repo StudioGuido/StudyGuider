@@ -1,11 +1,13 @@
 import { fakeApi } from "../../services/fakeApi";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from '../../services/supabaseClient';
 import BookCard from "../../components/BookCard";
 import BookModal from "../../components/BookModal";
 import UploadModal from "../../components/UploadModal";
+import { useNavigate } from "react-router-dom";
+
+const MAX_TEXTBOOKS = 3;
 
 export default function Books() {
   const [books, setBooks] = useState(null);
@@ -105,12 +107,33 @@ async function handleUpload(file) {
     await fetchBooks();
 
     setShowUploadModal(false);
+    window.location.reload();
   } catch (err) {
     console.error("Upload error:", err);
     const message = err.message === "Failed to fetch"
       ? "Could not connect to the server. Please try again later."
       : err.message;
     setUploadError(message);
+  }
+}
+
+async function handleDelete(book) {
+  if (!confirm(`Delete "${book.title}"? This cannot be undone.`)) return;
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const currentToken = sessionData.session?.access_token;
+    if (!currentToken) throw new Error("Not authenticated");
+
+    const res = await fetch(`http://localhost:8000/api/textbooks/${book.id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${currentToken}` },
+    });
+    if (!res.ok) throw new Error("Failed to delete textbook");
+
+    setBooks((prev) => prev.filter((b) => b.id !== book.id));
+  } catch (err) {
+    console.error("Delete error:", err);
+    alert(err.message);
   }
 }
 
@@ -157,6 +180,7 @@ async function pollStatus(textbookId, currentToken) {
                 key={b.id}
                 book={{ id: b.id, title: b.title }}
                 onSelect={(book) => setSelectedBook(book)}
+                onDelete={handleDelete}
               />
             ))}
           </ul>
@@ -165,11 +189,17 @@ async function pollStatus(textbookId, currentToken) {
             <button
               type="button"
               onClick={() => { setUploadError(null); setShowUploadModal(true); }}
-              className="w-full p-5 rounded-xl border border-dashed border-gray-700 text-center text-white bg-transparent hover:bg-white/3 transition"
+              disabled={books.length >= MAX_TEXTBOOKS}
+              className="w-full p-5 rounded-xl border border-dashed border-gray-700 text-center text-white bg-transparent hover:bg-white/3 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
             >
               <div className="text-3xl">+</div>
               <div className="mt-1 font-semibold">Import New Textbook</div>
             </button>
+            {books.length >= MAX_TEXTBOOKS && (
+              <p className="mt-3 text-sm text-gray-400 text-center">
+                You can only have {MAX_TEXTBOOKS} textbooks. Delete one to upload another.
+              </p>
+            )}
           </div>
         </div>
         {selectedBook && (

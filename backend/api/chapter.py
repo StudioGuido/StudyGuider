@@ -8,6 +8,7 @@ import logging
 import uuid
 from api.auth import verify_jwt
 import redis.asyncio as redis
+from uuid import UUID
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -30,7 +31,7 @@ class ChapterOpenRequest(BaseModel):
 
 
 @router.get("/api/getChapters")
-async def getChapters_endpoint(textbook_id: int, user_id = Depends(verify_jwt)):
+async def getChapters_endpoint(textbook_id: UUID, user_id = Depends(verify_jwt)):
 
     '''
     This api is used to retrieve every chapter within a textbook given

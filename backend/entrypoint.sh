@@ -4,7 +4,7 @@ echo "⏳ Initializing database..."
 
 # setting up database
 python createTables.py
-python moveToDb.py
+# python moveToDb.py
 
 
 # python warmModel.py
