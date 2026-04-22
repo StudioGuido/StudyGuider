@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../services/supabaseClient";
 import BookCard from "../../components/BookCard";
-import BookModal from "../../components/BookModal";
 import UploadModal from "../../components/UploadModal";
 import { useNavigate } from "react-router-dom";
 
@@ -11,7 +10,6 @@ const MAX_TEXTBOOKS = 3;
 
 export default function Books() {
   const [books, setBooks] = useState(null);
-  const [selectedBook, setSelectedBook] = useState(null);
   const { user } = useAuth();
   const navigate = useNavigate();
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -28,10 +26,24 @@ export default function Books() {
     await supabase.auth.signOut();
   };
 
+  async function handleBookSelect(book) {
+    const session = await supabase.auth.getSession();
+    const token = session.data.session.access_token;
+
+    const res = await fetch(
+      `http://localhost:8000/api/getChapters?textbook_id=${book.id}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    const data = await res.json();
+    const firstChapter = data.response[0].number;
+
+    navigate(`/books/${book.id}/chapters/${firstChapter}/understanding`);
+  }
+
   async function fetchBooks() {
     const session = await supabase.auth.getSession();
     const token = session.data.session.access_token;
-    console.log(token)
+    console.log(token);
 
     const res = await fetch("http://localhost:8000/api/getTextbooks", {
       headers: { Authorization: `Bearer ${token}` },
@@ -184,14 +196,13 @@ export default function Books() {
         </header>
 
         <div className="bg-[#0b0b0b] border border-gray-800 rounded-2xl p-6 space-y-4 shadow-xl">
-
           {books.length > 0 && (
             <ul className="space-y-3">
               {books.map((b) => (
                 <BookCard
                   key={b.id}
                   book={{ id: b.id, title: b.title }}
-                  onSelect={(book) => setSelectedBook(book)}
+                  onSelect={handleBookSelect}
                   onDelete={handleDelete}
                 />
               ))}
@@ -221,12 +232,7 @@ export default function Books() {
             )}
           </div>
         </div>
-        {selectedBook && (
-          <BookModal
-            book={selectedBook}
-            onClose={() => setSelectedBook(null)}
-          />
-        )}
+
         {showUploadModal && (
           <UploadModal
             onClose={() => setShowUploadModal(false)}
