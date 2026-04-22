@@ -25,20 +25,20 @@ function getTabStyle(isActive) {
 export default function Understanding({ defaultMode = "summary" }) {
   const { bookId, chapterId } = useParams();
   const [mode, setMode] = useState(defaultMode);
-  const [summary, setSummary] = useState(null);
+  const [summary, setSummary] = useState("Loading summary...");
   const [pdfUrl, setPdfUrl] = useState(null);
   const [pdfError, setPdfError] = useState(null);
   const [bookTitle, setBookTitle] = useState(null);
   // Placeholder until we get chapter titles
   const chapterTitle = `${bookTitle || ""}: Chapter ${chapterId || ""}`;
 
-  useEffect(() => {
-    if (mode === "summary") {
-      fakeApi
-        .getSummary(bookId, chapterId)
-        .then((data) => setSummary(data?.text ?? null));
-    }
-  }, [bookId, chapterId, mode]); // revisit
+  // useEffect(() => {
+  //   if (mode === "summary") {
+  //     fakeApi
+  //       .getSummary(bookId, chapterId)
+  //       .then((data) => setSummary(data?.text ?? null));
+  //   }
+  // }, [bookId, chapterId, mode]); // revisit
 
   useEffect(() => {
     let alive = true;
@@ -105,39 +105,40 @@ export default function Understanding({ defaultMode = "summary" }) {
 
   // useEffect to grab summary and pass as a prop to summary component
   useEffect(() => {
-  async function fetchSummary() {
-    try {
-      if (!bookId || !chapterId) return;
+    if (mode !== "summary") return;
+    async function fetchSummary() {
+      try {
+        if (!bookId || !chapterId) return;
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (!token) throw new Error("Not authenticated");
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token;
+        if (!token) throw new Error("Not authenticated");
 
-      const res = await fetch("http://localhost:8000/api/generateSummary", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          textbook: Number(bookId),
-          chapter: Number(chapterId),
-        }),
-      });
+        const res = await fetch("http://localhost:8000/api/generateSummary", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            textbook_id: bookId,
+            chapter_number: parseInt(chapterId, 10)
+          }),
+        });
 
-      if (!res.ok) throw new Error("Failed to generate summary");
+        if (!res.ok) throw new Error("Failed to generate summary");
 
-      const data = await res.json();
+        const data = await res.json();
 
-      setSummary(data.response); // adjust if needed
+        setSummary(data.response); // adjust if needed
 
-    } catch (err) {
-      console.error("Error generating summary:", err);
+      } catch (err) {
+        console.error("Error generating summary:", err);
+      }
     }
-  }
 
-  fetchSummary();
-}, [bookId, chapterId]);
+    fetchSummary();
+}, [bookId, chapterId, mode]);
   
   // const bookTitle = "Sample Book Title";
   // const chapterTitle = "Chapter 1: Introduction";

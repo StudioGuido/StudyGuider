@@ -7,7 +7,7 @@ from api.auth import verify_jwt
 import logging
 router = APIRouter()
 logger = logging.getLogger(__name__)
-import uuid
+from uuid import UUID
 
 @router.get("/api/getTextbooks")
 async def getTextbooks_endpoint(user_id = Depends(verify_jwt)):
@@ -66,7 +66,7 @@ for any database errors.
     
 @router.get("/api/getTextbookTitle")
 async def get_textbook_title(
-    textbook_id: int,
+    textbook_id: UUID,
     user_valid=Depends(verify_jwt)
 ):
     conn = None
