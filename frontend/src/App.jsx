@@ -5,6 +5,7 @@ import Chapters from "./pages/Chapters/Chapters";
 import Understanding from "./pages/Understanding/Understanding";
 import Reinforce from "./pages/Reinforce/Reinforce";
 import PhaseLayout from "./components/PhaseLayout";
+import Mastery from "./pages/Mastery/Mastery";
 
 // --- NEW IMPORTS FOR AUTH ---
 import { useAuth } from "./context/AuthContext"; // Import the hook to access user state
@@ -65,6 +66,12 @@ export default function App() {
               path="/books/:bookId/chapters/:chapterId/reinforce/quiz/results"
               element={<Reinforce type="quiz" showResults />}
             />
+
+            <Route 
+            path="/books/:bookId/chapters/:chapterId/mastery"
+            element={<Mastery />}
+            />
+
           </Route>
         </Routes>
       </Layout>
