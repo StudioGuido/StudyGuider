@@ -47,5 +47,13 @@ app.add_middleware(
 app.include_router(flashcard_router)
 app.include_router(summary_router)
 
+# Health router for deployment testing
+@app.get("/health")
+def health():
+    return {
+        "status": "ok",
+        "service": "backend",
+    }
+
 
 # uvicorn main:app --reload
