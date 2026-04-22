@@ -25,7 +25,6 @@ services:
       - .env
   
   backend:
-
     build: .
     container_name: studyguider_backend
     ports:
@@ -36,9 +35,17 @@ services:
       - ./backend/images:/images
     depends_on:
       - db
-
+      - redis
     env_file:
       - .env
+
+  redis:
+    image: redis:alpine
+    container_name: studyguider_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
 
   db:
     image: ankane/pgvector
@@ -54,3 +61,4 @@ services:
 
 volumes:
   pgdata:
+  redisdata:

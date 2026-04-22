@@ -112,9 +112,6 @@ export default function Understanding({ defaultMode = "summary" }) {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       if (!token) throw new Error("Not authenticated");
-      await   fetch("http://localhost:8000/ping")
-            .then(r => r.json())
-            .then(console.log);
 
       const res = await fetch("http://localhost:8000/api/generateSummary", {
         method: "POST",

@@ -10,6 +10,8 @@ import time
 import re
 import fitz
 import api._retrieveChapters as rc
+import api._creatingEmbeddings as ce
+from uuid import UUID
 
 """
 Notes: 
@@ -38,7 +40,7 @@ s3 = boto3.client(
 # s3 = boto3.client("s3")
 
 class ProcessRequest(BaseModel):
-    book_id: int
+    book_id: UUID
     file_key: str
 
 def upload_file(local_path: str, *, key_prefix: str = "textbooks/uploads") -> str:
@@ -183,7 +185,7 @@ async def get_url(user_valid=Depends(verify_jwt)):
 # Provides frontend with a presigned url for textbook chapter.
 @router.get("/api/textbooks/{textbook_id}/chapters/{chapter_id}/pdf")
 async def get_chapter_pdf_url(
-    textbook_id: int,
+    textbook_id: UUID,
     chapter_id: int,
     user_valid=Depends(verify_jwt),
 ):
@@ -263,11 +265,35 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
         download_file(request.file_key, "downloaded_textbook.pdf")
         
         # Generates list of local downloaded chapter paths
-        listOfChapters, textbook_title = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
+        listOfChapters, book_title = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
+        
+        # TODO: Call creating embeddings function here
+        # Debugging Embeddings
+        # for p in listOfChapters:
+        #     print(repr(p), "exists:", os.path.exists(p) if isinstance(p, str) else "not-a-str", flush=True)
 
-        print("\n\n Uploading textbook: ", textbook_title, flush=True)
+        # print("\n\n100000\n\n")
+        
+        # await ce.fillTables(listOfChapters, request.book_id)
+        # print("\n\n200000\n\n")
+        """
+        1. Run the app with s3 upload once to get the seperate files
+        2. Write your helper function that will create embeddings
+        2.5 Add those embeddings to the database
+        3. Test that you are doing this correctly
+        4. Then you can integrate it into the main code.
+        5. Merge your code with Pierce's code
+        
+        """
+        # creates keys from filepaths and uploads chunks to s3
+        # await upload(supabase_uid, listOfChapters)
+        
+
+        print("\n\n Uploading textbook: ", book_title, flush=True)
         # creates keys from filepaths and uploads chunks to s3
         await upload(supabase_uid, listOfChapters, request.book_id)
+        
+        await ce.fillTables(listOfChapters, request.book_id)
         print("\n\n Finished uploading textbook\n\n")
 
 
@@ -282,6 +308,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
                 user=os.getenv("DATABASE_USER"),
                 password=os.getenv("DATABASE_PASSWORD"),
             )
+
             await conn.execute(
                 """
                 UPDATE textbooks
@@ -289,7 +316,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
                     title = $1
                 WHERE id = $2;
                 """,
-                textbook_title,
+                book_title,
                 request.book_id,
             )
         except Exception as e:
@@ -311,7 +338,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
 
 
 @router.get("/api/textbooks/{textbook_id}/status")
-async def get_job_status(textbook_id: int):
+async def get_job_status(textbook_id: UUID):
     conn = None
     try:
         conn = await asyncpg.connect(

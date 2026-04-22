@@ -15,8 +15,14 @@ export const AuthProvider = ({ children }) => {
     });
 
     // Listen for logins/logouts in real-time
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      // On sign-out, reset the URL so the next login/signup lands on /books
+      // instead of restoring the previous in-app route (which may reference
+      // resources the new user doesn't have, e.g. a book they didn't upload).
+      if (event === 'SIGNED_OUT') {
+        window.history.replaceState(null, '', '/');
+      }
     });
 
     return () => subscription.unsubscribe();

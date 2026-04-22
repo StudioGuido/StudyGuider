@@ -35,7 +35,7 @@ def extract_chapters_from_pdf_Updated_Better_Version(pdf_path, supabase_uid):
     # indexed to standard "0" start (TOC has 1 as start index)
     level1_entries = [(title, page - 1) for title, page in level1_entries]
     
-    
+
     seen_pages = {}
     deduped_entries = []
 
