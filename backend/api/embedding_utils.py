@@ -56,12 +56,119 @@ def _generate_embeddings_blocking(texts):
         raise RuntimeError(f"Error generating embeddings: {e}")
 
     
+async def generate_contextHelper(transcript, chapter, textbook):
+    '''
+    This function will generate embeddings for a transcript then
+    run similarity search on a chapters vector embeddings based on its textbook
+    then use cross encoder reranking to narrow returned chunks to the best 3
+    '''
+    request_id = str(uuid.uuid4())
+    
+    try:
+        embedding = await generate_embeddings(transcript)
+    except Exception as e:
+        raise
+    
+    #set embeddings to string of float32 values
+    embedding = str(np.array(embedding).astype("float32")[0].tolist())
+
+    try:
+        logger.info(f"[{request_id}] Connecting to database...")
+
+        conn = await asyncpg.connect(
+        host=os.getenv("DATABASE_HOST"),
+        database=os.getenv("DATABASE_NAME"),
+        user=os.getenv("DATABASE_USER"),
+        password=os.getenv("DATABASE_PASSWORD")
+        )
+
+        res = await conn.fetchrow("""
+            SELECT c.textbook_id, c.chapter_number
+            FROM chapters c
+            JOIN textbooks t ON c.textbook_id = t.id
+            WHERE t.title = $1 AND c.chapter_title = $2;
+        """, textbook, chapter)
+        
+        if not res:
+            logger.warning(f"[{request_id}] Chapter or textbook not found")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Chapter {chapter} not found or textbook {textbook} not found.")
+        
+        textbook_id = res["textbook_id"]
+        chapter_number = res["chapter_number"]
+
+        logger.info(f"[{request_id}] Getting 5 chunks using cosine similarity search")
+
+        rows = await conn.fetch("""
+            SELECT chunk_text, embedding <-> $1 AS distance
+            FROM chapter_embeddings
+            WHERE textbook_id = $2 AND chapter_number = $3
+            ORDER BY distance ASC
+            LIMIT 5;
+        """, embedding, textbook_id, chapter_number)
+
+        if not rows:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Empty Table Row")
+        
+        # combine context chunks
+        context = [row[0] for row in rows]
+
+        logger.info(f"[{request_id}] Calling BERT...")
+        #RERANKING PROCESS
+        model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+
+        queried_context = []
+
+        #get list of [query, chunk]
+        for c in context:
+            queried_context.append([transcript, c])
+        
+        scores = model.predict(queried_context)
+        logger.info(f"[{request_id}] All chunk scores: {scores}")
+
+        scored_context = []
+        
+        for i, score in enumerate(scores):
+            data = {
+                "score": score,
+                "context": context[i]
+            }
+            scored_context.append(data)
+
+        def get_first_element(x):
+            return x["score"]
+        
+        #sort chunks by their score
+        scored_context = sorted(scored_context, key=get_first_element, reverse=True)
+
+        scored_context = scored_context[:3]
+
+        context = []
+        for c in scored_context:
+            context.append(c["context"])
+        
+        context_str = "\n".join(context)
+
+        return context_str
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        logger.error(f"[{request_id}] Database error occured")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    
+    finally:
+        await conn.close()
 
 async def generate_Helper(prompt, chapter, textbook):
     '''
     This function will generate embeddings for a prompt then
     run similairity search on a chapters vector embeddings based
-    on its textbook 
+    on its textbook and use cross encoder reranker to return best 3 chunks
     '''
     request_id = str(uuid.uuid4())
 

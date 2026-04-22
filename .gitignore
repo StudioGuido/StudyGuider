@@ -4,3 +4,5 @@
 /backend/bookadders/textbookPDFs
 /research/__pycache__
 /research/importFunctionality/myenv
+*__pycache__
+*__init__.py
