@@ -60,7 +60,7 @@ def upload_file(local_path: str, *, key_prefix: str = "textbooks/uploads") -> st
     return key
 
 # Uploads chunked chapter PDFs (one batch id per request avoids S3 overwrites on same filenames).
-async def upload(supabase_uid, path_arr, textbook_id):
+async def upload(supabase_uid, path_arr, textbook_id, title_arr):
     uploaded = []
     failed = []
     
@@ -98,7 +98,7 @@ async def upload(supabase_uid, path_arr, textbook_id):
                     """,
                     textbook_id,
                     chapter_count,
-                    "chapter_title_placeholder",
+                    title_arr[chapter_count - 1],
                 )
 
                 uploaded.append(s3_key)
@@ -265,7 +265,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
         download_file(request.file_key, "downloaded_textbook.pdf")
         
         # Generates list of local downloaded chapter paths
-        listOfChapters, book_title = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
+        listOfChapters, book_title, listOfTitles = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
         
         if not listOfChapters:
             raise ValueError("No chapters could be extracted from the PDF. Ensure the PDF has a valid Table of Contents and chapter structure.")
@@ -294,7 +294,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
 
         print("\n\n Uploading textbook: ", book_title, flush=True)
         # creates keys from filepaths and uploads chunks to s3
-        await upload(supabase_uid, listOfChapters, request.book_id)
+        await upload(supabase_uid, listOfChapters, request.book_id, listOfTitles)
         
         await ce.fillTables(listOfChapters, request.book_id)
         print("\n\n Finished uploading textbook\n\n")

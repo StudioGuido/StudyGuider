@@ -15,13 +15,15 @@ export default function ChapterSidebar({ className = "", activePhase }) {
 
       const res = await fetch(
         `http://localhost:8000/api/getChapters?textbook_id=${bookId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       const data = await res.json();
       if (alive) setChapters(data.response);
     }
     fetchChapters();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [bookId]);
 
   const getChapterClasses = (isActive) => {
@@ -57,24 +59,26 @@ export default function ChapterSidebar({ className = "", activePhase }) {
           </button>
         </div>
 
-        <div className={`w-80 transition-opacity duration-300 ${collapsed ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+        <div
+          className={`w-80 transition-opacity duration-300 ${collapsed ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+        >
           <header className="px-4 pb-3 pt-1 border-b border-neutral-800">
             <h2 className="text-xl font-semibold">Chapters</h2>
           </header>
 
           <nav className="p-3 overflow-y-auto h-[calc(100vh-7.5rem)]">
             <ul className="space-y-2">
-              {chapters.map((chapterId, idx) => (
-                <li key={chapterId}>
+              {chapters.map((chapter, idx) => (
+                <li key={chapter.number}>
                   <NavLink
-                    to={`/books/${bookId}/chapters/${chapterId}/${activePhase === "understanding" ? "understanding" : "reinforce/flashcards"}`}
+                    to={`/books/${bookId}/chapters/${chapter.number}/${activePhase === "understanding" ? "understanding" : "reinforce/flashcards"}`}
                     className={({ isActive }) => getChapterClasses(isActive)}
                     style={({ isActive }) =>
                       isActive ? { color: "#000000" } : undefined
                     }
                     end={false}
                   >
-                    <span className="font-medium">{`Chapter ${idx + 1}`}</span>
+                    <span className="font-medium">{chapter.title}</span>
                   </NavLink>
                 </li>
               ))}

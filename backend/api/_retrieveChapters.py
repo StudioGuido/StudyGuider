@@ -175,7 +175,9 @@ def extract_chapters_from_pdf_Updated_Better_Version(pdf_path, supabase_uid):
 
     doc.close()
 
-    return listOfChapters, textbook_title
+    listOfTitles = [title for title, _ in mapOfChapters]
+
+    return listOfChapters, textbook_title, listOfTitles
 
 
 def find_chapters_by_page(page, toc_title=""):

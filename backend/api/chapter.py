@@ -52,14 +52,14 @@ async def getChapters_endpoint(textbook_id: UUID, user_id = Depends(verify_jwt))
         )
 
         rows = await conn.fetch(
-            "SELECT chapter_number FROM chapters WHERE textbook_id = $1 ORDER BY chapter_number;",
+            "SELECT chapter_number, chapter_title FROM chapters WHERE textbook_id = $1 ORDER BY chapter_number;",
             textbook_id
         )
 
         if not rows:
             raise HTTPException(status_code=404, detail="Chapter Titles not found")
 
-        chapters = [row["chapter_number"] for row in rows]
+        chapters = [{"number": row["chapter_number"], "title": row["chapter_title"]} for row in rows]
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,

@@ -13,7 +13,7 @@ export default function Chapters() {
 
       const res = await fetch(
         `http://localhost:8000/api/getChapters?textbook_id=${bookId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       const data = await res.json();
       setChapters(data.response);
@@ -26,18 +26,18 @@ export default function Chapters() {
     <section>
       <h1 className="text-2xl font-semibold mb-4">Chapters</h1>
       <ul className="space-y-2">
-        {chapters.map((chapterId, index) => (
-          <li key={chapterId} className="flex gap-3">
-            <span>Chapter {index + 1}</span>
+        {chapters.map((chapter, index) => (
+          <li key={chapter.number} className="flex gap-3">
+            <span>{chapter.title}</span>
             <Link
               className="text-blue-600 underline"
-              to={`/books/${bookId}/chapters/${chapterId}/understanding`}
+              to={`/books/${bookId}/chapters/${chapter.number}/understanding`}
             >
               Understanding
             </Link>
             <Link
               className="text-blue-600 underline"
-              to={`/books/${bookId}/chapters/${chapterId}/reinforce/flashcards`}
+              to={`/books/${bookId}/chapters/${chapter.number}/reinforce/flashcards`}
             >
               Reinforce
             </Link>
