@@ -7,6 +7,8 @@ import BookModal from "../../components/BookModal";
 import UploadModal from "../../components/UploadModal";
 import { useNavigate } from "react-router-dom";
 
+const MAX_TEXTBOOKS = 3;
+
 export default function Books() {
   const [books, setBooks] = useState(null);
   const [selectedBook, setSelectedBook] = useState(null);
@@ -115,6 +117,26 @@ async function handleUpload(file) {
   }
 }
 
+async function handleDelete(book) {
+  if (!confirm(`Delete "${book.title}"? This cannot be undone.`)) return;
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const currentToken = sessionData.session?.access_token;
+    if (!currentToken) throw new Error("Not authenticated");
+
+    const res = await fetch(`http://localhost:8000/api/textbooks/${book.id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${currentToken}` },
+    });
+    if (!res.ok) throw new Error("Failed to delete textbook");
+
+    setBooks((prev) => prev.filter((b) => b.id !== book.id));
+  } catch (err) {
+    console.error("Delete error:", err);
+    alert(err.message);
+  }
+}
+
 async function pollStatus(textbookId, currentToken) {
   const MAX_ATTEMPTS = 60; // 3 min at 3s intervals
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
@@ -158,6 +180,7 @@ async function pollStatus(textbookId, currentToken) {
                 key={b.id}
                 book={{ id: b.id, title: b.title }}
                 onSelect={(book) => setSelectedBook(book)}
+                onDelete={handleDelete}
               />
             ))}
           </ul>
@@ -166,11 +189,17 @@ async function pollStatus(textbookId, currentToken) {
             <button
               type="button"
               onClick={() => { setUploadError(null); setShowUploadModal(true); }}
-              className="w-full p-5 rounded-xl border border-dashed border-gray-700 text-center text-white bg-transparent hover:bg-white/3 transition"
+              disabled={books.length >= MAX_TEXTBOOKS}
+              className="w-full p-5 rounded-xl border border-dashed border-gray-700 text-center text-white bg-transparent hover:bg-white/3 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
             >
               <div className="text-3xl">+</div>
               <div className="mt-1 font-semibold">Import New Textbook</div>
             </button>
+            {books.length >= MAX_TEXTBOOKS && (
+              <p className="mt-3 text-sm text-gray-400 text-center">
+                You can only have {MAX_TEXTBOOKS} textbooks. Delete one to upload another.
+              </p>
+            )}
           </div>
         </div>
         {selectedBook && (
