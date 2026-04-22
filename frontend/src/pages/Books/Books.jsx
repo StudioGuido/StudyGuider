@@ -86,11 +86,14 @@ async function handleUpload(file) {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${currentToken}`,
        },
-      body: JSON.stringify({ book_id, file_key  }),
+      body: JSON.stringify({ book_id, file_key }),
       
     });
 
-    if (!processResponse.ok) throw new Error("Failed to start processing");
+    if (!processResponse.ok) {
+      const errorData = await processResponse.json().catch(() => ({}));
+      throw new Error(errorData.detail || "Failed to start processing");
+    }
     const processData = await processResponse.json();
     console.log(processData.message);
 

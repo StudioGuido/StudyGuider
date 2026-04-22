@@ -28,6 +28,10 @@ def extract_chapters_from_pdf_Updated_Better_Version(pdf_path, supabase_uid):
     doc = fitz.open(pdf_path)
     textbook_title = doc.metadata["title"]
     toc = doc.get_toc()
+
+    if not toc:
+        raise ValueError("No metadata Table of Contents found in this PDF.")
+
     mapOfChapters = []
 
     # Collect all level-1 TOC entries with their pages first

@@ -29,7 +29,7 @@ async def getTextbooks_endpoint(user_id = Depends(verify_jwt)):
         )
 
         rows = await conn.fetch(
-            "SELECT id, title, status FROM textbooks WHERE user_uid = $1;",
+            "SELECT id, title, status FROM textbooks WHERE user_uid = $1 AND status = 'complete';",
             supabase_uid,
         )
 

@@ -267,6 +267,9 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
         # Generates list of local downloaded chapter paths
         listOfChapters, book_title = rc.extract_chapters_from_pdf_Updated_Better_Version("downloaded_textbook.pdf", supabase_uid)
         
+        if not listOfChapters:
+            raise ValueError("No chapters could be extracted from the PDF. Ensure the PDF has a valid Table of Contents and chapter structure.")
+        
         # TODO: Call creating embeddings function here
         # Debugging Embeddings
         # for p in listOfChapters:
@@ -333,7 +336,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
     except Exception as e:
         print(f"Error: {e}")
 
-        raise HTTPException(status_code=500, detail="Processing failed")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 
