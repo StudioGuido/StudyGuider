@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useParams } from 'react-router-dom'
 
 export default function Mastery() {
+  const {bookId, chapterId } = useParams(); 
   const [status, setStatus] = useState('Not connected');
   const [isConnecting, setIsConnecting] = useState(false);
   const [transcripts, setTranscripts] = useState([]);
@@ -85,6 +87,8 @@ export default function Mastery() {
 
           // Update UI with user's speech
           setTranscripts((prev) => [...prev, { role: 'user', text: userText }]);
+          
+          console.log("TEXTBOOK ID:" + bookId)
 
           let chunks = [];
           try {
@@ -93,10 +97,16 @@ export default function Mastery() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 transcript: userText,
-                chapter: "The Way of the Program",
-                textbook: "thinkpython2"
+                chapter: chapterId,
+                textbook: bookId,
               })
             });
+
+            if (!res.ok) {
+            // This will print the exact Pydantic validation error to your browser console
+            const errorDetails = await res.json();
+            console.error("FastAPI 422 Error:", JSON.stringify(errorDetails, null, 2));
+}
             const data = await res.json();
             chunks = data.response;
             console.log("Context fetched:", chunks);

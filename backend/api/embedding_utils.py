@@ -83,11 +83,10 @@ async def generate_contextHelper(transcript, chapter, textbook):
         )
 
         res = await conn.fetchrow("""
-            SELECT c.textbook_id, c.chapter_number
-            FROM chapters c
-            JOIN textbooks t ON c.textbook_id = t.id
-            WHERE t.title = $1 AND c.chapter_title = $2;
-        """, textbook, chapter)
+            SELECT textbook_id, chapter_number
+            FROM chapters
+            WHERE textbook_id = $1 AND chapter_number = $2;
+        """, textbook, int(chapter))
         
         if not res:
             logger.warning(f"[{request_id}] Chapter or textbook not found")
