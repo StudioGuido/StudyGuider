@@ -43,10 +43,14 @@ export default function PdfViewer({ fileUrl, initialScale = 1, error = null }) {
   // CSS scale factor: at 100% zoom the page fits the container width
   const cssScale = containerWidth > 0 ? (containerWidth / RENDER_WIDTH) * scale : 1;
 
+  const MIN_SCALE = 0.5;
+  const MAX_SCALE = 3;
   const zoomIn = () =>
-    setScale((s) => Math.min(Math.round(s * 1.1 * 10) / 10, 3));
+    setScale((s) => Math.min(Math.round(s * 1.1 * 10) / 10, MAX_SCALE));
   const zoomOut = () =>
-    setScale((s) => Math.max(Math.round(s * 0.9 * 10) / 10, 0.5));
+    setScale((s) => Math.max(Math.round(s * 0.9 * 10) / 10, MIN_SCALE));
+  const canZoomIn = scale < MAX_SCALE;
+  const canZoomOut = scale > MIN_SCALE;
 
   return (
     <div className="flex h-[70vh] flex-col rounded-3xl border border-neutral-800 bg-[#050509] text-slate-100 overflow-hidden">
@@ -62,8 +66,14 @@ export default function PdfViewer({ fileUrl, initialScale = 1, error = null }) {
 
         {/* Zoom controls */}
         <button
-          onClick={zoomOut}
-          className="flex h-7 w-7 items-center justify-center rounded-md border border-neutral-700 text-sm leading-none hover:bg-neutral-800 transition"
+          onClick={canZoomOut ? zoomOut : undefined}
+          aria-disabled={!canZoomOut}
+          title={canZoomOut ? "Zoom out" : "Minimum zoom reached"}
+          className={`flex h-7 w-7 items-center justify-center rounded-md border text-sm leading-none transition ${
+            canZoomOut
+              ? "border-neutral-700 hover:bg-neutral-800"
+              : "cursor-not-allowed! border-neutral-800 text-slate-600"
+          }`}
         >
           –
         </button>
@@ -71,8 +81,14 @@ export default function PdfViewer({ fileUrl, initialScale = 1, error = null }) {
           {Math.round(scale * 100)}%
         </span>
         <button
-          onClick={zoomIn}
-          className="flex h-7 w-7 items-center justify-center rounded-md border border-neutral-700 text-sm leading-none hover:bg-neutral-800 transition"
+          onClick={canZoomIn ? zoomIn : undefined}
+          aria-disabled={!canZoomIn}
+          title={canZoomIn ? "Zoom in" : "Maximum zoom reached"}
+          className={`flex h-7 w-7 items-center justify-center rounded-md border text-sm leading-none transition ${
+            canZoomIn
+              ? "border-neutral-700 hover:bg-neutral-800"
+              : "cursor-not-allowed! border-neutral-800 text-slate-600"
+          }`}
         >
           +
         </button>
