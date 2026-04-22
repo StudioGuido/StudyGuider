@@ -11,6 +11,7 @@ import re
 import fitz
 import api._retrieveChapters as rc
 import api._creatingEmbeddings as ce
+from uuid import UUID
 
 """
 Notes: 
@@ -39,7 +40,7 @@ s3 = boto3.client(
 # s3 = boto3.client("s3")
 
 class ProcessRequest(BaseModel):
-    book_id: int
+    book_id: UUID
     file_key: str
 
 def upload_file(local_path: str, *, key_prefix: str = "textbooks/uploads") -> str:
@@ -184,7 +185,7 @@ async def get_url(user_valid=Depends(verify_jwt)):
 # Provides frontend with a presigned url for textbook chapter.
 @router.get("/api/textbooks/{textbook_id}/chapters/{chapter_id}/pdf")
 async def get_chapter_pdf_url(
-    textbook_id: int,
+    textbook_id: UUID,
     chapter_id: int,
     user_valid=Depends(verify_jwt),
 ):
@@ -272,7 +273,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
         #     print(repr(p), "exists:", os.path.exists(p) if isinstance(p, str) else "not-a-str", flush=True)
 
         # print("\n\n100000\n\n")
-        ce.createEmbeddings(listOfChapters)
+        
         # await ce.fillTables(listOfChapters, request.book_id)
         # print("\n\n200000\n\n")
         """
@@ -291,6 +292,8 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
         print("\n\n Uploading textbook: ", book_title, flush=True)
         # creates keys from filepaths and uploads chunks to s3
         await upload(supabase_uid, listOfChapters, request.book_id)
+        
+        await ce.fillTables(listOfChapters, request.book_id)
         print("\n\n Finished uploading textbook\n\n")
 
 
@@ -313,7 +316,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
                     title = $1
                 WHERE id = $2;
                 """,
-                textbook_title,
+                book_title,
                 request.book_id,
             )
         except Exception as e:
@@ -335,7 +338,7 @@ async def trigger_pdf_processing(request: ProcessRequest, user_valid=Depends(ver
 
 
 @router.get("/api/textbooks/{textbook_id}/status")
-async def get_job_status(textbook_id: int):
+async def get_job_status(textbook_id: UUID):
     conn = None
     try:
         conn = await asyncpg.connect(

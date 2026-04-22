@@ -103,7 +103,7 @@ async def init_db():
 
             create_textbook_table_query = """
             CREATE TABLE IF NOT EXISTS textbooks (
-                id SERIAL PRIMARY KEY,
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 user_uid UUID REFERENCES users(supabase_uid) ON DELETE CASCADE,
                 title TEXT NOT NULL,
                 author TEXT NOT NULL,
@@ -113,10 +113,12 @@ async def init_db():
             );
             """
             await conn.execute(create_textbook_table_query)
+            
+            await conn.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto;")
 
             chaptersTable = """
             CREATE TABLE IF NOT EXISTS chapters (
-                textbook_id INTEGER NOT NULL,
+                textbook_id UUID NOT NULL,
                 chapter_number INTEGER NOT NULL,
                 chapter_title TEXT NOT NULL,
                 PRIMARY KEY (textbook_id, chapter_number),
@@ -128,7 +130,7 @@ async def init_db():
 
             embeddingTable = """
             CREATE TABLE IF NOT EXISTS chapter_embeddings (
-                textbook_id INTEGER NOT NULL,
+                textbook_id UUID NOT NULL,
                 chapter_number INTEGER NOT NULL,
                 chunk_index INTEGER NOT NULL,
                 embedding vector(384) NOT NULL,
@@ -155,7 +157,7 @@ async def init_db():
                 fc_id SERIAL PRIMARY KEY,
                 question TEXT NOT NULL,
                 answer TEXT NOT NULL,
-                textbook_id INTEGER NOT NULL,
+                textbook_id UUID NOT NULL,
                 chapter_number INTEGER NOT NULL,
                 chunk_index INTEGER NOT NULL,
                 FOREIGN KEY (textbook_id, chapter_number, chunk_index)
@@ -173,7 +175,7 @@ async def init_db():
             );
             """
             await conn.execute(flash_card_set_assignment_table)
-            
+
             seenflashcards_table = """
             CREATE TABLE IF NOT EXISTS seen_card (
                 user_id UUID REFERENCES users(supabase_uid) ON DELETE CASCADE,
