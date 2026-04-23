@@ -104,7 +104,7 @@ async def generate_endpoint(request: FlashRequest ):  #user validation didn't go
         existing_flashcards = await conn.fetch("""
             SELECT fc_id, question, answer, chunk_index
             FROM master_flashcard
-            WHERE textbook_id = $1 AND chapter_number = $2 AND user_id = $3 AND last_seen < NOW() - INTERVAL '1 minute'
+            WHERE textbook_id = $1 AND chapter_number = $2 AND user_id = $3 AND last_seen < NOW() - INTERVAL '1 day'
             ORDER BY last_seen ASC
             LIMIT $4
             
