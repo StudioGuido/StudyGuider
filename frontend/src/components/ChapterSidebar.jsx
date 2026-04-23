@@ -26,6 +26,13 @@ export default function ChapterSidebar({ className = "", activePhase }) {
     };
   }, [bookId]);
 
+  const phaseToPath = {
+    understanding: "understanding",
+    reinforcing: "reinforce/flashcards",
+    mastery: "mastery",
+  };
+  const phaseSuffix = phaseToPath[activePhase] ?? "understanding";
+
   const getChapterClasses = (isActive) => {
     const base = "block rounded-lg px-4 py-3 ring-1 transition-colors";
     if (isActive) {
@@ -71,7 +78,7 @@ export default function ChapterSidebar({ className = "", activePhase }) {
               {chapters.map((chapter, idx) => (
                 <li key={chapter.number}>
                   <NavLink
-                    to={`/books/${bookId}/chapters/${chapter.number}/${activePhase === "understanding" ? "understanding" : "reinforce/flashcards"}`}
+                    to={`/books/${bookId}/chapters/${chapter.number}/${phaseSuffix}`}
                     className={({ isActive }) => getChapterClasses(isActive)}
                     style={({ isActive }) =>
                       isActive ? { color: "#000000" } : undefined
