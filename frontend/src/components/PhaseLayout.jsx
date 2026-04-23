@@ -1,30 +1,34 @@
-import { useState } from "react";
-import { Outlet, useParams, useNavigate } from "react-router-dom";
+import { Outlet, useParams, useNavigate, useLocation } from "react-router-dom";
 import ChapterSidebar from "./ChapterSidebar";
 import PhaseNavbar from "./PhaseNavbar";
 import { supabase } from "../services/supabaseClient";
 
+function getPhaseFromPath(pathname) {
+  if (pathname.includes("/mastery")) return "mastery";
+  if (pathname.includes("/reinforce/quiz")) return "reinforcing";
+  if (pathname.includes("/reinforce/flashcards")) return "reinforcing";
+  return "understanding";
+}
+
 export default function PhaseLayout() {
-  const [activePhase, setActivePhase] = useState("understanding");
   const { bookId, chapterId } = useParams();
+  const location = useLocation();
+  const activePhase = getPhaseFromPath(location.pathname);
   const navigate = useNavigate();
 
   const handlePhaseSelect = (phase) => {
     if (phase === "understanding") {
       navigate(`/books/${bookId}/chapters/${chapterId}/understanding`);
-      setActivePhase(phase);
       return;
     }
 
     if (phase === "reinforcing") {
       navigate(`/books/${bookId}/chapters/${chapterId}/reinforce/flashcards`);
-      setActivePhase(phase);
       return;
     }
 
     if (phase === "mastery") {
       navigate(`/books/${bookId}/chapters/${chapterId}/mastery`);
-      setActivePhase(phase);
       return;
     }
   };

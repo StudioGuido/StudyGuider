@@ -1,9 +1,18 @@
 ﻿import { useEffect, useState } from "react";
-import { NavLink, useParams } from "react-router-dom";
+import { NavLink, useParams, useLocation } from "react-router-dom";
 import { supabase } from "../services/supabaseClient";
+
+function getPhaseSuffixFromPath(pathname) {
+  if (pathname.includes("/mastery")) return "mastery";
+  if (pathname.includes("/reinforce/quiz")) return "reinforce/quiz";
+  if (pathname.includes("/reinforce/flashcards")) return "reinforce/flashcards";
+  if (pathname.includes("/understanding/ask-ai")) return "understanding/ask-ai";
+  return "understanding";
+}
 
 export default function ChapterSidebar({ className = "", activePhase }) {
   const { bookId } = useParams();
+  const location = useLocation();
   const [chapters, setChapters] = useState([]);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -31,7 +40,9 @@ export default function ChapterSidebar({ className = "", activePhase }) {
     reinforcing: "reinforce/flashcards",
     mastery: "mastery",
   };
-  const phaseSuffix = phaseToPath[activePhase] ?? "understanding";
+  const defaultPhaseSuffix = phaseToPath[activePhase] ?? "understanding";
+  const phaseSuffix =
+    getPhaseSuffixFromPath(location.pathname) || defaultPhaseSuffix;
 
   const getChapterClasses = (isActive) => {
     const base = "block rounded-lg px-4 py-3 ring-1 transition-colors";
@@ -47,15 +58,14 @@ export default function ChapterSidebar({ className = "", activePhase }) {
     <>
       <aside
         className={[
-          "shrink-0 h-screen sticky top-0 overflow-hidden transition-all duration-300",
+          "shrink-0 h-screen sticky top-0 overflow-hidden transition-all duration-300 flex flex-col min-h-0",
           "bg-neutral-950 text-slate-50 border-r border-neutral-800",
           collapsed ? "w-14" : "w-80",
           className,
         ].join(" ")}
         aria-label="Chapter navigation"
       >
-        {/* Toggle button */}
-        <div className="flex items-center pr-2 pl-2 pt-4 pb-2">
+        <div className="flex items-center justify-between pr-2 pl-2 pt-7 pb-2">
           <button
             type="button"
             onClick={() => setCollapsed((c) => !c)}
@@ -64,16 +74,15 @@ export default function ChapterSidebar({ className = "", activePhase }) {
           >
             <span className="text-lg leading-none">&#9776;</span>
           </button>
+          <div className="flex-1 px-3">
+            <h2 className="text-xl font-semibold">Chapters</h2>
+          </div>
         </div>
 
         <div
-          className={`w-80 transition-opacity duration-300 ${collapsed ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+          className={`flex-1 min-h-0 transition-opacity duration-300 ${collapsed ? "opacity-0 pointer-events-none" : "opacity-100"}`}
         >
-          <header className="px-4 pb-3 pt-1 border-b border-neutral-800">
-            <h2 className="text-xl font-semibold">Chapters</h2>
-          </header>
-
-          <nav className="p-3 overflow-y-auto h-[calc(100vh-7.5rem)]">
+          <nav className="p-3 overflow-y-auto h-full">
             <ul className="space-y-2">
               {chapters.map((chapter, idx) => (
                 <li key={chapter.number}>
