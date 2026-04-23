@@ -160,6 +160,9 @@ async def init_db():
                 textbook_id UUID NOT NULL,
                 chapter_number INTEGER NOT NULL,
                 chunk_index INTEGER NOT NULL,
+                user_id UUID REFERENCES users(supabase_uid) ON DELETE CASCADE,
+                last_seen TIMESTAMP DEFAULT NOW(),
+                created_at TIMESTAMP DEFAULT NOW(),
                 FOREIGN KEY (textbook_id, chapter_number, chunk_index)
                 REFERENCES chapter_embeddings(textbook_id, chapter_number, chunk_index)
                 ON DELETE CASCADE

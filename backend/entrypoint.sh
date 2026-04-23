@@ -4,10 +4,13 @@ echo "⏳ Initializing database..."
 
 # setting up database
 python createTables.py
-# python moveToDb.py
+python moveToDb.py
 
 
 # python warmModel.py
+
+PYTHONPATH=. pytest testAPI/test_flashcard_integration.py -v
+ 
 
 # starting up the server
 echo "🚀 Starting FastAPI server..."
