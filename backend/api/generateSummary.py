@@ -8,17 +8,13 @@ import re
 import logging
 import uuid
 import time
+from google.genai import errors as genai_errors
 from .AIHelper import get_gemini_response
 from api.auth import verify_jwt
 from uuid import UUID
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-
-
-# class SummaryRequest(BaseModel):
-#     textbook: str
-#     chapter: str
     
 class SummaryRequest(BaseModel):
     textbook_id: UUID
@@ -41,9 +37,6 @@ async def generate_endpoint(request: SummaryRequest, user_valid=Depends(verify_j
         "textbook": request.textbook_id,
         "chapter": request.chapter_number
     })
-
-    # chapter = request.chapter
-    # textbook = request.textbook
 
     conn = None
 
@@ -124,10 +117,25 @@ async def generate_endpoint(request: SummaryRequest, user_valid=Depends(verify_j
 
         try:
             modelResponse = await get_gemini_response(prompt)
-        except Exception as e:
-            logger.error(f"[{request_id}] Gemini API failed", exc_info=True)
-
-            modelResponse = "⚠️ Summary temporarily unavailable due to high demand. Please try again in a moment."
+        except genai_errors.APIError as e:
+            gemini_status = getattr(e, "code", None) or 0
+            logger.warning(
+                f"[{request_id}] Gemini API error: status={gemini_status} message={getattr(e, 'message', str(e))}"
+            )
+            if gemini_status == 503:
+                raise HTTPException(
+                    status_code=503,
+                    detail="The AI service is currently overloaded. Please try again in a moment.",
+                )
+            if gemini_status == 429:
+                raise HTTPException(
+                    status_code=429,
+                    detail="Rate limit reached. Please try again shortly.",
+                )
+            raise HTTPException(status_code=502, detail="Model generation failed")
+        except Exception:
+            logger.exception(f"[{request_id}] Gemini call failed")
+            raise HTTPException(status_code=502, detail="Model generation failed")
 
         logger.info(f"[{request_id}] Summary generated", extra={
             "response_length": len(modelResponse) if modelResponse else 0,

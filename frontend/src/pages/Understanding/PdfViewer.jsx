@@ -5,7 +5,7 @@ import "./pdf-worker-setup";
 
 const RENDER_WIDTH = 800; // fixed rasterisation width — never changes
 
-export default function PdfViewer({ fileUrl, initialScale = 1, error = null }) {
+export default function PdfViewer({ fileUrl, initialScale = 1, error = null, chapterNumber }) {
   const [numPages, setNumPages] = useState(0);
   const [scale, setScale] = useState(initialScale);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -95,7 +95,7 @@ export default function PdfViewer({ fileUrl, initialScale = 1, error = null }) {
 
         {/* Right-aligned label */}
         <div className="ml-auto text-[10px] uppercase tracking-wide text-slate-500">
-          PDF Viewer
+          {chapterNumber ? `Chapter ${chapterNumber}` : ""}
         </div>
       </div>
 

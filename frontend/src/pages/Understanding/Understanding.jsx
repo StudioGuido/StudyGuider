@@ -2,7 +2,6 @@ import ChapterSidebarNav from "../../components/ChapterSidebar";
 import PhaseNavbar from "../../components/PhaseNavbar";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { fakeApi } from "../../services/fakeApi";
 import { supabase } from "../../services/supabaseClient";
 import PdfViewer from "./PdfViewer";
 import Summary from "./Summary";
@@ -152,7 +151,7 @@ export default function Understanding({ defaultMode = "summary" }) {
     <section className="flex-1 grid grid-cols-2 gap-4 min-h-0">
       {/* Left: PDF viewer placeholder */}
       <div className="rounded min-h-0 flex flex-col">
-        <PdfViewer fileUrl={pdfUrl} error={pdfError} />
+        <PdfViewer fileUrl={pdfUrl} error={pdfError} chapterNumber={chapterId} />
       </div>
 
       {/* Right: Summary / AskAI */}
@@ -183,7 +182,7 @@ export default function Understanding({ defaultMode = "summary" }) {
               onRegenerate={fetchSummary}
             />
           ) : (
-            <AskAI bookTitle={bookTitle} chapterTitle={chapterTitle} />
+            <AskAI bookId={bookId} chapterId={chapterId} />
           )}
         </div>
       </div>

@@ -58,48 +58,58 @@ export default function ChapterSidebar({ className = "", activePhase }) {
     <>
       <aside
         className={[
-          "shrink-0 h-screen sticky top-0 overflow-hidden transition-all duration-300 flex flex-col min-h-0",
+          "shrink-0 h-screen sticky top-0 overflow-hidden transition-[width] duration-300 ease-in-out",
           "bg-neutral-950 text-slate-50 border-r border-neutral-800",
           collapsed ? "w-14" : "w-80",
           className,
         ].join(" ")}
         aria-label="Chapter navigation"
       >
-        <div className="flex items-center justify-between pr-2 pl-2 pt-7 pb-2">
-          <button
-            type="button"
-            onClick={() => setCollapsed((c) => !c)}
-            className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-neutral-800 transition-colors"
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            <span className="text-lg leading-none">&#9776;</span>
-          </button>
-          <div className="flex-1 px-3">
-            <h2 className="text-xl font-semibold">Chapters</h2>
+        <div className="w-80 h-full flex flex-col min-h-0">
+          <div className="flex items-center pr-2 pl-2 pt-7 pb-2">
+            <button
+              type="button"
+              onClick={() => setCollapsed((c) => !c)}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md hover:bg-neutral-800 transition-colors"
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <span className="text-lg leading-none">&#9776;</span>
+            </button>
+            <div
+              className={`flex-1 px-3 transition-opacity duration-200 ${
+                collapsed ? "opacity-0" : "opacity-100"
+              }`}
+            >
+              <h2 className="text-xl font-semibold whitespace-nowrap">
+                Chapters
+              </h2>
+            </div>
           </div>
-        </div>
 
-        <div
-          className={`flex-1 min-h-0 transition-opacity duration-300 ${collapsed ? "opacity-0 pointer-events-none" : "opacity-100"}`}
-        >
-          <nav className="p-3 overflow-y-auto h-full">
-            <ul className="space-y-2">
-              {chapters.map((chapter, idx) => (
-                <li key={chapter.number}>
-                  <NavLink
-                    to={`/books/${bookId}/chapters/${chapter.number}/${phaseSuffix}`}
-                    className={({ isActive }) => getChapterClasses(isActive)}
-                    style={({ isActive }) =>
-                      isActive ? { color: "#000000" } : undefined
-                    }
-                    end={false}
-                  >
-                    <span className="font-medium">{chapter.title}</span>
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <div
+            className={`flex-1 min-h-0 transition-opacity duration-200 ${
+              collapsed ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
+          >
+            <nav className="p-3 overflow-y-auto h-full">
+              <ul className="space-y-2">
+                {chapters.map((chapter) => (
+                  <li key={chapter.number}>
+                    <NavLink
+                      to={`/books/${bookId}/chapters/${chapter.number}/${phaseSuffix}`}
+                      className={({ isActive }) => getChapterClasses(isActive)}
+                      style={({ isActive }) =>
+                        isActive ? { color: "#000000" } : undefined
+                      }
+                      end={false}
+                    >
+                      <span className="font-medium">{chapter.title}</span>
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
         </div>
       </aside>
     </>

@@ -12,6 +12,7 @@ from api.s3 import router as s3_router
 from logging_config import setup_logging
 from api.generateFlashCard import router as flashcard_router
 from api.generateSummary import router as summary_router
+from api.askAI import router as askai_router
 
 # initiate logger
 setup_logging()
@@ -46,6 +47,7 @@ app.add_middleware(
 )
 app.include_router(flashcard_router)
 app.include_router(summary_router)
+app.include_router(askai_router)
 
 # Health router for deployment testing
 @app.get("/health")
